@@ -30,7 +30,7 @@ style_atoms = { version = "0.14", package = "stylo_atoms" }
 static_prefs = { version = "0.14", package = "stylo_static_prefs" }
 
 [dev-dependencies]
-quick-xml = "0.37"
+quick-xml = "0.39"
 walkdir = "2"
 
 [lints]

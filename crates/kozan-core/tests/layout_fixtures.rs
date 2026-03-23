@@ -150,7 +150,7 @@ fn parse_input_children(reader: &mut Reader<&[u8]>, collect_text: bool) -> (Vec<
                 }
             }
             Ok(Event::Text(t)) if collect_text => {
-                if let Ok(s) = t.unescape() {
+                if let Ok(s) = t.decode() {
                     let trimmed = s.trim();
                     if !trimmed.is_empty() {
                         text_content.push_str(trimmed);

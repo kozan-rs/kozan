@@ -224,12 +224,12 @@ impl SceneBuilder {
                 // ── Clip stack ───────────────────────────────────────────────
 
                 DisplayItem::PushClip(data) => {
-                    scene.push_layer(Mix::Clip, 1.0, current_transform, &to_kurbo_rect(data.rect));
+                    scene.push_clip_layer(Fill::NonZero, current_transform, &to_kurbo_rect(data.rect));
                 }
                 DisplayItem::PopClip => { scene.pop_layer(); }
 
                 DisplayItem::PushRoundedClip(data) => {
-                    scene.push_layer(Mix::Clip, 1.0, current_transform,
+                    scene.push_clip_layer(Fill::NonZero, current_transform,
                         &to_kurbo_rounded_rect(data.rect, data.radii));
                 }
                 DisplayItem::PopRoundedClip => { scene.pop_layer(); }
@@ -238,7 +238,7 @@ impl SceneBuilder {
 
                 DisplayItem::PushOpacity(alpha) => {
                     let bounds = vello::kurbo::Rect::new(-1e6, -1e6, 1e6, 1e6);
-                    scene.push_layer(Mix::Normal, *alpha, current_transform, &bounds);
+                    scene.push_layer(Fill::NonZero, Mix::Normal, *alpha, current_transform, &bounds);
                 }
                 DisplayItem::PopOpacity => { scene.pop_layer(); }
 

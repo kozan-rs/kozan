@@ -14,8 +14,8 @@ kozan-platform = { path = "../kozan-platform" }
 kozan-primitives = { path = "../kozan-primitives" }
 
 raw-window-handle = "0.6"
-vello = "0.4"
-pollster = "0.3"
+vello = "0.8"
+pollster = "0.4"
 
 [lints]
 workspace = true

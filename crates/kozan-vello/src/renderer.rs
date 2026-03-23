@@ -38,7 +38,7 @@ impl VelloRenderer {
     }
 
     async fn init() -> Result<Self, RendererError> {
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             ..Default::default()
         });
@@ -50,7 +50,7 @@ impl VelloRenderer {
                 force_fallback_adapter: false,
             })
             .await
-            .ok_or(RendererError::AdapterNotFound)?;
+            .map_err(|_| RendererError::AdapterNotFound)?;
 
         let (device, queue) = adapter
             .request_device(
@@ -59,11 +59,11 @@ impl VelloRenderer {
                     required_features: wgpu::Features::empty(),
                     required_limits: wgpu::Limits::default(),
                     memory_hints: wgpu::MemoryHints::default(),
+                    ..Default::default()
                 },
-                None,
             )
             .await
-            .map_err(|e| RendererError::DeviceCreation(e.to_string()))?;
+            .map_err(|e: wgpu::RequestDeviceError| RendererError::DeviceCreation(e.to_string()))?;
 
         Ok(Self {
             gpu: Arc::new(GpuContext { instance, adapter, device, queue }),
@@ -83,8 +83,6 @@ mod tests {
 
     #[test]
     fn gpu_context_fields_are_accessible() {
-        // Compile-time verification that GpuContext struct is well-formed
-        // and its fields are the expected wgpu types.
         fn _takes_ctx(ctx: &GpuContext) {
             let _: &wgpu::Instance = &ctx.instance;
             let _: &wgpu::Adapter = &ctx.adapter;
@@ -107,7 +105,7 @@ impl Renderer for VelloRenderer {
         W: HasWindowHandle + HasDisplayHandle,
     {
         // SAFETY: The window outlives the surface.
-        // `kozan-winit`'s `WindowState` owns both and drops the surface before the window.
+        // kozan-winit's WindowState owns both and drops the surface before the window.
         let surface = unsafe {
             self.gpu
                 .instance

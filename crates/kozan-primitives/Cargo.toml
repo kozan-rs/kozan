@@ -9,7 +9,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-glam = "0.29"
+glam = "0.32"
 
 [lints]
 workspace = true
