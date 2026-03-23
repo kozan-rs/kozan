@@ -1,0 +1,28 @@
+[package]
+name = "kozan"
+description = "Kozan UI platform — re-exports and prelude for application authors"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan-core       = { path = "../kozan-core" }
+kozan-platform   = { path = "../kozan-platform" }
+kozan-primitives = { path = "../kozan-primitives" }
+kozan-scheduler  = { path = "../kozan-scheduler" }
+
+# Optional backends — enabled by feature flag.
+# Default: winit + vello (the standard app stack).
+kozan-winit = { path = "../kozan-winit", optional = true }
+kozan-vello = { path = "../kozan-vello", optional = true }
+
+[features]
+default = ["winit", "vello"]
+winit   = ["dep:kozan-winit"]
+vello   = ["dep:kozan-vello"]
+
+[lints]
+workspace = true

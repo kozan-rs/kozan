@@ -1,0 +1,67 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "examples/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+authors = ["Youssef Khalil <me@darky.dev>"]
+repository = "https://github.com/kozan-rs/kozan"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Allow these in a UI engine codebase
+module_name_repetitions = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_precision_loss = "allow"
+too_many_lines = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+return_self_not_must_use = "allow"
+wildcard_imports = "allow"
+field_reassign_with_default = "allow"
+float_cmp = "allow"
+inline_always = "allow"
+doc_markdown = "allow"
+similar_names = "allow"
+struct_field_names = "allow"
+unnecessary_wraps = "allow"
+needless_pass_by_value = "allow"
+semicolon_if_nothing_returned = "allow"
+redundant_closure_for_method_calls = "allow"
+ptr_as_ptr = "allow"
+assertions_on_constants = "allow"
+manual_map = "allow"
+items_after_statements = "allow"
+unreadable_literal = "allow"
+single_match_else = "allow"
+match_same_arms = "allow"
+range_plus_one = "allow"
+trivially_copy_pass_by_ref = "allow"
+cast_possible_wrap = "allow"
+manual_let_else = "allow"
+map_unwrap_or = "allow"
+unchecked_time_subtraction = "allow"
+many_single_char_names = "allow"
+unnecessary_operation = "allow"
+cast_lossless = "allow"
+uninlined_format_args = "allow"
+if_not_else = "allow"
+needless_lifetimes = "allow"
+struct_excessive_bools = "allow"
+match_wildcard_for_single_variants = "allow"
+unused_self = "allow"
+needless_continue = "allow"
+used_underscore_binding = "allow"
+elidable_lifetime_names = "allow"
+
+[workspace.lints.rust]
+# DocumentCell is the one exception to unsafe
+unsafe_code = { level = "allow", priority = 1 }
+
+# parley 0.7 + vello 0.4.1 have incompatible peniko/skrifa versions (5 duplicate builds). Fix needs vello 0.8.0 (MSRV bump 1.85 → 1.92).
+[workspace.dependencies]

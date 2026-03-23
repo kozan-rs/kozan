@@ -1,0 +1,8 @@
+target/
+debug/
+*.pdb
+*.rs.bk
+**/mutants.out*/
+.claude/
+.desloppify/
+.idea/

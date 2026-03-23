@@ -1,0 +1,292 @@
+/* ── Kozan Dashboard — shadcn-inspired dark theme ─────────────────────────── */
+/* Single source of truth: same CSS for Kozan and the HTML mirror.            */
+
+body { width: 100%; height: 100%; margin: 0; font-family: "Cairo"; }
+
+/* ── Tokens ──────────────────────────────────────────────────────────────── */
+/* bg-base:    rgb(9, 9, 11)        — zinc-950                               */
+/* bg-card:    rgb(24, 24, 27)      — zinc-900                               */
+/* bg-surface: rgb(39, 39, 42)      — zinc-800                               */
+/* border:     rgb(39, 39, 42)      — zinc-800                               */
+/* border-dim: rgb(30, 30, 33)      — between 900 and 800                    */
+/* fg:         rgb(250, 250, 250)   — zinc-50                                */
+/* fg-muted:   rgb(161, 161, 170)   — zinc-400                               */
+/* fg-dim:     rgb(113, 113, 122)   — zinc-500                               */
+/* accent:     rgb(59, 130, 246)    — blue-500                               */
+/* accent-dim: rgba(59,130,246,0.15)                                         */
+
+/* ── FPS overlay ─────────────────────────────────────────────────────────── */
+
+.fps-badge {
+    position: absolute; top: 8px; right: 8px;
+    padding: 2px 8px; border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: rgb(52, 211, 153); font-size: 11px; font-weight: 700;
+}
+
+/* ── Shell ────────────────────────────────────────────────────────────────── */
+
+.shell {
+    display: flex; flex-direction: column;
+    width: 100%; height: 100%;
+    background-color: rgb(9, 9, 11);
+    font-family: "Cairo"; font-weight: 500; font-size: 14px;
+    color: rgb(250, 250, 250);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.header {
+    display: flex; flex-direction: row; align-items: center;
+    height: 52px; min-height: 52px; flex-shrink: 0;
+    padding-left: 20px; padding-right: 20px; gap: 12px;
+    background-color: rgb(9, 9, 11);
+    border-bottom-width: 1px; border-bottom-style: solid;
+    border-bottom-color: rgb(39, 39, 42);
+    font-size: 14px; font-weight: 600;
+}
+
+.logo {
+    width: 28px; height: 28px; border-radius: 6px;
+    background-color: rgb(250, 250, 250);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.logo-inner {
+    width: 12px; height: 12px; border-radius: 3px;
+    background-color: rgb(9, 9, 11);
+}
+
+.spacer { flex-grow: 1; }
+
+.header-label { font-size: 13px; font-weight: 500; color: rgb(113, 113, 122); }
+
+.status-dot {
+    width: 8px; height: 8px; border-radius: 4px;
+    background-color: rgb(63, 63, 70);
+}
+.status-active { background-color: rgb(34, 197, 94); }
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+
+.body-row { display: flex; flex-direction: row; flex-grow: 1; min-height: 0; }
+
+.content {
+    flex-grow: 1; display: flex; flex-direction: column;
+    padding: 24px; gap: 20px;
+    min-height: 0; overflow-y: auto;
+}
+
+.cards-row { display: flex; flex-direction: row; gap: 16px; flex-shrink: 0; }
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+
+.sidebar {
+    width: 240px; min-width: 240px; display: flex; flex-direction: column;
+    min-height: 0;
+    background-color: rgb(9, 9, 11);
+    border-right-width: 1px; border-right-style: solid;
+    border-right-color: rgb(39, 39, 42);
+}
+
+.sidebar-header {
+    display: flex; flex-direction: row; align-items: center;
+    gap: 10px; padding: 16px; flex-shrink: 0;
+    border-bottom-width: 1px; border-bottom-style: solid;
+    border-bottom-color: rgb(39, 39, 42);
+}
+
+.avatar {
+    width: 32px; height: 32px; border-radius: 16px;
+    background-color: rgb(124, 58, 237);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.avatar-inner {
+    width: 20px; height: 20px; border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.avatar-name { font-size: 13px; font-weight: 600; color: rgb(250, 250, 250); }
+.avatar-email { font-size: 11px; font-weight: 400; color: rgb(113, 113, 122); }
+
+/* ── Scrollable nav list ─────────────────────────────────────────────────── */
+
+.sidebar-nav {
+    flex-grow: 1; display: flex; flex-direction: column;
+    padding: 8px; gap: 1px;
+    min-height: 0; overflow-y: auto;
+}
+
+.nav-section {
+    padding-left: 12px; padding-top: 16px; padding-bottom: 6px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    color: rgb(113, 113, 122);
+}
+
+.nav-item {
+    display: flex; flex-direction: row; align-items: center;
+    gap: 10px; padding: 8px 12px; border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    color: rgb(161, 161, 170);
+}
+
+.nav-item:hover {
+    background-color: rgb(24, 24, 27);
+    color: rgb(250, 250, 250);
+}
+
+.nav-active {
+    background-color: rgb(24, 24, 27);
+    color: rgb(250, 250, 250);
+}
+
+.nav-icon {
+    width: 16px; height: 16px; border-radius: 4px;
+    opacity: 0.8;
+}
+
+.icon-blue   { background-color: rgb(59, 130, 246); }
+.icon-purple { background-color: rgb(139, 92, 246); }
+.icon-teal   { background-color: rgb(20, 184, 166); }
+.icon-orange { background-color: rgb(249, 115, 22); }
+.icon-green  { background-color: rgb(34, 197, 94); }
+.icon-rose   { background-color: rgb(244, 63, 94); }
+.icon-amber  { background-color: rgb(245, 158, 11); }
+.icon-cyan   { background-color: rgb(6, 182, 212); }
+.icon-pink   { background-color: rgb(236, 72, 153); }
+.icon-lime   { background-color: rgb(132, 204, 22); }
+.icon-sky    { background-color: rgb(14, 165, 233); }
+.icon-indigo { background-color: rgb(99, 102, 241); }
+.icon-zinc   { background-color: rgb(161, 161, 170); }
+
+/* ── Sidebar footer ──────────────────────────────────────────────────────── */
+
+.sidebar-footer {
+    padding: 12px; flex-shrink: 0;
+    border-top-width: 1px; border-top-style: solid;
+    border-top-color: rgb(39, 39, 42);
+}
+
+.sidebar-badge {
+    display: flex; flex-direction: row; align-items: center;
+    gap: 8px; padding: 8px 10px; border-radius: 6px;
+    background-color: rgb(24, 24, 27);
+}
+
+.badge-dot {
+    width: 6px; height: 6px; border-radius: 3px;
+    background-color: rgb(34, 197, 94);
+}
+
+.badge-label { font-size: 12px; font-weight: 500; color: rgb(161, 161, 170); }
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+
+.card {
+    flex-grow: 1; display: flex; flex-direction: column;
+    padding: 20px; gap: 10px;
+    background-color: rgb(24, 24, 27);
+    border-width: 1px; border-style: solid; border-color: rgb(39, 39, 42);
+    border-radius: 8px;
+}
+
+.card:hover {
+    border-color: rgb(63, 63, 70);
+}
+
+.card:active {
+    background-color: rgb(30, 30, 34);
+}
+
+.card-icon { width: 36px; height: 36px; border-radius: 8px; }
+
+.card-value { font-size: 24px; font-weight: 700; color: rgb(250, 250, 250); }
+
+.card-label { font-size: 12px; font-weight: 500; color: rgb(113, 113, 122); }
+
+.card-track {
+    width: 100%; height: 4px; border-radius: 2px;
+    overflow: hidden; background-color: rgb(39, 39, 42);
+}
+
+.card-fill { width: 0%; height: 100%; border-radius: 2px; }
+
+.card-blue   { border-color: rgba(59, 130, 246, 0.4); }
+.card-purple { border-color: rgba(139, 92, 246, 0.4); }
+.card-teal   { border-color: rgba(20, 184, 166, 0.4); }
+.card-orange { border-color: rgba(249, 115, 22, 0.4); }
+
+.fill-blue   { background-color: rgb(59, 130, 246); }
+.fill-purple { background-color: rgb(139, 92, 246); }
+.fill-teal   { background-color: rgb(20, 184, 166); }
+.fill-orange { background-color: rgb(249, 115, 22); }
+
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+
+.panel {
+    flex-grow: 1; display: flex; flex-direction: column;
+    padding: 20px; gap: 16px;
+    background-color: rgb(24, 24, 27);
+    border-width: 1px; border-style: solid; border-color: rgb(39, 39, 42);
+    border-radius: 8px;
+}
+
+.panel-header { display: flex; flex-direction: row; align-items: center; }
+
+.panel-title { font-size: 15px; font-weight: 600; color: rgb(250, 250, 250); }
+
+.panel-subtitle { font-size: 12px; font-weight: 400; color: rgb(113, 113, 122); }
+
+.panel-badge {
+    padding: 3px 10px; border-radius: 12px;
+    background-color: rgb(39, 39, 42);
+    font-size: 11px; font-weight: 600; color: rgb(161, 161, 170);
+}
+
+/* ── Chart ────────────────────────────────────────────────────────────────── */
+
+.chart {
+    flex-grow: 1; display: flex; flex-direction: row;
+    align-items: flex-end; gap: 8px;
+}
+
+.chart-col {
+    flex-grow: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+}
+
+.chart-track {
+    width: 100%; height: 160px; border-radius: 4px;
+    background-color: rgb(39, 39, 42);
+    display: flex; flex-direction: column; justify-content: flex-end;
+}
+
+.chart-fill {
+    width: 100%; height: 0%; border-radius: 4px;
+    background-color: rgb(63, 63, 70);
+}
+
+.chart-fill:hover { background-color: rgb(99, 102, 241); }
+
+.chart-tick {
+    width: 20px; height: 4px; border-radius: 2px;
+    background-color: rgb(39, 39, 42);
+}
+
+/* ── Activity list ───────────────────────────────────────────────────────── */
+
+.activity-row {
+    display: flex; flex-direction: row; align-items: center;
+    gap: 12px; padding: 10px 0;
+}
+
+.activity-dot {
+    width: 8px; height: 8px; border-radius: 4px;
+}
+
+.activity-text { flex-grow: 1; font-size: 13px; color: rgb(161, 161, 170); }
+
+.activity-time { font-size: 11px; color: rgb(63, 63, 70); }
+
+.divider { width: 100%; height: 1px; background-color: rgb(39, 39, 42); }

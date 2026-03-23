@@ -1,0 +1,25 @@
+[package]
+name = "kozan-macros"
+description = "Derive macros for the Kozan UI platform"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"
+proc-macro-crate = "3"
+
+[dev-dependencies]
+trybuild = { version = "1", features = ["diff"] }
+kozan-core = { path = "../kozan-core" }
+
+[lints]
+workspace = true

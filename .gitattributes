@@ -1,0 +1,23 @@
+# Force LF line endings everywhere
+* text=auto eol=lf
+
+# Rust source
+*.rs text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+
+# Documentation
+*.md text eol=lf
+
+# Scripts
+*.sh text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary

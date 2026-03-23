@@ -1,0 +1,15 @@
+[package]
+name = "kozan-scheduler"
+description = "Task scheduler and async executor for the Kozan UI platform"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan-primitives = { path = "../kozan-primitives" }
+
+[lints]
+workspace = true

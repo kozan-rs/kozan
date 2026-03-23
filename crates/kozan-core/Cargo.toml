@@ -1,0 +1,37 @@
+[package]
+name = "kozan-core"
+description = "Core DOM engine for the Kozan UI platform"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan-primitives = { path = "../kozan-primitives" }
+kozan-macros = { path = "../kozan-macros" }
+taffy = { version = "0.9", features = ["flexbox", "grid", "block_layout", "content_size", "calc", "detailed_layout_info"] }
+smallvec = "1.13"
+parley = "0.7"
+
+# Stylo — Mozilla's CSS engine (from Servo)
+# Package name is "stylo" on crates.io, but lib.name = "style"
+style = { version = "0.14", package = "stylo" }
+style_dom = { version = "0.14", package = "stylo_dom" }
+style_traits = { version = "0.14", package = "stylo_traits" }
+selectors = "0.36"
+app_units = "0.7"
+servo_arc = "0.4"
+euclid = "0.22"
+web_atoms = "0.2"
+url = "2"
+style_atoms = { version = "0.14", package = "stylo_atoms" }
+static_prefs = { version = "0.14", package = "stylo_static_prefs" }
+
+[dev-dependencies]
+quick-xml = "0.37"
+walkdir = "2"
+
+[lints]
+workspace = true

@@ -1,0 +1,21 @@
+[package]
+name = "kozan-vello"
+description = "Vello + wgpu renderer backend for Kozan"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan-core = { path = "../kozan-core" }
+kozan-platform = { path = "../kozan-platform" }
+kozan-primitives = { path = "../kozan-primitives" }
+
+raw-window-handle = "0.6"
+vello = "0.4"
+pollster = "0.3"
+
+[lints]
+workspace = true

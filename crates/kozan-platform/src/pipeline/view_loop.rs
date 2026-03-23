@@ -1,0 +1,99 @@
+//! View thread event loop.
+//!
+//! Chrome: renderer main thread event loop — drain events, tick scheduler,
+//! commit frame, park until next event or vsync.
+
+use std::sync::mpsc;
+
+use kozan_scheduler::Scheduler;
+
+use crate::context::ViewContext;
+use crate::event::{LifecycleEvent, ViewEvent};
+
+/// The view thread's main loop. Returns when Shutdown is received.
+pub fn run(scheduler: &mut Scheduler, ctx: &mut ViewContext, rx: &mpsc::Receiver<ViewEvent>) {
+    loop {
+        // 1. Drain pending events.
+        while let Ok(event) = rx.try_recv() {
+            match event {
+                ViewEvent::Shutdown => return,
+                other => dispatch(scheduler, ctx, other),
+            }
+        }
+
+        // 2. Drain user frame callbacks into scheduler.
+        for cb in ctx.take_staged_frame_callbacks() {
+            scheduler.request_frame(cb);
+        }
+
+        // 3. Tick — runs macrotasks, microtasks, frame callback (lifecycle + commit).
+        let result = scheduler.tick(&mut |info| {
+            ctx.set_last_fps(info.fps);
+            ctx.update_lifecycle_and_commit();
+        });
+
+        // 4. Check if async tasks dirtied the DOM.
+        if ctx.document_needs_frame() {
+            ctx.invalidate_style();
+            scheduler.set_needs_frame();
+        }
+
+        // 5. Store timing for next frame's FrameInfo.
+        scheduler.frame_scheduler_mut().set_frame_timing(ctx.last_frame_timing());
+
+        // 6. Park until next event or timeout.
+        match result.park_timeout {
+            Some(t) if t.is_zero() => continue,
+            Some(t) => match rx.recv_timeout(t) {
+                Ok(ViewEvent::Shutdown) => return,
+                Ok(event) => dispatch(scheduler, ctx, event),
+                Err(_) => {}
+            },
+            None => match rx.recv() {
+                Ok(ViewEvent::Shutdown) => return,
+                Ok(event) => dispatch(scheduler, ctx, event),
+                Err(_) => return,
+            },
+        }
+    }
+}
+
+fn dispatch(scheduler: &mut Scheduler, ctx: &mut ViewContext, event: ViewEvent) {
+    match event {
+        ViewEvent::Input(input) => {
+            if ctx.on_input(input) {
+                ctx.invalidate_style();
+                scheduler.set_needs_frame();
+            }
+        }
+        ViewEvent::Lifecycle(lc) => on_lifecycle(scheduler, ctx, lc),
+        ViewEvent::Paint => {
+            ctx.invalidate_style();
+            scheduler.set_needs_frame();
+        }
+        ViewEvent::ScrollSync(offsets) => {
+            ctx.apply_scroll_sync(offsets);
+            scheduler.set_needs_frame();
+        }
+        ViewEvent::Shutdown => unreachable!(),
+    }
+}
+
+fn on_lifecycle(scheduler: &mut Scheduler, ctx: &mut ViewContext, lc: LifecycleEvent) {
+    match lc {
+        LifecycleEvent::Resized { width, height } => {
+            // resize() sets layout+paint dirty — no style recalc needed.
+            ctx.on_resize(width, height);
+        }
+        LifecycleEvent::ScaleFactorChanged { scale_factor, refresh_rate_millihertz } => {
+            ctx.on_scale_factor_changed(scale_factor);
+            if let Some(mhz) = refresh_rate_millihertz {
+                let budget = std::time::Duration::from_micros(1_000_000_000 / mhz as u64);
+                scheduler.frame_scheduler_mut().set_frame_budget(budget);
+            }
+            ctx.invalidate_style();
+        }
+        LifecycleEvent::Focused(_) => {}
+    }
+    scheduler.set_needs_frame();
+}

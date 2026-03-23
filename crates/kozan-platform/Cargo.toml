@@ -1,0 +1,18 @@
+[package]
+name = "kozan-platform"
+description = "Abstract platform layer for the Kozan UI platform — zero windowing-backend dependency"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan-core = { path = "../kozan-core" }
+kozan-primitives = { path = "../kozan-primitives" }
+kozan-scheduler = { path = "../kozan-scheduler" }
+raw-window-handle = "0.6"
+
+[lints]
+workspace = true

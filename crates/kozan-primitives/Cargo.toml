@@ -1,0 +1,15 @@
+[package]
+name = "kozan-primitives"
+description = "Foundational types for the Kozan UI platform: geometry, color, units"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+glam = "0.29"
+
+[lints]
+workspace = true

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Kozan Dashboard — Chrome Reference</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <style>html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }</style>
+</head>
+<body>
+
+<!-- FPS overlay -->
+<div class="fps-badge" id="fps">-- FPS</div>
+<script>
+  let frames = 0, last = performance.now();
+  function tick() {
+    frames++;
+    const now = performance.now();
+    if (now - last >= 500) {
+      document.getElementById('fps').textContent = Math.round(frames / ((now - last) / 1000)) + ' FPS';
+      frames = 0; last = now;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+</script>
+
+<div class="shell">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo"><div class="logo-inner"></div></div>
+    Kozan
+    <div class="spacer"></div>
+    <div class="header-label">Dashboard</div>
+    <div class="status-dot status-active"></div>
+  </div>
+
+  <div class="body-row">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Sidebar header -->
+      <div class="sidebar-header">
+        <div class="avatar"><div class="avatar-inner"></div></div>
+        <div>
+          <div class="avatar-name">Kozan User</div>
+          <div class="avatar-email">user@kozan.dev</div>
+        </div>
+      </div>
+
+      <!-- Scrollable nav -->
+      <div class="sidebar-nav">
+
+        <div class="nav-section">MAIN</div>
+        <div class="nav-item nav-active"><div class="nav-icon icon-blue"></div>Dashboard</div>
+        <div class="nav-item"><div class="nav-icon icon-purple"></div>Analytics</div>
+        <div class="nav-item"><div class="nav-icon icon-teal"></div>Reports</div>
+        <div class="nav-item"><div class="nav-icon icon-orange"></div>Calendar</div>
+        <div class="nav-item"><div class="nav-icon icon-green"></div>Projects</div>
+        <div class="nav-item"><div class="nav-icon icon-cyan"></div>Tasks</div>
+        <div class="nav-item"><div class="nav-icon icon-pink"></div>Messages</div>
+        <div class="nav-item"><div class="nav-icon icon-amber"></div>Notifications</div>
+
+        <div class="nav-section">SETTINGS</div>
+        <div class="nav-item"><div class="nav-icon icon-zinc"></div>General</div>
+        <div class="nav-item"><div class="nav-icon icon-indigo"></div>Team</div>
+        <div class="nav-item"><div class="nav-icon icon-orange"></div>Billing</div>
+        <div class="nav-item"><div class="nav-icon icon-rose"></div>Integrations</div>
+        <div class="nav-item"><div class="nav-icon icon-teal"></div>API Keys</div>
+        <div class="nav-item"><div class="nav-icon icon-purple"></div>Security</div>
+        <div class="nav-item"><div class="nav-icon icon-sky"></div>Appearance</div>
+
+        <div class="nav-section">SUPPORT</div>
+        <div class="nav-item"><div class="nav-icon icon-blue"></div>Documentation</div>
+        <div class="nav-item"><div class="nav-icon icon-lime"></div>Changelog</div>
+        <div class="nav-item"><div class="nav-icon icon-green"></div>Help Center</div>
+        <div class="nav-item"><div class="nav-icon icon-cyan"></div>Community</div>
+        <div class="nav-item"><div class="nav-icon icon-amber"></div>Feedback</div>
+
+      </div>
+
+      <!-- Sidebar footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-badge">
+          <div class="badge-dot"></div>
+          <div class="badge-label">All systems online</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Cards row -->
+      <div class="cards-row">
+        <div class="card card-blue">
+          <div class="card-icon icon-blue"></div>
+          <div class="card-value">$2,847</div>
+          <div class="card-label">Revenue</div>
+          <div class="card-track"><div class="card-fill fill-blue" style="width:78%"></div></div>
+        </div>
+        <div class="card card-purple">
+          <div class="card-icon icon-purple"></div>
+          <div class="card-value">1,024</div>
+          <div class="card-label">Users</div>
+          <div class="card-track"><div class="card-fill fill-purple" style="width:52%"></div></div>
+        </div>
+        <div class="card card-teal">
+          <div class="card-icon icon-teal"></div>
+          <div class="card-value">98.2%</div>
+          <div class="card-label">Uptime</div>
+          <div class="card-track"><div class="card-fill fill-teal" style="width:91%"></div></div>
+        </div>
+        <div class="card card-orange">
+          <div class="card-icon icon-orange"></div>
+          <div class="card-value">142</div>
+          <div class="card-label">Issues</div>
+          <div class="card-track"><div class="card-fill fill-orange" style="width:35%"></div></div>
+        </div>
+      </div>
+
+      <!-- Chart panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Weekly Overview</div>
+          <div class="spacer"></div>
+          <div class="panel-badge">+12.5%</div>
+        </div>
+        <div class="chart">
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:45%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:72%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:58%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-purple" style="height:95%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:65%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:40%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:82%"></div></div><div class="chart-tick"></div></div>
+          <div class="chart-col"><div class="chart-track"><div class="chart-fill fill-blue" style="height:55%"></div></div><div class="chart-tick"></div></div>
+        </div>
+      </div>
+
+      <!-- Activity panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Recent Activity</div>
+          <div class="spacer"></div>
+          <div class="panel-subtitle">Last 24 hours</div>
+        </div>
+
+        <div class="activity-row">
+          <div class="activity-dot icon-green"></div>
+          <div class="activity-text">Deployment succeeded</div>
+          <div class="activity-time">2m ago</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="activity-row">
+          <div class="activity-dot icon-blue"></div>
+          <div class="activity-text">New user registered</div>
+          <div class="activity-time">5m ago</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="activity-row">
+          <div class="activity-dot icon-orange"></div>
+          <div class="activity-text">Payment processed</div>
+          <div class="activity-time">12m ago</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="activity-row">
+          <div class="activity-dot icon-purple"></div>
+          <div class="activity-text">Report generated</div>
+          <div class="activity-time">1h ago</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="activity-row">
+          <div class="activity-dot icon-rose"></div>
+          <div class="activity-text">Alert triggered</div>
+          <div class="activity-time">2h ago</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Nav click behavior -->
+<script>
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('nav-active'));
+      item.classList.add('nav-active');
+    });
+  });
+</script>
+
+</body>
+</html>

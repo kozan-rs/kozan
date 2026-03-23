@@ -1,0 +1,15 @@
+[package]
+name = "hello-world"
+description = "Kozan hello-world — opens a window and renders a colored box"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan = { path = "../../crates/kozan" }
+
+[lints]
+workspace = true
