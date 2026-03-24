@@ -12,10 +12,10 @@
 
 use style::color::AbsoluteColor;
 use style::properties::PropertyDeclaration;
+use style::values::specified::box_::{Display, PositionProperty};
 use style::values::specified::{
     Color, FontSize, FontWeight, Margin, NonNegativeLengthPercentage, Opacity, Size,
 };
-use style::values::specified::box_::{Display, PositionProperty};
 
 use crate::dom::document_cell::DocumentCell;
 use crate::id::RawId;
@@ -33,7 +33,11 @@ pub struct StyleAccess {
 
 impl StyleAccess {
     pub(crate) fn new(cell: DocumentCell, id: RawId) -> Self {
-        Self { cell, id, pending: Vec::new() }
+        Self {
+            cell,
+            id,
+            pending: Vec::new(),
+        }
     }
 
     // ── Display ──
@@ -47,15 +51,16 @@ impl StyleAccess {
 
     pub fn color(&mut self, value: impl Into<AbsoluteColor>) -> &mut Self {
         use style::values::specified::color::ColorPropertyValue;
-        self.pending.push(PropertyDeclaration::Color(
-            ColorPropertyValue(Color::from_absolute_color(value.into()))
-        ));
+        self.pending
+            .push(PropertyDeclaration::Color(ColorPropertyValue(
+                Color::from_absolute_color(value.into()),
+            )));
         self
     }
 
     pub fn background_color(&mut self, value: impl Into<AbsoluteColor>) -> &mut Self {
         self.pending.push(PropertyDeclaration::BackgroundColor(
-            Color::from_absolute_color(value.into())
+            Color::from_absolute_color(value.into()),
         ));
         self
     }
@@ -73,42 +78,50 @@ impl StyleAccess {
     }
 
     pub fn min_width(&mut self, value: impl Into<Size>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::MinWidth(value.into()));
+        self.pending
+            .push(PropertyDeclaration::MinWidth(value.into()));
         self
     }
 
     pub fn min_height(&mut self, value: impl Into<Size>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::MinHeight(value.into()));
+        self.pending
+            .push(PropertyDeclaration::MinHeight(value.into()));
         self
     }
 
     // ── Margin ──
 
     pub fn margin_top(&mut self, value: impl Into<Margin>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::MarginTop(value.into()));
+        self.pending
+            .push(PropertyDeclaration::MarginTop(value.into()));
         self
     }
 
     pub fn margin_right(&mut self, value: impl Into<Margin>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::MarginRight(value.into()));
+        self.pending
+            .push(PropertyDeclaration::MarginRight(value.into()));
         self
     }
 
     pub fn margin_bottom(&mut self, value: impl Into<Margin>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::MarginBottom(value.into()));
+        self.pending
+            .push(PropertyDeclaration::MarginBottom(value.into()));
         self
     }
 
     pub fn margin_left(&mut self, value: impl Into<Margin>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::MarginLeft(value.into()));
+        self.pending
+            .push(PropertyDeclaration::MarginLeft(value.into()));
         self
     }
 
     pub fn margin(&mut self, value: impl Into<Margin>) -> &mut Self {
         let v = value.into();
         self.pending.push(PropertyDeclaration::MarginTop(v.clone()));
-        self.pending.push(PropertyDeclaration::MarginRight(v.clone()));
-        self.pending.push(PropertyDeclaration::MarginBottom(v.clone()));
+        self.pending
+            .push(PropertyDeclaration::MarginRight(v.clone()));
+        self.pending
+            .push(PropertyDeclaration::MarginBottom(v.clone()));
         self.pending.push(PropertyDeclaration::MarginLeft(v));
         self
     }
@@ -116,30 +129,37 @@ impl StyleAccess {
     // ── Padding ──
 
     pub fn padding_top(&mut self, value: impl Into<NonNegativeLengthPercentage>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::PaddingTop(value.into()));
+        self.pending
+            .push(PropertyDeclaration::PaddingTop(value.into()));
         self
     }
 
     pub fn padding_right(&mut self, value: impl Into<NonNegativeLengthPercentage>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::PaddingRight(value.into()));
+        self.pending
+            .push(PropertyDeclaration::PaddingRight(value.into()));
         self
     }
 
     pub fn padding_bottom(&mut self, value: impl Into<NonNegativeLengthPercentage>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::PaddingBottom(value.into()));
+        self.pending
+            .push(PropertyDeclaration::PaddingBottom(value.into()));
         self
     }
 
     pub fn padding_left(&mut self, value: impl Into<NonNegativeLengthPercentage>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::PaddingLeft(value.into()));
+        self.pending
+            .push(PropertyDeclaration::PaddingLeft(value.into()));
         self
     }
 
     pub fn padding(&mut self, value: impl Into<NonNegativeLengthPercentage>) -> &mut Self {
         let v = value.into();
-        self.pending.push(PropertyDeclaration::PaddingTop(v.clone()));
-        self.pending.push(PropertyDeclaration::PaddingRight(v.clone()));
-        self.pending.push(PropertyDeclaration::PaddingBottom(v.clone()));
+        self.pending
+            .push(PropertyDeclaration::PaddingTop(v.clone()));
+        self.pending
+            .push(PropertyDeclaration::PaddingRight(v.clone()));
+        self.pending
+            .push(PropertyDeclaration::PaddingBottom(v.clone()));
         self.pending.push(PropertyDeclaration::PaddingLeft(v));
         self
     }
@@ -170,21 +190,22 @@ impl StyleAccess {
     ///
     /// For multiple families or generics, use `set_attribute("style", "font-family: ...")`.
     pub fn font_family(&mut self, name: &str) -> &mut Self {
+        use style::Atom;
         use style::values::computed::font::{
             FamilyName, FontFamilyList, FontFamilyNameSyntax, SingleFontFamily,
         };
         use style::values::specified::font::FontFamily;
-        use style::Atom;
 
         let list = FontFamilyList {
-            list: style::ArcSlice::from_iter(std::iter::once(
-                SingleFontFamily::FamilyName(FamilyName {
+            list: style::ArcSlice::from_iter(std::iter::once(SingleFontFamily::FamilyName(
+                FamilyName {
                     name: Atom::from(name),
                     syntax: FontFamilyNameSyntax::Quoted,
-                }),
-            )),
+                },
+            ))),
         };
-        self.pending.push(PropertyDeclaration::FontFamily(FontFamily::Values(list)));
+        self.pending
+            .push(PropertyDeclaration::FontFamily(FontFamily::Values(list)));
         self
     }
 
@@ -200,14 +221,20 @@ impl StyleAccess {
     pub fn flex_grow(&mut self, value: f32) -> &mut Self {
         use style::values::generics::NonNegative;
         use style::values::specified::Number;
-        self.pending.push(PropertyDeclaration::FlexGrow(NonNegative(Number::new(value))));
+        self.pending
+            .push(PropertyDeclaration::FlexGrow(NonNegative(Number::new(
+                value,
+            ))));
         self
     }
 
     pub fn flex_shrink(&mut self, value: f32) -> &mut Self {
         use style::values::generics::NonNegative;
         use style::values::specified::Number;
-        self.pending.push(PropertyDeclaration::FlexShrink(NonNegative(Number::new(value))));
+        self.pending
+            .push(PropertyDeclaration::FlexShrink(NonNegative(Number::new(
+                value,
+            ))));
         self
     }
 
@@ -219,7 +246,8 @@ impl StyleAccess {
             GenericSize::Auto => GenericFlexBasis::Content,
             other => GenericFlexBasis::Size(other),
         };
-        self.pending.push(PropertyDeclaration::FlexBasis(Box::new(basis)));
+        self.pending
+            .push(PropertyDeclaration::FlexBasis(Box::new(basis)));
         self
     }
 
@@ -229,17 +257,20 @@ impl StyleAccess {
         use style::values::generics::length::GenericLengthPercentageOrNormal;
         let v: NonNegativeLengthPercentage = value.into();
         self.pending.push(PropertyDeclaration::RowGap(
-            GenericLengthPercentageOrNormal::LengthPercentage(v.clone())
+            GenericLengthPercentageOrNormal::LengthPercentage(v.clone()),
         ));
         self.pending.push(PropertyDeclaration::ColumnGap(
-            GenericLengthPercentageOrNormal::LengthPercentage(v)
+            GenericLengthPercentageOrNormal::LengthPercentage(v),
         ));
         self
     }
 
     // ── Flex layout ──
 
-    pub fn flex_direction(&mut self, value: style::computed_values::flex_direction::T) -> &mut Self {
+    pub fn flex_direction(
+        &mut self,
+        value: style::computed_values::flex_direction::T,
+    ) -> &mut Self {
         self.pending.push(PropertyDeclaration::FlexDirection(value));
         self
     }
@@ -265,57 +296,90 @@ impl StyleAccess {
 
     pub fn align_items_center(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ItemPlacement};
-        self.pending.push(PropertyDeclaration::AlignItems(ItemPlacement(AlignFlags::CENTER)));
+        self.pending
+            .push(PropertyDeclaration::AlignItems(ItemPlacement(
+                AlignFlags::CENTER,
+            )));
         self
     }
     pub fn align_items_start(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ItemPlacement};
-        self.pending.push(PropertyDeclaration::AlignItems(ItemPlacement(AlignFlags::FLEX_START)));
+        self.pending
+            .push(PropertyDeclaration::AlignItems(ItemPlacement(
+                AlignFlags::FLEX_START,
+            )));
         self
     }
     pub fn align_items_end(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ItemPlacement};
-        self.pending.push(PropertyDeclaration::AlignItems(ItemPlacement(AlignFlags::FLEX_END)));
+        self.pending
+            .push(PropertyDeclaration::AlignItems(ItemPlacement(
+                AlignFlags::FLEX_END,
+            )));
         self
     }
     pub fn align_items_stretch(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ItemPlacement};
-        self.pending.push(PropertyDeclaration::AlignItems(ItemPlacement(AlignFlags::STRETCH)));
+        self.pending
+            .push(PropertyDeclaration::AlignItems(ItemPlacement(
+                AlignFlags::STRETCH,
+            )));
         self
     }
 
     pub fn justify_content_center(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ContentDistribution};
-        self.pending.push(PropertyDeclaration::JustifyContent(ContentDistribution::new(AlignFlags::CENTER)));
+        self.pending.push(PropertyDeclaration::JustifyContent(
+            ContentDistribution::new(AlignFlags::CENTER),
+        ));
         self
     }
     pub fn justify_content_start(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ContentDistribution};
-        self.pending.push(PropertyDeclaration::JustifyContent(ContentDistribution::new(AlignFlags::FLEX_START)));
+        self.pending.push(PropertyDeclaration::JustifyContent(
+            ContentDistribution::new(AlignFlags::FLEX_START),
+        ));
         self
     }
     pub fn justify_content_end(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ContentDistribution};
-        self.pending.push(PropertyDeclaration::JustifyContent(ContentDistribution::new(AlignFlags::FLEX_END)));
+        self.pending.push(PropertyDeclaration::JustifyContent(
+            ContentDistribution::new(AlignFlags::FLEX_END),
+        ));
         self
     }
     pub fn justify_content_between(&mut self) -> &mut Self {
         use style::values::specified::align::{AlignFlags, ContentDistribution};
-        self.pending.push(PropertyDeclaration::JustifyContent(ContentDistribution::new(AlignFlags::SPACE_BETWEEN)));
+        self.pending.push(PropertyDeclaration::JustifyContent(
+            ContentDistribution::new(AlignFlags::SPACE_BETWEEN),
+        ));
         self
     }
 
     // ── Border ──
 
-    pub fn border_radius(&mut self, v: impl Into<NonNegativeLengthPercentage> + Clone) -> &mut Self {
+    pub fn border_radius(
+        &mut self,
+        v: impl Into<NonNegativeLengthPercentage> + Clone,
+    ) -> &mut Self {
         use style::values::generics::border::GenericBorderCornerRadius;
         use style::values::generics::size::Size2D;
         let lp = v.into();
         let r = GenericBorderCornerRadius(Size2D::new(lp.clone(), lp));
-        self.pending.push(PropertyDeclaration::BorderTopLeftRadius(Box::new(r.clone())));
-        self.pending.push(PropertyDeclaration::BorderTopRightRadius(Box::new(r.clone())));
-        self.pending.push(PropertyDeclaration::BorderBottomRightRadius(Box::new(r.clone())));
-        self.pending.push(PropertyDeclaration::BorderBottomLeftRadius(Box::new(r)));
+        self.pending
+            .push(PropertyDeclaration::BorderTopLeftRadius(Box::new(
+                r.clone(),
+            )));
+        self.pending
+            .push(PropertyDeclaration::BorderTopRightRadius(Box::new(
+                r.clone(),
+            )));
+        self.pending
+            .push(PropertyDeclaration::BorderBottomRightRadius(Box::new(
+                r.clone(),
+            )));
+        self.pending
+            .push(PropertyDeclaration::BorderBottomLeftRadius(Box::new(r)));
         self
     }
 
@@ -326,16 +390,16 @@ impl StyleAccess {
         let lp = v.into();
         // Extract px value from the NonNegativeLengthPercentage
         self.pending.push(PropertyDeclaration::BorderTopWidth(
-            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp))
+            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp)),
         ));
         self.pending.push(PropertyDeclaration::BorderRightWidth(
-            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp))
+            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp)),
         ));
         self.pending.push(PropertyDeclaration::BorderBottomWidth(
-            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp))
+            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp)),
         ));
         self.pending.push(PropertyDeclaration::BorderLeftWidth(
-            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp))
+            style::values::specified::BorderSideWidth::from_px(self.extract_px(&lp)),
         ));
         self
     }
@@ -350,44 +414,57 @@ impl StyleAccess {
 
     pub fn border_color(&mut self, v: impl Into<AbsoluteColor>) -> &mut Self {
         let c = Color::from_absolute_color(v.into());
-        self.pending.push(PropertyDeclaration::BorderTopColor(c.clone()));
-        self.pending.push(PropertyDeclaration::BorderRightColor(c.clone()));
-        self.pending.push(PropertyDeclaration::BorderBottomColor(c.clone()));
+        self.pending
+            .push(PropertyDeclaration::BorderTopColor(c.clone()));
+        self.pending
+            .push(PropertyDeclaration::BorderRightColor(c.clone()));
+        self.pending
+            .push(PropertyDeclaration::BorderBottomColor(c.clone()));
         self.pending.push(PropertyDeclaration::BorderLeftColor(c));
         self
     }
 
     pub fn border_bottom_width_px(&mut self, v: f32) -> &mut Self {
         self.pending.push(PropertyDeclaration::BorderBottomWidth(
-            style::values::specified::BorderSideWidth::from_px(v)
+            style::values::specified::BorderSideWidth::from_px(v),
         ));
         self
     }
 
-    pub fn border_bottom_style(&mut self, v: style::values::specified::border::BorderStyle) -> &mut Self {
+    pub fn border_bottom_style(
+        &mut self,
+        v: style::values::specified::border::BorderStyle,
+    ) -> &mut Self {
         self.pending.push(PropertyDeclaration::BorderBottomStyle(v));
         self
     }
 
     pub fn border_bottom_color(&mut self, v: impl Into<AbsoluteColor>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::BorderBottomColor(Color::from_absolute_color(v.into())));
+        self.pending.push(PropertyDeclaration::BorderBottomColor(
+            Color::from_absolute_color(v.into()),
+        ));
         self
     }
 
     pub fn border_right_width_px(&mut self, v: f32) -> &mut Self {
         self.pending.push(PropertyDeclaration::BorderRightWidth(
-            style::values::specified::BorderSideWidth::from_px(v)
+            style::values::specified::BorderSideWidth::from_px(v),
         ));
         self
     }
 
-    pub fn border_right_style(&mut self, v: style::values::specified::border::BorderStyle) -> &mut Self {
+    pub fn border_right_style(
+        &mut self,
+        v: style::values::specified::border::BorderStyle,
+    ) -> &mut Self {
         self.pending.push(PropertyDeclaration::BorderRightStyle(v));
         self
     }
 
     pub fn border_right_color(&mut self, v: impl Into<AbsoluteColor>) -> &mut Self {
-        self.pending.push(PropertyDeclaration::BorderRightColor(Color::from_absolute_color(v.into())));
+        self.pending.push(PropertyDeclaration::BorderRightColor(
+            Color::from_absolute_color(v.into()),
+        ));
         self
     }
 
@@ -395,8 +472,10 @@ impl StyleAccess {
 
     pub fn overflow_hidden(&mut self) -> &mut Self {
         use style::values::specified::box_::Overflow;
-        self.pending.push(PropertyDeclaration::OverflowX(Overflow::Hidden));
-        self.pending.push(PropertyDeclaration::OverflowY(Overflow::Hidden));
+        self.pending
+            .push(PropertyDeclaration::OverflowX(Overflow::Hidden));
+        self.pending
+            .push(PropertyDeclaration::OverflowY(Overflow::Hidden));
         self
     }
 
@@ -406,9 +485,9 @@ impl StyleAccess {
     fn extract_px(&self, lp: &NonNegativeLengthPercentage) -> f32 {
         use style::values::specified::length::NoCalcLength;
         match &lp.0 {
-            style::values::specified::LengthPercentage::Length(
-                NoCalcLength::Absolute(style::values::specified::length::AbsoluteLength::Px(v))
-            ) => *v,
+            style::values::specified::LengthPercentage::Length(NoCalcLength::Absolute(
+                style::values::specified::length::AbsoluteLength::Px(v),
+            )) => *v,
             _ => 0.0,
         }
     }
@@ -419,26 +498,42 @@ impl StyleAccess {
     // container.style().w(px(200.0)).h(px(100.0)).bg(rgb8(232, 76, 61));
 
     /// Short for `width`.
-    pub fn w(&mut self, v: impl Into<Size>) -> &mut Self { self.width(v) }
+    pub fn w(&mut self, v: impl Into<Size>) -> &mut Self {
+        self.width(v)
+    }
     /// Short for `height`.
-    pub fn h(&mut self, v: impl Into<Size>) -> &mut Self { self.height(v) }
+    pub fn h(&mut self, v: impl Into<Size>) -> &mut Self {
+        self.height(v)
+    }
     /// Width + height (square).
     pub fn size(&mut self, v: impl Into<Size> + Clone) -> &mut Self {
         self.width(v.clone());
         self.height(v)
     }
     /// Short for `background_color`.
-    pub fn bg(&mut self, v: impl Into<AbsoluteColor>) -> &mut Self { self.background_color(v) }
+    pub fn bg(&mut self, v: impl Into<AbsoluteColor>) -> &mut Self {
+        self.background_color(v)
+    }
     /// `display: flex`.
-    pub fn flex(&mut self) -> &mut Self { self.display(Display::Flex) }
+    pub fn flex(&mut self) -> &mut Self {
+        self.display(Display::Flex)
+    }
     /// `display: grid`.
-    pub fn grid(&mut self) -> &mut Self { self.display(Display::Grid) }
+    pub fn grid(&mut self) -> &mut Self {
+        self.display(Display::Grid)
+    }
     /// `display: block`.
-    pub fn block(&mut self) -> &mut Self { self.display(Display::Block) }
+    pub fn block(&mut self) -> &mut Self {
+        self.display(Display::Block)
+    }
     /// Short for `padding` (all 4).
-    pub fn pad(&mut self, v: impl Into<NonNegativeLengthPercentage>) -> &mut Self { self.padding(v) }
+    pub fn pad(&mut self, v: impl Into<NonNegativeLengthPercentage>) -> &mut Self {
+        self.padding(v)
+    }
     /// Short for `margin` (all 4).
-    pub fn mar(&mut self, v: impl Into<Margin>) -> &mut Self { self.margin(v) }
+    pub fn mar(&mut self, v: impl Into<Margin>) -> &mut Self {
+        self.margin(v)
+    }
 
     // ── Raw (advanced) ──
 

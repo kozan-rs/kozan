@@ -41,7 +41,7 @@ pub struct IdAllocator {
 
 impl IdAllocator {
     /// Create a new empty allocator.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             generations: Vec::new(),
@@ -93,7 +93,7 @@ impl IdAllocator {
 
     /// Check if a slot is alive with the given generation.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_alive(&self, id: RawId) -> bool {
         let i = id.index() as usize;
         i < self.generations.len() && self.generations[i] == id.generation() && self.alive[i]
@@ -101,14 +101,14 @@ impl IdAllocator {
 
     /// Number of currently alive entries.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn count(&self) -> u32 {
         self.count
     }
 
     /// Total number of slots (alive + dead, not including unallocated).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.generations.len()
     }

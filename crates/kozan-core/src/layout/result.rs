@@ -72,7 +72,7 @@ impl IntrinsicSizes {
     ///
     /// CSS: `width = min(max_content, max(min_content, available))`.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn shrink_to_fit(&self, available: f32) -> f32 {
         self.max_content.min(self.min_content.max(available))
     }
@@ -86,10 +86,7 @@ mod tests {
 
     #[test]
     fn layout_result_construction() {
-        let fragment = Fragment::new_box(
-            Size::new(800.0, 200.0),
-            BoxFragmentData::default(),
-        );
+        let fragment = Fragment::new_box(Size::new(800.0, 200.0), BoxFragmentData::default());
 
         let result = LayoutResult {
             fragment,

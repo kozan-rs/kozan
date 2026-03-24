@@ -19,7 +19,7 @@ pub struct InlineFormattingContext {
 }
 
 impl InlineFormattingContext {
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             items: SmallVec::new(),
@@ -45,8 +45,11 @@ impl InlineFormattingContext {
         let font_metrics = measurer.font_metrics(font_size);
 
         // Resolve CSS line-height using the font's actual metrics.
-        let line_height =
-            super::measurer::resolve_line_height(&style.clone_line_height(), font_size, &font_metrics);
+        let line_height = super::measurer::resolve_line_height(
+            &style.clone_line_height(),
+            font_size,
+            &font_metrics,
+        );
 
         // Distribute leading equally above and below the baseline.
         // Chrome: CalculateLeadingSpace() → AddLeading().
@@ -116,14 +119,18 @@ impl InlineFormattingContext {
     }
 
     /// Whether this context has any items.
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
 }
 
 /// Resolve a Stylo margin value to px (auto → 0).
-fn resolve_stylo_margin(value: &style::values::generics::length::GenericMargin<style::values::computed::LengthPercentage>) -> f32 {
+fn resolve_stylo_margin(
+    value: &style::values::generics::length::GenericMargin<
+        style::values::computed::LengthPercentage,
+    >,
+) -> f32 {
     use style::values::generics::length::GenericMargin;
     match value {
         GenericMargin::LengthPercentage(lp) => resolve_stylo_lp(lp),
@@ -134,7 +141,9 @@ fn resolve_stylo_margin(value: &style::values::generics::length::GenericMargin<s
 
 /// Resolve a Stylo `LengthPercentage` to px (percentages resolved against 0 for now).
 fn resolve_stylo_lp(value: &style::values::computed::LengthPercentage) -> f32 {
-    value.percentage_relative_to(style::values::computed::CSSPixelLength::new(0.0)).px()
+    value
+        .percentage_relative_to(style::values::computed::CSSPixelLength::new(0.0))
+        .px()
 }
 
 impl Default for InlineFormattingContext {

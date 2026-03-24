@@ -32,7 +32,7 @@ impl Text {
 
     /// Get the text content.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn content(&self) -> String {
         self.0
             .read_data::<TextData, _>(|d| d.content.clone())
@@ -45,13 +45,16 @@ impl Text {
     /// When text changes, marks parent for restyle + sets `needs_layout`.
     pub fn set_content(&self, value: impl Into<String>) {
         let value = value.into();
-        let changed = self.0.write_data::<TextData, _>(|d| {
-            if d.content == value {
-                return false; // Same value — no-op.
-            }
-            d.content = value;
-            true
-        }).unwrap_or(false);
+        let changed = self
+            .0
+            .write_data::<TextData, _>(|d| {
+                if d.content == value {
+                    return false; // Same value — no-op.
+                }
+                d.content = value;
+                true
+            })
+            .unwrap_or(false);
 
         if changed {
             // Text content changed → parent needs relayout (text affects sizing).

@@ -47,7 +47,10 @@ mod harness {
 
         /// Root fragment size as `(width, height)`.
         pub fn root_size(&self) -> (f32, f32) {
-            (self.root_fragment.size.width, self.root_fragment.size.height)
+            (
+                self.root_fragment.size.width,
+                self.root_fragment.size.height,
+            )
         }
 
         /// Number of direct children of the root box.
@@ -57,7 +60,6 @@ mod harness {
                 .map(|b| b.children.len())
                 .unwrap_or(0)
         }
-
     }
 
     /// An element reference returned from harness builder methods.
@@ -87,21 +89,29 @@ mod harness {
             }
         }
 
-        pub fn div(&mut self, style_fn: impl FnOnce(&mut StyleAccess), children: &[HarnessNode]) -> HarnessNode {
+        pub fn div(
+            &mut self,
+            style_fn: impl FnOnce(&mut StyleAccess),
+            children: &[HarnessNode],
+        ) -> HarnessNode {
             let el = self.doc.create::<HtmlDivElement>();
             style_fn(&mut el.handle().style());
             for child in children {
                 el.handle().append(child.handle);
             }
             self.doc.root().append(el);
-            HarnessNode { handle: el.handle() }
+            HarnessNode {
+                handle: el.handle(),
+            }
         }
 
         pub fn layout(&mut self, root: HarnessNode) -> LayoutTestResult {
             self.doc.recalc_styles();
 
             let root_index = self.doc.root_index();
-            let ctx = LayoutContext { text_measurer: &self.font_system };
+            let ctx = LayoutContext {
+                text_measurer: &self.font_system,
+            };
             let result = self.doc.resolve_layout(
                 root_index,
                 Some(self.viewport_w),
@@ -120,7 +130,9 @@ mod harness {
                 })
                 .map(|c| Arc::clone(&c.fragment));
 
-            LayoutTestResult { root_fragment: child_frag.unwrap_or(doc_root_frag) }
+            LayoutTestResult {
+                root_fragment: child_frag.unwrap_or(doc_root_frag),
+            }
         }
     }
 
@@ -128,15 +140,13 @@ mod harness {
 
     /// Create a `Size` (width/height) from a px value.
     pub fn px_size(v: f32) -> style::values::specified::Size {
-        use style::values::specified::{LengthPercentage, Size};
         use style::values::generics::NonNegative;
-        Size::LengthPercentage(NonNegative(
-            LengthPercentage::Length(
-                style::values::specified::length::NoCalcLength::Absolute(
-                    style::values::specified::length::AbsoluteLength::Px(v),
-                ),
+        use style::values::specified::{LengthPercentage, Size};
+        Size::LengthPercentage(NonNegative(LengthPercentage::Length(
+            style::values::specified::length::NoCalcLength::Absolute(
+                style::values::specified::length::AbsoluteLength::Px(v),
             ),
-        ))
+        )))
     }
 }
 
@@ -160,22 +170,34 @@ macro_rules! assert_layout {
         assert!(
             (child.x - $x).abs() < 0.5,
             "child {} x: expected {}, got {} (diff {})",
-            $index, $x, child.x, (child.x - $x).abs()
+            $index,
+            $x,
+            child.x,
+            (child.x - $x).abs()
         );
         assert!(
             (child.y - $y).abs() < 0.5,
             "child {} y: expected {}, got {} (diff {})",
-            $index, $y, child.y, (child.y - $y).abs()
+            $index,
+            $y,
+            child.y,
+            (child.y - $y).abs()
         );
         assert!(
             (child.width - $w).abs() < 0.5,
             "child {} width: expected {}, got {} (diff {})",
-            $index, $w, child.width, (child.width - $w).abs()
+            $index,
+            $w,
+            child.width,
+            (child.width - $w).abs()
         );
         assert!(
             (child.height - $h).abs() < 0.5,
             "child {} height: expected {}, got {} (diff {})",
-            $index, $h, child.height, (child.height - $h).abs()
+            $index,
+            $h,
+            child.height,
+            (child.height - $h).abs()
         );
     }};
 }
@@ -189,9 +211,26 @@ mod block_flow {
     #[test]
     fn block_children_stack_vertically() {
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let c0 = h.div(|s| { s.width(px_size(200.0)); s.height(px_size(50.0)); }, &[]);
-        let c1 = h.div(|s| { s.width(px_size(200.0)); s.height(px_size(80.0)); }, &[]);
-        let root = h.div(|s| { s.width(px_size(800.0)); }, &[c0, c1]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(200.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(200.0));
+                s.height(px_size(80.0));
+            },
+            &[],
+        );
+        let root = h.div(
+            |s| {
+                s.width(px_size(800.0));
+            },
+            &[c0, c1],
+        );
         let result = h.layout(root);
 
         // Block children stack: first at y=0, second directly below it.
@@ -202,7 +241,13 @@ mod block_flow {
     #[test]
     fn explicit_size_respected() {
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let root = h.div(|s| { s.width(px_size(300.0)); s.height(px_size(200.0)); }, &[]);
+        let root = h.div(
+            |s| {
+                s.width(px_size(300.0));
+                s.height(px_size(200.0));
+            },
+            &[],
+        );
         let result = h.layout(root);
         let (w, hv) = result.root_size();
         assert!((w - 300.0).abs() < 0.5, "expected w=300, got {w}");
@@ -220,9 +265,27 @@ mod flex_row {
     #[test]
     fn flex_row_places_children_horizontally() {
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let c0 = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(50.0)); }, &[]);
-        let c1 = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(50.0)); }, &[]);
-        let c2 = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(50.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c2 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.display(Display::Flex);
@@ -242,9 +305,27 @@ mod flex_row {
     #[test]
     fn flex_row_child_count() {
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let c0 = h.div(|s| { s.width(px_size(50.0)); s.height(px_size(50.0)); }, &[]);
-        let c1 = h.div(|s| { s.width(px_size(50.0)); s.height(px_size(50.0)); }, &[]);
-        let root = h.div(|s| { s.display(Display::Flex); s.width(px_size(200.0)); }, &[c0, c1]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(50.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(50.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let root = h.div(
+            |s| {
+                s.display(Display::Flex);
+                s.width(px_size(200.0));
+            },
+            &[c0, c1],
+        );
         let result = h.layout(root);
         assert_eq!(result.child_count(), 2);
     }
@@ -253,8 +334,18 @@ mod flex_row {
     fn flex_row_stretch_height() {
         // align-items: stretch (the default) makes children fill the container height.
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let c0 = h.div(|s| { s.width(px_size(100.0)); }, &[]);
-        let c1 = h.div(|s| { s.width(px_size(100.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.display(Display::Flex);
@@ -274,7 +365,13 @@ mod flex_row {
     fn flex_row_justify_center() {
         // justify-content: center shifts children to the middle of the main axis.
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let c0 = h.div(|s| { s.width(px_size(50.0)); s.height(px_size(50.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(50.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.display(Display::Flex);
@@ -299,8 +396,20 @@ mod flex_row {
     fn flex_row_justify_space_between() {
         // justify-content: space-between pushes first to start, last to end.
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let c0 = h.div(|s| { s.width(px_size(50.0)); s.height(px_size(50.0)); }, &[]);
-        let c1 = h.div(|s| { s.width(px_size(50.0)); s.height(px_size(50.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(50.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(50.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.display(Display::Flex);
@@ -320,7 +429,13 @@ mod flex_row {
     fn flex_row_align_items_center() {
         // align-items: center places children at the cross-axis midpoint.
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let c0 = h.div(|s| { s.width(px_size(50.0)); s.height(px_size(20.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(50.0));
+                s.height(px_size(20.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.display(Display::Flex);
@@ -345,8 +460,20 @@ mod flex_row {
     fn flex_row_mixed_grow_and_fixed() {
         // One fixed child (100px) and one flex-grow:1 child split remaining space.
         let mut h = LayoutTestHarness::new(1280.0, 800.0);
-        let fixed = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(50.0)); }, &[]);
-        let grow = h.div(|s| { s.flex_grow(1.0); s.height(px_size(50.0)); }, &[]);
+        let fixed = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let grow = h.div(
+            |s| {
+                s.flex_grow(1.0);
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.display(Display::Flex);
@@ -372,8 +499,20 @@ mod flex_column {
     #[test]
     fn flex_column_places_children_vertically() {
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let c0 = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(40.0)); }, &[]);
-        let c1 = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(60.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(40.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(60.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.flex_col();
@@ -393,8 +532,18 @@ mod flex_column {
     fn flex_column_stretch_width() {
         // align-items: stretch (the default in a column) fills the container width.
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let c0 = h.div(|s| { s.height(px_size(50.0)); }, &[]);
-        let c1 = h.div(|s| { s.height(px_size(50.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.flex_col();
@@ -415,8 +564,20 @@ mod flex_column {
     fn flex_column_grow_fills_height() {
         // flex-grow: 1 on a child causes it to consume remaining column height.
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let fixed = h.div(|s| { s.height(px_size(60.0)); s.width(px_size(100.0)); }, &[]);
-        let grow = h.div(|s| { s.flex_grow(1.0); s.width(px_size(100.0)); }, &[]);
+        let fixed = h.div(
+            |s| {
+                s.height(px_size(60.0));
+                s.width(px_size(100.0));
+            },
+            &[],
+        );
+        let grow = h.div(
+            |s| {
+                s.flex_grow(1.0);
+                s.width(px_size(100.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.flex_col();
@@ -436,13 +597,18 @@ mod flex_column {
     fn flex_column_percentage_height() {
         // A child with percentage height resolves against the definite container height.
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        use style::values::specified::{LengthPercentage, Size};
-        use style::values::generics::NonNegative;
         use style::values::computed::Percentage;
-        let half_height = Size::LengthPercentage(NonNegative(
-            LengthPercentage::Percentage(Percentage(0.5)),
-        ));
-        let c0 = h.div(|s| { s.height(half_height); s.width(px_size(100.0)); }, &[]);
+        use style::values::generics::NonNegative;
+        use style::values::specified::{LengthPercentage, Size};
+        let half_height =
+            Size::LengthPercentage(NonNegative(LengthPercentage::Percentage(Percentage(0.5))));
+        let c0 = h.div(
+            |s| {
+                s.height(half_height);
+                s.width(px_size(100.0));
+            },
+            &[],
+        );
         let root = h.div(
             |s| {
                 s.flex_col();
@@ -468,8 +634,18 @@ mod grid {
     #[test]
     fn grid_two_children_both_in_container() {
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let c0 = h.div(|s| { s.height(px_size(50.0)); }, &[]);
-        let c1 = h.div(|s| { s.height(px_size(50.0)); }, &[]);
+        let c0 = h.div(
+            |s| {
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let c1 = h.div(
+            |s| {
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
         // Without explicit column template, grid auto-places each item in its own row.
         let root = h.div(
             |s| {
@@ -506,7 +682,12 @@ mod margin_auto {
             },
             &[],
         );
-        let root = h.div(|s| { s.width(px_size(400.0)); }, &[child]);
+        let root = h.div(
+            |s| {
+                s.width(px_size(400.0));
+            },
+            &[child],
+        );
         let result = h.layout(root);
 
         // 200px child in 400px parent: left margin = (400 - 200) / 2 = 100.
@@ -530,7 +711,12 @@ mod margin_auto {
             },
             &[],
         );
-        let root = h.div(|s| { s.width(px_size(400.0)); }, &[child]);
+        let root = h.div(
+            |s| {
+                s.width(px_size(400.0));
+            },
+            &[child],
+        );
         let result = h.layout(root);
 
         // All free space (200px) collapses into the left margin → child at x=200.
@@ -541,7 +727,6 @@ mod margin_auto {
             c.x,
         );
     }
-
 }
 
 // ── Nested blocks ──
@@ -553,15 +738,34 @@ mod nested_blocks {
     #[test]
     fn nested_blocks_respect_explicit_sizes() {
         let mut h = LayoutTestHarness::new(800.0, 600.0);
-        let inner = h.div(|s| { s.width(px_size(80.0)); s.height(px_size(50.0)); }, &[]);
-        let root = h.div(|s| { s.width(px_size(200.0)); s.height(px_size(150.0)); }, &[inner]);
+        let inner = h.div(
+            |s| {
+                s.width(px_size(80.0));
+                s.height(px_size(50.0));
+            },
+            &[],
+        );
+        let root = h.div(
+            |s| {
+                s.width(px_size(200.0));
+                s.height(px_size(150.0));
+            },
+            &[inner],
+        );
         let result = h.layout(root);
 
         let (root_w, _) = result.root_size();
-        assert!((root_w - 200.0).abs() < 0.5, "outer width: expected 200, got {root_w}");
+        assert!(
+            (root_w - 200.0).abs() < 0.5,
+            "outer width: expected 200, got {root_w}"
+        );
 
         let inner_c = result.child(0).expect("inner child must exist");
-        assert!((inner_c.width - 80.0).abs() < 0.5, "inner width: expected 80, got {}", inner_c.width);
+        assert!(
+            (inner_c.width - 80.0).abs() < 0.5,
+            "inner width: expected 80, got {}",
+            inner_c.width
+        );
     }
 }
 
@@ -614,8 +818,19 @@ mod margins_siblings {
             },
             &[],
         );
-        let c1 = h.div(|s| { s.width(px_size(100.0)); s.height(px_size(30.0)); }, &[]);
-        let root = h.div(|s| { s.width(px_size(200.0)); }, &[c0, c1]);
+        let c1 = h.div(
+            |s| {
+                s.width(px_size(100.0));
+                s.height(px_size(30.0));
+            },
+            &[],
+        );
+        let root = h.div(
+            |s| {
+                s.width(px_size(200.0));
+            },
+            &[c0, c1],
+        );
         let result = h.layout(root);
 
         assert_layout!(result, 0 => { x: 0.0, y: 0.0, w: 100.0, h: 40.0 });

@@ -33,9 +33,9 @@ mod host_impl;
 
 use winit::event_loop::EventLoop;
 
+use kozan_platform::ViewContext;
 use kozan_platform::renderer::Renderer;
 use kozan_platform::request::WindowConfig;
-use kozan_platform::ViewContext;
 
 use handler::AppHandler;
 use host_impl::{InternalRequest, WinitPlatformHost};
@@ -54,7 +54,10 @@ impl PendingWindow {
     where
         F: FnOnce(&ViewContext) + Send + 'static,
     {
-        Self { config, init: Box::new(init) }
+        Self {
+            config,
+            init: Box::new(init),
+        }
     }
 }
 

@@ -41,7 +41,7 @@ impl HtmlHeadingElement {
     ///
     /// Returns 1-6 based on the actual runtime tag.
     /// Falls back to the stored `level` data.
-    #[must_use] 
+    #[must_use]
     pub fn heading_level(&self) -> u8 {
         match self.tag_name() {
             "h1" => 1,
@@ -55,10 +55,9 @@ impl HtmlHeadingElement {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    
+
     use crate::dom::document::Document;
     use crate::dom::traits::Element;
 
@@ -92,5 +91,4 @@ mod tests {
         // The level data prop is set by create_heading.
         assert_eq!(h3.level(), 3);
     }
-
 }

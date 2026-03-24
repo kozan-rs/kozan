@@ -45,14 +45,14 @@ impl Modifiers {
 
     /// Create from raw bits.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn from_bits(bits: u16) -> Self {
         Self(bits)
     }
 
     /// Get the raw bits.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn bits(self) -> u16 {
         self.0
     }
@@ -61,42 +61,42 @@ impl Modifiers {
 
     /// Shift key is held.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn shift(self) -> bool {
         self.0 & SHIFT != 0
     }
 
     /// Ctrl key is held (Control on Mac).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn ctrl(self) -> bool {
         self.0 & CTRL != 0
     }
 
     /// Alt key is held (Option on Mac).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn alt(self) -> bool {
         self.0 & ALT != 0
     }
 
     /// Meta key is held (Win on Windows, Cmd on Mac).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn meta(self) -> bool {
         self.0 & META != 0
     }
 
     /// Caps Lock is active.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn caps_lock(self) -> bool {
         self.0 & CAPS_LOCK != 0
     }
 
     /// Num Lock is active.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn num_lock(self) -> bool {
         self.0 & NUM_LOCK != 0
     }
@@ -105,21 +105,21 @@ impl Modifiers {
 
     /// Left mouse button is currently held.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn left_button(self) -> bool {
         self.0 & LEFT_BUTTON != 0
     }
 
     /// Right mouse button is currently held.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn right_button(self) -> bool {
         self.0 & RIGHT_BUTTON != 0
     }
 
     /// Middle mouse button is currently held.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn middle_button(self) -> bool {
         self.0 & MIDDLE_BUTTON != 0
     }
@@ -128,7 +128,7 @@ impl Modifiers {
 
     /// This is an auto-repeat key event (key held down).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn is_auto_repeat(self) -> bool {
         self.0 & IS_AUTO_REPEAT != 0
     }
@@ -136,66 +136,66 @@ impl Modifiers {
     // ---- Builder methods (set individual bits) ----
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_shift(self) -> Self {
         Self(self.0 | SHIFT)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_ctrl(self) -> Self {
         Self(self.0 | CTRL)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_alt(self) -> Self {
         Self(self.0 | ALT)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_meta(self) -> Self {
         Self(self.0 | META)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_caps_lock(self) -> Self {
         Self(self.0 | CAPS_LOCK)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_num_lock(self) -> Self {
         Self(self.0 | NUM_LOCK)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_left_button(self) -> Self {
         Self(self.0 | LEFT_BUTTON)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_right_button(self) -> Self {
         Self(self.0 | RIGHT_BUTTON)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_middle_button(self) -> Self {
         Self(self.0 | MIDDLE_BUTTON)
     }
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn with_auto_repeat(self) -> Self {
         Self(self.0 | IS_AUTO_REPEAT)
     }
 
     /// Combine two modifier sets.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn union(self, other: Self) -> Self {
         Self(self.0 | other.0)
     }
 
     /// Check if all bits in `other` are set in `self`.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn contains(self, other: Self) -> bool {
         self.0 & other.0 == other.0
     }

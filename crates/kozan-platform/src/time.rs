@@ -54,9 +54,11 @@ impl Future for Sleep {
 ///     card.set_style(activated_style());
 /// });
 /// ```
-#[must_use] 
+#[must_use]
 pub fn sleep(duration: Duration) -> Sleep {
-    Sleep { deadline: Instant::now() + duration }
+    Sleep {
+        deadline: Instant::now() + duration,
+    }
 }
 
 // ── interval ──────────────────────────────────────────────────────────────────
@@ -98,7 +100,7 @@ impl Interval {
 /// Create a periodic timer that fires every `period`.
 ///
 /// The first tick fires after one full `period` (not immediately).
-#[must_use] 
+#[must_use]
 pub fn interval(period: Duration) -> Interval {
     Interval {
         period,

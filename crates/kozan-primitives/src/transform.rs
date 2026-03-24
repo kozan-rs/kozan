@@ -25,7 +25,7 @@ impl AffineTransform {
     };
 
     /// Construct from the six matrix components directly.
-    #[must_use] 
+    #[must_use]
     pub fn new(a: f32, b: f32, c: f32, d: f32, tx: f32, ty: f32) -> Self {
         Self {
             inner: glam::Affine2::from_cols(
@@ -36,54 +36,54 @@ impl AffineTransform {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn translate(tx: f32, ty: f32) -> Self {
         Self {
             inner: glam::Affine2::from_translation(glam::Vec2::new(tx, ty)),
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn scale(sx: f32, sy: f32) -> Self {
         Self {
             inner: glam::Affine2::from_scale(glam::Vec2::new(sx, sy)),
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn uniform_scale(s: f32) -> Self {
         Self::scale(s, s)
     }
 
     /// Counter-clockwise rotation by `angle` radians.
-    #[must_use] 
+    #[must_use]
     pub fn rotate(angle: f32) -> Self {
         Self {
             inner: glam::Affine2::from_angle(angle),
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_identity(&self) -> bool {
         self.inner == glam::Affine2::IDENTITY
     }
 
     /// True when the transform only translates (no rotation, scale, or skew).
-    #[must_use] 
+    #[must_use]
     pub fn is_translation_only(&self) -> bool {
         self.inner.matrix2 == glam::Mat2::IDENTITY
     }
 
     /// True when axis-aligned rectangles stay axis-aligned after
     /// transformation (no rotation or skew — only scale and translation).
-    #[must_use] 
+    #[must_use]
     pub fn preserves_axis_alignment(&self) -> bool {
         let m = self.inner.matrix2;
         (m.x_axis.y == 0.0 && m.y_axis.x == 0.0) || (m.x_axis.x == 0.0 && m.y_axis.y == 0.0)
     }
 
     /// Compose: apply `self` first, then `other`.
-    #[must_use] 
+    #[must_use]
     pub fn then(&self, other: &Self) -> Self {
         Self {
             inner: other.inner * self.inner,
@@ -91,7 +91,7 @@ impl AffineTransform {
     }
 
     /// Prepend a translation to this transform.
-    #[must_use] 
+    #[must_use]
     pub fn pre_translate(&self, tx: f32, ty: f32) -> Self {
         let t = glam::Affine2::from_translation(glam::Vec2::new(tx, ty));
         Self {
@@ -100,7 +100,7 @@ impl AffineTransform {
     }
 
     /// Prepend a scale to this transform.
-    #[must_use] 
+    #[must_use]
     pub fn pre_scale(&self, sx: f32, sy: f32) -> Self {
         let s = glam::Affine2::from_scale(glam::Vec2::new(sx, sy));
         Self {
@@ -110,7 +110,7 @@ impl AffineTransform {
 
     /// Compute the inverse. Returns `None` for singular (degenerate)
     /// transforms where the determinant is zero.
-    #[must_use] 
+    #[must_use]
     pub fn inverse(&self) -> Option<Self> {
         let det = self.determinant();
         if det.abs() < f32::EPSILON {
@@ -121,12 +121,12 @@ impl AffineTransform {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn determinant(&self) -> f32 {
         self.inner.matrix2.determinant()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn transform_point(&self, p: Point) -> Point {
         let result = self.inner.transform_point2(glam::Vec2::new(p.x, p.y));
         Point::new(result.x, result.y)
@@ -168,7 +168,7 @@ impl AffineTransform {
 
     /// Access the underlying `glam::Affine2` for interop with rendering
     /// libraries that accept glam types directly.
-    #[must_use] 
+    #[must_use]
     pub fn as_raw(&self) -> &glam::Affine2 {
         &self.inner
     }
@@ -206,28 +206,28 @@ impl Transform3D {
         inner: glam::Mat4::IDENTITY,
     };
 
-    #[must_use] 
+    #[must_use]
     pub fn translate(tx: f32, ty: f32, tz: f32) -> Self {
         Self {
             inner: glam::Mat4::from_translation(glam::Vec3::new(tx, ty, tz)),
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn scale(sx: f32, sy: f32, sz: f32) -> Self {
         Self {
             inner: glam::Mat4::from_scale(glam::Vec3::new(sx, sy, sz)),
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn rotate_x(angle: f32) -> Self {
         Self {
             inner: glam::Mat4::from_rotation_x(angle),
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn rotate_y(angle: f32) -> Self {
         Self {
             inner: glam::Mat4::from_rotation_y(angle),
@@ -235,7 +235,7 @@ impl Transform3D {
     }
 
     /// Rotation around the Z axis (equivalent to 2D rotation).
-    #[must_use] 
+    #[must_use]
     pub fn rotate_z(angle: f32) -> Self {
         Self {
             inner: glam::Mat4::from_rotation_z(angle),
@@ -244,7 +244,7 @@ impl Transform3D {
 
     /// A perspective projection that makes distant objects appear smaller.
     /// `depth` is the distance from the viewer to the z=0 plane.
-    #[must_use] 
+    #[must_use]
     pub fn perspective(depth: f32) -> Self {
         if depth == 0.0 {
             return Self::IDENTITY;
@@ -255,7 +255,7 @@ impl Transform3D {
         Self { inner: m }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_identity(&self) -> bool {
         self.inner == glam::Mat4::IDENTITY
     }
@@ -263,7 +263,7 @@ impl Transform3D {
     /// True when the transform operates only in the X/Y plane (no Z
     /// rotation, no perspective, no Z translation). Can be losslessly
     /// represented as an [`AffineTransform`].
-    #[must_use] 
+    #[must_use]
     pub fn is_2d(&self) -> bool {
         let m = self.inner;
         let c = |col: usize, row: usize| m.col(col)[row];
@@ -281,7 +281,7 @@ impl Transform3D {
 
     /// Extract a 2D affine transform, dropping the Z components.
     /// Only meaningful when [`is_2d`](Self::is_2d) returns true.
-    #[must_use] 
+    #[must_use]
     pub fn to_affine(&self) -> AffineTransform {
         let m = self.inner;
         AffineTransform::new(
@@ -295,7 +295,7 @@ impl Transform3D {
     }
 
     /// Promote a 2D affine transform to a 3D matrix.
-    #[must_use] 
+    #[must_use]
     pub fn from_affine(t: &AffineTransform) -> Self {
         let a = t.inner;
         let m2 = a.matrix2;
@@ -310,7 +310,7 @@ impl Transform3D {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn then(&self, other: &Self) -> Self {
         Self {
             inner: other.inner * self.inner,
@@ -318,7 +318,7 @@ impl Transform3D {
     }
 
     /// Compute the inverse. Returns `None` if the matrix is singular.
-    #[must_use] 
+    #[must_use]
     pub fn inverse(&self) -> Option<Self> {
         let det = self.inner.determinant();
         if det.abs() < f32::EPSILON {
@@ -329,7 +329,7 @@ impl Transform3D {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn determinant(&self) -> f32 {
         self.inner.determinant()
     }
@@ -337,7 +337,7 @@ impl Transform3D {
     /// Transform a 2D point through this 3D matrix. The point is treated
     /// as (x, y, 0, 1) and projected back to 2D by dividing by the
     /// homogeneous `w` coordinate.
-    #[must_use] 
+    #[must_use]
     pub fn transform_point(&self, p: Point) -> Point {
         let v = self.inner * glam::Vec4::new(p.x, p.y, 0.0, 1.0);
         if v.w.abs() < f32::EPSILON {
@@ -348,7 +348,7 @@ impl Transform3D {
 
     /// True when the back face of a transformed plane would be visible
     /// (the Z component of the transformed normal is negative).
-    #[must_use] 
+    #[must_use]
     pub fn is_back_face_visible(&self) -> bool {
         // The Z component of the transformed normal tells us if the
         // surface faces away from the viewer. Computed from the
@@ -362,7 +362,7 @@ impl Transform3D {
 
     /// Access the underlying `glam::Mat4` for interop with rendering
     /// libraries that accept glam types directly.
-    #[must_use] 
+    #[must_use]
     pub fn as_raw(&self) -> &glam::Mat4 {
         &self.inner
     }

@@ -4,13 +4,14 @@
 //! in `Storage<ElementData>`. `StyleEngine` owns only document-level state:
 //! Stylist, `SharedRwLock`, snapshots, animations.
 
+use style::Atom;
 use style::context::{
     RegisteredSpeculativePainter, RegisteredSpeculativePainters, SharedStyleContext,
 };
 use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::media_queries::{MediaList, MediaType};
-use style::properties::style_structs::Font;
 use style::properties::ComputedValues;
+use style::properties::style_structs::Font;
 use style::selector_parser::SnapshotMap;
 use style::servo::animation::DocumentAnimationSet;
 use style::shared_lock::{SharedRwLock, StylesheetGuards};
@@ -19,7 +20,6 @@ use style::stylist::Stylist;
 use style::thread_state::ThreadState;
 use style::traversal::DomTraversal;
 use style::traversal_flags::TraversalFlags;
-use style::Atom;
 
 use euclid::{Scale, Size2D};
 use selectors::matching::QuirksMode;
@@ -122,8 +122,7 @@ impl StyleEngine {
     }
 
     fn make_stylesheet(&self, css: &str, origin: Origin) -> DocumentStyleSheet {
-        let url = url::Url::parse("kozan://stylesheet")
-            .expect("hardcoded URL is always valid");
+        let url = url::Url::parse("kozan://stylesheet").expect("hardcoded URL is always valid");
         let url_data = style::stylesheets::UrlExtraData(Arc::new(url));
 
         let data = Stylesheet::from_str(
@@ -229,10 +228,7 @@ impl StyleEngine {
         };
 
         // Pre-traverse and run Stylo's style computation.
-        let token = <RecalcStyle as DomTraversal<KozanNode>>::pre_traverse(
-            root_element,
-            &context,
-        );
+        let token = <RecalcStyle as DomTraversal<KozanNode>>::pre_traverse(root_element, &context);
         if token.should_traverse() {
             let traversal = RecalcStyle::new(context);
             style::driver::traverse_dom::<KozanNode, RecalcStyle>(&traversal, token, None);

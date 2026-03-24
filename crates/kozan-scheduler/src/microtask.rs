@@ -76,7 +76,7 @@ pub struct MicrotaskQueue {
 impl MicrotaskQueue {
     /// Create an empty microtask queue.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             queue: VecDeque::new(),
@@ -134,14 +134,14 @@ impl MicrotaskQueue {
 
     /// Number of pending microtasks.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.queue.len()
     }
 
     /// Whether the microtask queue is empty.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }

@@ -35,8 +35,8 @@
 
 pub mod algo;
 pub mod box_model;
-pub mod document_layout;
 pub mod context;
+pub mod document_layout;
 pub mod fragment;
 pub mod hit_test;
 pub mod inline;
@@ -49,9 +49,7 @@ pub use fragment::{
     BoxFragmentData, ChildFragment, Fragment, FragmentKind, LineFragmentData, OverflowClip,
     PhysicalInsets, TextFragmentData,
 };
-pub use inline::{
-    FontHeight, FontMetrics, TextMeasurer, TextMetrics, resolve_line_height,
-};
+pub use hit_test::HitTestResult;
+pub use inline::{FontHeight, FontMetrics, TextMeasurer, TextMetrics, resolve_line_height};
 pub use node_data::LayoutNodeData;
 pub use result::{IntrinsicSizes, LayoutResult};
-pub use hit_test::HitTestResult;

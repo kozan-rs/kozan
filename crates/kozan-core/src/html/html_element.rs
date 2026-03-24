@@ -90,8 +90,7 @@ pub trait HtmlElement: Element {
 
     /// The `draggable` attribute.
     fn draggable(&self) -> bool {
-        self.attribute("draggable")
-            .is_some_and(|v| v == "true")
+        self.attribute("draggable").is_some_and(|v| v == "true")
     }
 
     fn set_draggable(&self, draggable: bool) {
@@ -100,8 +99,7 @@ pub trait HtmlElement: Element {
 
     /// The `spellcheck` attribute.
     fn spellcheck(&self) -> bool {
-        self.attribute("spellcheck")
-            .is_none_or(|v| v != "false")
+        self.attribute("spellcheck").is_none_or(|v| v != "false")
     }
 
     fn set_spellcheck(&self, spellcheck: bool) {

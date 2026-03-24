@@ -21,18 +21,18 @@ pub mod html;
 pub mod input;
 pub mod styling;
 
-pub mod layout;
-pub mod paint;
 pub mod compositor;
+pub(crate) mod dirty_phases;
+pub mod layout;
+pub mod lifecycle;
+pub mod paint;
 pub mod scroll;
 pub mod widget;
-pub(crate) mod dirty_phases;
-pub mod lifecycle;
 
 // Re-exports: styling (Stylo-backed CSS engine).
-pub use styling::{Arc, ComputedValues, PropertyDeclarationBlock};
-pub use styling::values;
 pub use styling::style_structs;
+pub use styling::values;
+pub use styling::{Arc, ComputedValues, PropertyDeclarationBlock};
 
 // Re-exports: traits (most important — users import these).
 pub use dom::traits::{ContainerNode, Element, HasHandle, Node};

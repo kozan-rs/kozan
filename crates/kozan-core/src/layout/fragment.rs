@@ -193,7 +193,7 @@ impl PhysicalInsets {
         left: 0.0,
     };
 
-    #[must_use] 
+    #[must_use]
     pub fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
         Self {
             top,
@@ -205,14 +205,14 @@ impl PhysicalInsets {
 
     /// Total inline (horizontal) insets.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn inline_sum(&self) -> f32 {
         self.left + self.right
     }
 
     /// Total block (vertical) insets.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn block_sum(&self) -> f32 {
         self.top + self.bottom
     }
@@ -220,7 +220,7 @@ impl PhysicalInsets {
 
 impl Fragment {
     /// Create a box fragment.
-    #[must_use] 
+    #[must_use]
     pub fn new_box(size: Size, data: BoxFragmentData) -> Arc<Self> {
         Arc::new(Self {
             size,
@@ -235,7 +235,7 @@ impl Fragment {
     /// Chrome: `NGPhysicalFragment` always has a style + layout object pointer.
     /// The style is needed by the paint phase for background, border, text color.
     /// The `dom_node` is needed for looking up text content and element data.
-    #[must_use] 
+    #[must_use]
     pub fn new_box_styled(
         size: Size,
         data: BoxFragmentData,
@@ -251,7 +251,7 @@ impl Fragment {
     }
 
     /// Create a text fragment.
-    #[must_use] 
+    #[must_use]
     pub fn new_text(size: Size, data: TextFragmentData) -> Arc<Self> {
         Arc::new(Self {
             size,
@@ -262,7 +262,7 @@ impl Fragment {
     }
 
     /// Create a text fragment with style (for font-size, color inheritance).
-    #[must_use] 
+    #[must_use]
     pub fn new_text_styled(
         size: Size,
         data: TextFragmentData,
@@ -278,7 +278,7 @@ impl Fragment {
     }
 
     /// Create a line fragment.
-    #[must_use] 
+    #[must_use]
     pub fn new_line(size: Size, data: LineFragmentData) -> Arc<Self> {
         Arc::new(Self {
             size,
@@ -289,19 +289,19 @@ impl Fragment {
     }
 
     /// Whether this is a box fragment.
-    #[must_use] 
+    #[must_use]
     pub fn is_box(&self) -> bool {
         matches!(self.kind, FragmentKind::Box(_))
     }
 
     /// Whether this is a text fragment.
-    #[must_use] 
+    #[must_use]
     pub fn is_text(&self) -> bool {
         matches!(self.kind, FragmentKind::Text(_))
     }
 
     /// Whether this is a line fragment.
-    #[must_use] 
+    #[must_use]
     pub fn is_line(&self) -> bool {
         matches!(self.kind, FragmentKind::Line(_))
     }
@@ -316,7 +316,7 @@ impl Fragment {
     }
 
     /// Get line fragment data (panics if not a line).
-    #[must_use] 
+    #[must_use]
     pub fn as_line(&self) -> &LineFragmentData {
         match &self.kind {
             FragmentKind::Line(data) => data,
@@ -325,7 +325,7 @@ impl Fragment {
     }
 
     /// Get box fragment data if this is a box.
-    #[must_use] 
+    #[must_use]
     pub fn try_as_box(&self) -> Option<&BoxFragmentData> {
         match &self.kind {
             FragmentKind::Box(data) => Some(data),
@@ -334,7 +334,7 @@ impl Fragment {
     }
 
     /// Get text fragment data if this is text.
-    #[must_use] 
+    #[must_use]
     pub fn try_as_text(&self) -> Option<&TextFragmentData> {
         match &self.kind {
             FragmentKind::Text(data) => Some(data),
@@ -343,7 +343,7 @@ impl Fragment {
     }
 
     /// Get line fragment data if this is a line.
-    #[must_use] 
+    #[must_use]
     pub fn try_as_line(&self) -> Option<&LineFragmentData> {
         match &self.kind {
             FragmentKind::Line(data) => Some(data),
@@ -358,10 +358,7 @@ mod tests {
 
     #[test]
     fn box_fragment_immutable_via_arc() {
-        let fragment = Fragment::new_box(
-            Size::new(100.0, 50.0),
-            BoxFragmentData::default(),
-        );
+        let fragment = Fragment::new_box(Size::new(100.0, 50.0), BoxFragmentData::default());
         // Arc means shared + immutable.
         let shared = Arc::clone(&fragment);
         assert_eq!(fragment.size.width, 100.0);

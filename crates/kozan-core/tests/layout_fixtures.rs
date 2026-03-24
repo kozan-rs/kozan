@@ -7,10 +7,10 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use kozan_core::dom::traits::{Element, HasHandle};
 use kozan_core::layout::context::LayoutContext;
 use kozan_core::layout::fragment::Fragment;
 use kozan_core::layout::inline::font_system::FontSystem;
-use kozan_core::dom::traits::{Element, HasHandle};
 use kozan_core::{Document, HtmlDivElement};
 use kozan_primitives::units::Dimension;
 
@@ -94,14 +94,25 @@ fn parse_viewport_dim(s: &str) -> f32 {
 /// Parse a single `<div …/>` or `<div …>…</div>` subtree from the XML reader.
 /// The opening tag's attributes have already been collected into `attrs`.
 /// This recurses via `parse_input_children`.
-fn parse_input_node(attrs: Vec<(String, String)>, reader: &mut Reader<&[u8]>, is_text: bool) -> InputNode {
+fn parse_input_node(
+    attrs: Vec<(String, String)>,
+    reader: &mut Reader<&[u8]>,
+    is_text: bool,
+) -> InputNode {
     let (children, text_content) = parse_input_children(reader, is_text);
-    InputNode { attrs, children, text_content }
+    InputNode {
+        attrs,
+        children,
+        text_content,
+    }
 }
 
 /// Read children of a `<div>` or `<text>` until the closing tag is encountered.
 /// Returns (children, text_content). `text_content` is populated for `<text>` parents.
-fn parse_input_children(reader: &mut Reader<&[u8]>, collect_text: bool) -> (Vec<InputNode>, Option<String>) {
+fn parse_input_children(
+    reader: &mut Reader<&[u8]>,
+    collect_text: bool,
+) -> (Vec<InputNode>, Option<String>) {
     let mut children = Vec::new();
     let mut text_content = String::new();
     let mut buf = Vec::new();
@@ -173,8 +184,14 @@ fn parse_input_children(reader: &mut Reader<&[u8]>, collect_text: bool) -> (Vec<
 
 /// Parse `<node …>` subtree from `<expectations>`.
 fn parse_expected_node(attrs: Vec<(String, String)>, reader: &mut Reader<&[u8]>) -> ExpectedNode {
-    let x = attr_str(&attrs, "x").as_deref().map(parse_f32).unwrap_or(0.0);
-    let y = attr_str(&attrs, "y").as_deref().map(parse_f32).unwrap_or(0.0);
+    let x = attr_str(&attrs, "x")
+        .as_deref()
+        .map(parse_f32)
+        .unwrap_or(0.0);
+    let y = attr_str(&attrs, "y")
+        .as_deref()
+        .map(parse_f32)
+        .unwrap_or(0.0);
     let width = attr_str(&attrs, "width")
         .as_deref()
         .map(parse_f32)
@@ -214,8 +231,14 @@ fn parse_expected_children(reader: &mut Reader<&[u8]>) -> Vec<ExpectedNode> {
                     .to_string();
                 if tag == "node" {
                     let attrs = collect_attrs(&e);
-                    let x = attr_str(&attrs, "x").as_deref().map(parse_f32).unwrap_or(0.0);
-                    let y = attr_str(&attrs, "y").as_deref().map(parse_f32).unwrap_or(0.0);
+                    let x = attr_str(&attrs, "x")
+                        .as_deref()
+                        .map(parse_f32)
+                        .unwrap_or(0.0);
+                    let y = attr_str(&attrs, "y")
+                        .as_deref()
+                        .map(parse_f32)
+                        .unwrap_or(0.0);
                     let width = attr_str(&attrs, "width")
                         .as_deref()
                         .map(parse_f32)
@@ -280,9 +303,7 @@ fn parse_fixture(xml: &str) -> Result<Fixture, String> {
                     "test" => {
                         let attrs = collect_attrs(&e);
                         name = attr_str(&attrs, "name").unwrap_or_default();
-                        use_rounding = attr_str(&attrs, "use-rounding")
-                            .as_deref()
-                            == Some("true");
+                        use_rounding = attr_str(&attrs, "use-rounding").as_deref() == Some("true");
                     }
                     "input" => {
                         in_input = true;
@@ -342,8 +363,14 @@ fn parse_fixture(xml: &str) -> Result<Fixture, String> {
                     }
                     "node" if in_expectations && expected.is_none() => {
                         let attrs = collect_attrs(&e);
-                        let x = attr_str(&attrs, "x").as_deref().map(parse_f32).unwrap_or(0.0);
-                        let y = attr_str(&attrs, "y").as_deref().map(parse_f32).unwrap_or(0.0);
+                        let x = attr_str(&attrs, "x")
+                            .as_deref()
+                            .map(parse_f32)
+                            .unwrap_or(0.0);
+                        let y = attr_str(&attrs, "y")
+                            .as_deref()
+                            .map(parse_f32)
+                            .unwrap_or(0.0);
                         let width = attr_str(&attrs, "width")
                             .as_deref()
                             .map(parse_f32)
@@ -400,10 +427,7 @@ fn parse_fixture(xml: &str) -> Result<Fixture, String> {
 /// Individual attributes override these defaults.
 fn attrs_to_css(attrs: &[(String, String)]) -> String {
     // Do NOT default position:relative — it interferes with grid item placement.
-    let mut css_parts: Vec<String> = vec![
-        "display: flex".into(),
-        "box-sizing: border-box".into(),
-    ];
+    let mut css_parts: Vec<String> = vec!["display: flex".into(), "box-sizing: border-box".into()];
 
     for (key, val) in attrs {
         match key.as_str() {
@@ -486,18 +510,37 @@ fn fixup_bare_number<'a>(key: &str, val: &'a str) -> std::borrow::Cow<'a, str> {
         || trimmed.ends_with("vw")
         || trimmed.contains("content")  // min-content, max-content, fit-content
         || trimmed.contains("repeat")   // grid repeat()
-        || trimmed.contains("minmax")   // grid minmax()
+        || trimmed.contains("minmax")
+    // grid minmax()
     {
         return std::borrow::Cow::Borrowed(val);
     }
 
     // Properties that take dimension values (bare numbers → px).
     let dimension_props = [
-        "width", "height", "min-width", "min-height", "max-width", "max-height",
-        "margin", "margin-top", "margin-right", "margin-bottom", "margin-left",
-        "padding", "padding-top", "padding-right", "padding-bottom", "padding-left",
-        "top", "right", "bottom", "left",
-        "gap", "row-gap", "column-gap",
+        "width",
+        "height",
+        "min-width",
+        "min-height",
+        "max-width",
+        "max-height",
+        "margin",
+        "margin-top",
+        "margin-right",
+        "margin-bottom",
+        "margin-left",
+        "padding",
+        "padding-top",
+        "padding-right",
+        "padding-bottom",
+        "padding-left",
+        "top",
+        "right",
+        "bottom",
+        "left",
+        "gap",
+        "row-gap",
+        "column-gap",
         "flex-basis",
     ];
 
@@ -586,7 +629,9 @@ fn compare(
         Some(b) => b,
         None => {
             if !expected.children.is_empty() {
-                errors.push(format!("{path}: expected children but fragment is not a box"));
+                errors.push(format!(
+                    "{path}: expected children but fragment is not a box"
+                ));
             }
             return;
         }
@@ -607,8 +652,16 @@ fn compare(
             let cf = &box_children[i];
             let exp_child = &expected.children[i];
 
-            let actual_x = if use_rounding { round(cf.offset.x) } else { cf.offset.x };
-            let actual_y = if use_rounding { round(cf.offset.y) } else { cf.offset.y };
+            let actual_x = if use_rounding {
+                round(cf.offset.x)
+            } else {
+                cf.offset.x
+            };
+            let actual_y = if use_rounding {
+                round(cf.offset.y)
+            } else {
+                cf.offset.y
+            };
 
             if (actual_x - exp_child.x).abs() > tol {
                 errors.push(format!(
@@ -634,9 +687,21 @@ fn compare(
         return;
     }
 
-    for (i, (cf, exp_child)) in box_children.iter().zip(expected.children.iter()).enumerate() {
-        let actual_x = if use_rounding { round(cf.offset.x) } else { cf.offset.x };
-        let actual_y = if use_rounding { round(cf.offset.y) } else { cf.offset.y };
+    for (i, (cf, exp_child)) in box_children
+        .iter()
+        .zip(expected.children.iter())
+        .enumerate()
+    {
+        let actual_x = if use_rounding {
+            round(cf.offset.x)
+        } else {
+            cf.offset.x
+        };
+        let actual_y = if use_rounding {
+            round(cf.offset.y)
+        } else {
+            cf.offset.y
+        };
 
         if (actual_x - exp_child.x).abs() > tol {
             errors.push(format!(
@@ -665,7 +730,11 @@ fn compare(
 // Fixture runner
 // ─────────────────────────────────────────────────────────────────────────────
 
-fn run_fixture(path: &Path, shared_doc: &mut Document, font_system: &FontSystem) -> Result<(), String> {
+fn run_fixture(
+    path: &Path,
+    shared_doc: &mut Document,
+    font_system: &FontSystem,
+) -> Result<(), String> {
     let xml = std::fs::read_to_string(path).map_err(|e| format!("read error: {e}"))?;
     let fixture = parse_fixture(&xml)?;
 
@@ -675,8 +744,16 @@ fn run_fixture(path: &Path, shared_doc: &mut Document, font_system: &FontSystem)
     create_dom_elements(doc, &fixture.root_input, doc.root());
     doc.recalc_styles();
 
-    let avail_w = if fixture.viewport_w > 0.0 { Some(fixture.viewport_w) } else { None };
-    let avail_h = if fixture.viewport_h > 0.0 { Some(fixture.viewport_h) } else { None };
+    let avail_w = if fixture.viewport_w > 0.0 {
+        Some(fixture.viewport_w)
+    } else {
+        None
+    };
+    let avail_h = if fixture.viewport_h > 0.0 {
+        Some(fixture.viewport_h)
+    } else {
+        None
+    };
 
     let ctx = LayoutContext {
         text_measurer: font_system,
@@ -695,7 +772,11 @@ fn run_fixture(path: &Path, shared_doc: &mut Document, font_system: &FontSystem)
     let fixture_root_fragment = result
         .fragment
         .try_as_box()
-        .and_then(|b| b.children.iter().find(|cf| cf.fragment.try_as_box().is_some()))
+        .and_then(|b| {
+            b.children
+                .iter()
+                .find(|cf| cf.fragment.try_as_box().is_some())
+        })
         .map(|cf| &cf.fragment)
         .unwrap_or(&result.fragment);
 
@@ -730,7 +811,10 @@ fn run_layout_fixtures() {
         .join("tests/layout_fixtures");
 
     if !fixture_dir.exists() {
-        println!("Layout fixture directory not found: {}", fixture_dir.display());
+        println!(
+            "Layout fixture directory not found: {}",
+            fixture_dir.display()
+        );
         return;
     }
 
@@ -748,11 +832,7 @@ fn run_layout_fixtures() {
     for entry in WalkDir::new(&fixture_dir)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .is_some_and(|ext| ext == "xml")
-        })
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "xml"))
     {
         total += 1;
         let path = entry.path();
@@ -790,9 +870,7 @@ fn run_layout_fixtures() {
     }
 
     let fail_count = total - passed;
-    println!(
-        "\nLayout fixtures: {passed}/{total} passed ({fail_count} failed, {skipped} skipped)"
-    );
+    println!("\nLayout fixtures: {passed}/{total} passed ({fail_count} failed, {skipped} skipped)");
 
     // Dump ALL failures to a TSV file for external analysis.
     {
@@ -828,11 +906,19 @@ fn run_layout_fixtures() {
                 "wrong_width"
             } else if first.contains("height") {
                 "wrong_height"
-            } else if first.contains("/child[") && (first.contains(": x ") || first.contains("x expected")) {
+            } else if first.contains("/child[")
+                && (first.contains(": x ") || first.contains("x expected"))
+            {
                 "wrong_x"
-            } else if first.contains("/child[") && (first.contains(": y ") || first.contains("y expected")) {
+            } else if first.contains("/child[")
+                && (first.contains(": y ") || first.contains("y expected"))
+            {
                 "wrong_y"
-            } else if first.contains("parse") || first.contains("missing") || first.contains("read error") || first.contains("XML") {
+            } else if first.contains("parse")
+                || first.contains("missing")
+                || first.contains("read error")
+                || first.contains("XML")
+            {
                 "parse_or_missing"
             } else {
                 "other"
@@ -896,6 +982,10 @@ fn run_layout_fixtures() {
     }
 
     // Assert we at least ran the fixture suite (prevents silent no-ops).
-    assert!(total > 0, "Expected at least one layout fixture in {}", fixture_dir.display());
+    assert!(
+        total > 0,
+        "Expected at least one layout fixture in {}",
+        fixture_dir.display()
+    );
     // We do not assert zero failures — fixtures are fixed incrementally.
 }

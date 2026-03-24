@@ -134,7 +134,7 @@ pub struct LocalExecutor {
 
 impl LocalExecutor {
     /// Create a new empty executor.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             tasks: Vec::new(),
@@ -273,23 +273,19 @@ impl LocalExecutor {
     ///
     /// Returns `true` for completed tasks and cleaned-up slots.
     /// Panics for out-of-range `TaskId`s.
-    #[must_use] 
+    #[must_use]
     pub fn is_completed(&self, id: TaskId) -> bool {
         match self.tasks.get(id.0) {
             Some(Some(task)) => task.completed,
             Some(None) => true, // cleaned up = completed
             None => {
-                panic!(
-                    "TaskId({}) out of range (max: {})",
-                    id.0,
-                    self.tasks.len()
-                );
+                panic!("TaskId({}) out of range (max: {})", id.0, self.tasks.len());
             }
         }
     }
 
     /// Number of active (non-completed) tasks.
-    #[must_use] 
+    #[must_use]
     pub fn active_count(&self) -> usize {
         self.tasks
             .iter()
@@ -298,13 +294,13 @@ impl LocalExecutor {
     }
 
     /// Whether the executor has no active tasks.
-    #[must_use] 
+    #[must_use]
     pub fn is_idle(&self) -> bool {
         self.active_count() == 0 && self.spawn_queue.is_empty()
     }
 
     /// Whether any task is woken and needs polling.
-    #[must_use] 
+    #[must_use]
     pub fn has_woken(&self) -> bool {
         if !self.spawn_queue.is_empty() {
             return true;

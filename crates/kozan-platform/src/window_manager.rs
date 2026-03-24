@@ -104,11 +104,13 @@ impl<R: Renderer> WindowManager<R> {
             viewport: vp,
         };
 
-        let pipeline = WindowPipeline::spawn(pipeline_config, view_init)
-            .map_err(CreateWindowError::Spawn)?;
+        let pipeline =
+            WindowPipeline::spawn(pipeline_config, view_init).map_err(CreateWindowError::Spawn)?;
 
-        self.windows
-            .insert(config.window_id, WindowState::new(pipeline, vp.scale_factor));
+        self.windows.insert(
+            config.window_id,
+            WindowState::new(pipeline, vp.scale_factor),
+        );
         Ok(())
     }
 
@@ -136,9 +138,14 @@ impl<R: Renderer> WindowManager<R> {
     // ── Lifecycle events ─────────────────────────────────────
 
     pub fn on_resize(&mut self, id: WindowId, width: u32, height: u32) {
-        let Some(state) = self.windows.get_mut(&id) else { return };
+        let Some(state) = self.windows.get_mut(&id) else {
+            return;
+        };
         state.send_to_render(RenderEvent::Resize { width, height });
-        state.send_to_view(ViewEvent::Lifecycle(LifecycleEvent::Resized { width, height }));
+        state.send_to_view(ViewEvent::Lifecycle(LifecycleEvent::Resized {
+            width,
+            height,
+        }));
     }
 
     pub fn on_scale_factor_changed(
@@ -147,7 +154,9 @@ impl<R: Renderer> WindowManager<R> {
         scale_factor: f64,
         refresh_rate_millihertz: Option<u32>,
     ) {
-        let Some(state) = self.windows.get_mut(&id) else { return };
+        let Some(state) = self.windows.get_mut(&id) else {
+            return;
+        };
         state.input_mut().set_scale_factor(scale_factor);
         state.send_to_render(RenderEvent::ScaleFactorChanged(scale_factor));
         state.send_to_view(ViewEvent::Lifecycle(LifecycleEvent::ScaleFactorChanged {
@@ -157,60 +166,90 @@ impl<R: Renderer> WindowManager<R> {
     }
 
     pub fn on_focus_changed(&mut self, id: WindowId, focused: bool) {
-        let Some(state) = self.windows.get(&id) else { return };
+        let Some(state) = self.windows.get(&id) else {
+            return;
+        };
         state.send_to_view(ViewEvent::Lifecycle(LifecycleEvent::Focused(focused)));
     }
 
     /// Trigger a repaint — sends Paint to the view thread.
     pub fn on_redraw(&self, id: WindowId) {
-        let Some(state) = self.windows.get(&id) else { return };
+        let Some(state) = self.windows.get(&id) else {
+            return;
+        };
         state.send_to_view(ViewEvent::Paint);
     }
 
     // ── Mouse events ─────────────────────────────────────────
 
     pub fn on_cursor_moved(&mut self, id: WindowId, physical_x: f64, physical_y: f64) {
-        let Some(state) = self.windows.get_mut(&id) else { return };
-        state.input_mut().set_cursor_physical(physical_x, physical_y);
+        let Some(state) = self.windows.get_mut(&id) else {
+            return;
+        };
+        state
+            .input_mut()
+            .set_cursor_physical(physical_x, physical_y);
         let (x, y) = state.input().cursor();
         let modifiers = state.input().modifiers();
         state.send_to_view(ViewEvent::Input(InputEvent::MouseMove(MouseMoveEvent {
-            x, y, modifiers, timestamp: Instant::now(),
+            x,
+            y,
+            modifiers,
+            timestamp: Instant::now(),
         })));
     }
 
     pub fn on_cursor_entered(&mut self, id: WindowId) {
-        let Some(state) = self.windows.get(&id) else { return };
+        let Some(state) = self.windows.get(&id) else {
+            return;
+        };
         let (x, y) = state.input().cursor();
         let modifiers = state.input().modifiers();
         state.send_to_view(ViewEvent::Input(InputEvent::MouseEnter(MouseEnterEvent {
-            x, y, modifiers, timestamp: Instant::now(),
+            x,
+            y,
+            modifiers,
+            timestamp: Instant::now(),
         })));
     }
 
     pub fn on_cursor_left(&mut self, id: WindowId) {
-        let Some(state) = self.windows.get(&id) else { return };
+        let Some(state) = self.windows.get(&id) else {
+            return;
+        };
         let modifiers = state.input().modifiers();
         state.send_to_view(ViewEvent::Input(InputEvent::MouseLeave(MouseLeaveEvent {
-            modifiers, timestamp: Instant::now(),
+            modifiers,
+            timestamp: Instant::now(),
         })));
     }
 
     pub fn on_mouse_input(&mut self, id: WindowId, button: MouseButton, btn_state: ButtonState) {
-        let Some(state) = self.windows.get_mut(&id) else { return };
+        let Some(state) = self.windows.get_mut(&id) else {
+            return;
+        };
         state.input_mut().update_button_modifier(&button, btn_state);
         let (x, y) = state.input().cursor();
         let modifiers = state.input().modifiers();
-        state.send_to_view(ViewEvent::Input(InputEvent::MouseButton(MouseButtonEvent {
-            x, y, button, state: btn_state, modifiers,
-            click_count: 1, timestamp: Instant::now(),
-        })));
+        state.send_to_view(ViewEvent::Input(InputEvent::MouseButton(
+            MouseButtonEvent {
+                x,
+                y,
+                button,
+                state: btn_state,
+                modifiers,
+                click_count: 1,
+                timestamp: Instant::now(),
+            },
+        )));
     }
 
     // ── Scroll ───────────────────────────────────────────────
 
     pub fn on_mouse_wheel(&mut self, id: WindowId, delta: WheelDelta) {
-        let Some(state) = self.windows.get(&id) else { return };
+        let Some(state) = self.windows.get(&id) else {
+            return;
+        };
         let (x, y) = state.input().cursor();
         let modifiers = state.input().modifiers();
 
@@ -220,7 +259,11 @@ impl<R: Renderer> WindowManager<R> {
         });
 
         state.send_to_view(ViewEvent::Input(InputEvent::Wheel(wheel::WheelEvent {
-            x, y, delta, modifiers, timestamp: Instant::now(),
+            x,
+            y,
+            delta,
+            modifiers,
+            timestamp: Instant::now(),
         })));
     }
 
@@ -234,12 +277,22 @@ impl<R: Renderer> WindowManager<R> {
         text: Option<String>,
         repeat: bool,
     ) {
-        let Some(state) = self.windows.get(&id) else { return };
+        let Some(state) = self.windows.get(&id) else {
+            return;
+        };
         let mut modifiers = state.input().modifiers();
-        if repeat { modifiers = modifiers.with_auto_repeat(); }
-        state.send_to_view(ViewEvent::Input(InputEvent::Keyboard(keyboard::KeyboardEvent {
-            key, state: key_state, modifiers, text, timestamp: Instant::now(),
-        })));
+        if repeat {
+            modifiers = modifiers.with_auto_repeat();
+        }
+        state.send_to_view(ViewEvent::Input(InputEvent::Keyboard(
+            keyboard::KeyboardEvent {
+                key,
+                state: key_state,
+                modifiers,
+                text,
+                timestamp: Instant::now(),
+            },
+        )));
     }
 
     pub fn on_modifiers_changed(
@@ -250,7 +303,11 @@ impl<R: Renderer> WindowManager<R> {
         alt: bool,
         meta: bool,
     ) {
-        let Some(state) = self.windows.get_mut(&id) else { return };
-        state.input_mut().set_modifiers_from_keyboard(shift, ctrl, alt, meta);
+        let Some(state) = self.windows.get_mut(&id) else {
+            return;
+        };
+        state
+            .input_mut()
+            .set_modifiers_from_keyboard(shift, ctrl, alt, meta);
     }
 }

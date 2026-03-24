@@ -57,13 +57,13 @@ impl Default for PropertyState {
 
 impl PropertyState {
     /// Create a root property state (no transform, no clip, full opacity).
-    #[must_use] 
+    #[must_use]
     pub fn root() -> Self {
         Self::default()
     }
 
     /// Whether this state is the identity (no visual effects applied).
-    #[must_use] 
+    #[must_use]
     pub fn is_identity(&self) -> bool {
         self.transform_x == 0.0
             && self.transform_y == 0.0

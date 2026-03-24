@@ -65,7 +65,7 @@ pub enum NodeType {
 
 impl NodeType {
     /// Convert from the raw 4-bit value. Returns None for unknown types.
-    #[must_use] 
+    #[must_use]
     pub fn from_raw(value: u32) -> Option<Self> {
         match value {
             1 => Some(Self::Element),
@@ -83,7 +83,7 @@ impl NodeFlags {
     // ---- Constructors for each node kind ----
 
     /// Flags for an element node (container, not connected).
-    #[must_use] 
+    #[must_use]
     pub fn element(focusable: bool) -> Self {
         let mut flags = (NodeType::Element as u32) | IS_CONTAINER;
         if focusable {
@@ -93,13 +93,13 @@ impl NodeFlags {
     }
 
     /// Flags for a text node (leaf, not container).
-    #[must_use] 
+    #[must_use]
     pub fn text() -> Self {
         Self(NodeType::Text as u32)
     }
 
     /// Flags for the document root node (container).
-    #[must_use] 
+    #[must_use]
     pub fn document() -> Self {
         Self((NodeType::Document as u32) | IS_CONTAINER | IS_CONNECTED)
     }
@@ -116,35 +116,35 @@ impl NodeFlags {
 
     /// Is this an element node? (single AND + CMP)
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_element(self) -> bool {
         (self.0 & NODE_TYPE_MASK) == NodeType::Element as u32
     }
 
     /// Is this a text node?
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_text(self) -> bool {
         (self.0 & NODE_TYPE_MASK) == NodeType::Text as u32
     }
 
     /// Is this the document node?
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_document(self) -> bool {
         (self.0 & NODE_TYPE_MASK) == NodeType::Document as u32
     }
 
     /// Can this node have children? (Element, Document, `DocumentFragment`)
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_container(self) -> bool {
         (self.0 & IS_CONTAINER) != 0
     }
 
     /// Is this node connected to a document tree?
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_connected(self) -> bool {
         (self.0 & IS_CONNECTED) != 0
     }
@@ -152,13 +152,13 @@ impl NodeFlags {
     // ---- Focus ----
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_focusable(self) -> bool {
         (self.0 & IS_FOCUSABLE) != 0
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_focused(self) -> bool {
         (self.0 & IS_FOCUSED) != 0
     }
@@ -184,37 +184,37 @@ impl NodeFlags {
     // ---- Dirty flags ----
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn needs_style_recalc(self) -> bool {
         (self.0 & NEEDS_STYLE_RECALC) != 0
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn child_needs_style_recalc(self) -> bool {
         (self.0 & CHILD_NEEDS_STYLE) != 0
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn needs_layout(self) -> bool {
         (self.0 & NEEDS_LAYOUT) != 0
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn child_needs_layout(self) -> bool {
         (self.0 & CHILD_NEEDS_LAYOUT) != 0
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn needs_paint(self) -> bool {
         (self.0 & NEEDS_PAINT) != 0
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn child_needs_paint(self) -> bool {
         (self.0 & CHILD_NEEDS_PAINT) != 0
     }
@@ -257,7 +257,7 @@ impl NodeFlags {
 
     /// Is any dirty flag set on this node or its children?
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_dirty(self) -> bool {
         (self.0
             & (NEEDS_STYLE_RECALC
@@ -283,7 +283,7 @@ impl NodeFlags {
 
     /// Get the raw u32 value.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn raw(self) -> u32 {
         self.0
     }

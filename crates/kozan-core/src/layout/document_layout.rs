@@ -24,20 +24,21 @@
 
 use core::any::TypeId;
 
+use style::Atom;
+use style::properties::ComputedValues;
 use taffy::tree::{Cache, Layout, LayoutInput, LayoutOutput, NodeId};
 use taffy::{
     CacheTree, LayoutBlockContainer, LayoutFlexboxContainer, LayoutGridContainer,
-    LayoutPartialTree, TraversePartialTree, compute_block_layout,
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout,
-    compute_hidden_layout, compute_leaf_layout, compute_root_layout,
+    LayoutPartialTree, TraversePartialTree, compute_block_layout, compute_cached_layout,
+    compute_flexbox_layout, compute_grid_layout, compute_hidden_layout, compute_leaf_layout,
+    compute_root_layout,
 };
-use style::Atom;
-use style::properties::ComputedValues;
 
 use kozan_primitives::geometry::{Point, Size};
 
 use kozan_primitives::arena::Storage;
 
+use crate::TextData;
 use crate::data_storage::DataStorage;
 use crate::dom::document::Document;
 use crate::dom::element_data::ElementData;
@@ -46,13 +47,11 @@ use crate::layout::algo::shared;
 use crate::layout::box_model::is_stacking_context;
 use crate::layout::context::LayoutContext;
 use crate::layout::fragment::{
-    BoxFragmentData, ChildFragment, Fragment, OverflowClip, PhysicalInsets,
-    TextFragmentData,
+    BoxFragmentData, ChildFragment, Fragment, OverflowClip, PhysicalInsets, TextFragmentData,
 };
 use crate::layout::node_data::LayoutNodeData;
 use crate::layout::result::{EscapedMargins, LayoutResult};
 use crate::tree::{self, TreeData};
-use crate::TextData;
 
 // ============================================================
 // Document layout methods
@@ -267,10 +266,14 @@ impl Document {
 
         // Step 5: Compute layout via Taffy
         let available_space = taffy::Size {
-            width: available_width
-                .map_or(taffy::AvailableSpace::MaxContent, taffy::AvailableSpace::Definite),
-            height: available_height
-                .map_or(taffy::AvailableSpace::MaxContent, taffy::AvailableSpace::Definite),
+            width: available_width.map_or(
+                taffy::AvailableSpace::MaxContent,
+                taffy::AvailableSpace::Definite,
+            ),
+            height: available_height.map_or(
+                taffy::AvailableSpace::MaxContent,
+                taffy::AvailableSpace::Definite,
+            ),
         };
         {
             let mut view = DocumentLayoutView::from_document(self, ctx);
@@ -315,11 +318,7 @@ impl<'a> DocumentLayoutView<'a> {
         }
     }
 
-    fn compute_layout(
-        &mut self,
-        root: u32,
-        available_space: taffy::Size<taffy::AvailableSpace>,
-    ) {
+    fn compute_layout(&mut self, root: u32, available_space: taffy::Size<taffy::AvailableSpace>) {
         let root_node = NodeId::from(root as u64);
         compute_root_layout(self, root_node, available_space);
     }
@@ -374,7 +373,10 @@ impl Iterator for ChildIter {
 }
 
 impl TraversePartialTree for DocumentLayoutView<'_> {
-    type ChildIter<'c> = ChildIter where Self: 'c;
+    type ChildIter<'c>
+        = ChildIter
+    where
+        Self: 'c;
 
     fn child_ids(&self, parent: NodeId) -> Self::ChildIter<'_> {
         let idx = u64::from(parent) as u32;
@@ -413,7 +415,10 @@ impl TraversePartialTree for DocumentLayoutView<'_> {
 // ============================================================
 
 impl LayoutPartialTree for DocumentLayoutView<'_> {
-    type CoreContainerStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
+    type CoreContainerStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
     type CustomIdent = Atom;
 
     fn get_core_container_style(&self, node: NodeId) -> Self::CoreContainerStyle<'_> {
@@ -481,10 +486,7 @@ impl DocumentLayoutView<'_> {
     }
 
     fn layout_text_leaf(&mut self, _node: NodeId, inputs: LayoutInput, idx: u32) -> LayoutOutput {
-        let parent_idx = self
-            .tree
-            .get(idx)
-            .map_or(crate::id::INVALID, |t| t.parent);
+        let parent_idx = self.tree.get(idx).map_or(crate::id::INVALID, |t| t.parent);
         let parent_style = if parent_idx != crate::id::INVALID {
             self.computed_style(parent_idx)
         } else {
@@ -518,11 +520,9 @@ impl DocumentLayoutView<'_> {
             inputs,
             style,
             |_val, _basis| 0.0,
-            |known_dimensions, _available_space| {
-                taffy::Size {
-                    width: known_dimensions.width.unwrap_or(0.0),
-                    height: known_dimensions.height.unwrap_or(0.0),
-                }
+            |known_dimensions, _available_space| taffy::Size {
+                width: known_dimensions.width.unwrap_or(0.0),
+                height: known_dimensions.height.unwrap_or(0.0),
             },
         )
     }
@@ -653,8 +653,14 @@ impl CacheTree for DocumentLayoutView<'_> {
 // ============================================================
 
 impl LayoutFlexboxContainer for DocumentLayoutView<'_> {
-    type FlexboxContainerStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
-    type FlexboxItemStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
+    type FlexboxContainerStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
+    type FlexboxItemStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
 
     fn get_flexbox_container_style(&self, node: NodeId) -> Self::FlexboxContainerStyle<'_> {
         let idx = u64::from(node) as u32;
@@ -668,8 +674,14 @@ impl LayoutFlexboxContainer for DocumentLayoutView<'_> {
 }
 
 impl LayoutGridContainer for DocumentLayoutView<'_> {
-    type GridContainerStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
-    type GridItemStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
+    type GridContainerStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
+    type GridItemStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
 
     fn get_grid_container_style(&self, node: NodeId) -> Self::GridContainerStyle<'_> {
         let idx = u64::from(node) as u32;
@@ -683,8 +695,14 @@ impl LayoutGridContainer for DocumentLayoutView<'_> {
 }
 
 impl LayoutBlockContainer for DocumentLayoutView<'_> {
-    type BlockContainerStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
-    type BlockItemStyle<'a> = &'a taffy::Style<Atom> where Self: 'a;
+    type BlockContainerStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
+    type BlockItemStyle<'a>
+        = &'a taffy::Style<Atom>
+    where
+        Self: 'a;
 
     fn get_block_container_style(&self, node: NodeId) -> Self::BlockContainerStyle<'_> {
         let idx = u64::from(node) as u32;
@@ -731,10 +749,7 @@ fn build_fragment_recursive(doc: &Document, ctx: &LayoutContext, index: u32) -> 
 
     // Style: text nodes use parent's, elements use their own.
     let style = if is_text {
-        let parent_idx = doc
-            .tree
-            .get(index)
-            .map_or(crate::id::INVALID, |t| t.parent);
+        let parent_idx = doc.tree.get(index).map_or(crate::id::INVALID, |t| t.parent);
         if parent_idx != crate::id::INVALID {
             doc.computed_style(parent_idx)
                 .unwrap_or_else(|| crate::styling::initial_values_arc().clone())
@@ -762,10 +777,7 @@ fn build_fragment_recursive(doc: &Document, ctx: &LayoutContext, index: u32) -> 
     };
 
     // Build children fragments recursively.
-    let children_ids = layout_data
-        .layout_children
-        .clone()
-        .unwrap_or_default();
+    let children_ids = layout_data.layout_children.clone().unwrap_or_default();
     let mut children = Vec::with_capacity(children_ids.len());
 
     for &child_id in &children_ids {
@@ -801,7 +813,13 @@ fn build_fragment_recursive(doc: &Document, ctx: &LayoutContext, index: u32) -> 
     let dir = shared::InlineDirection::from_style(&style);
     let child_positions: Vec<_> = children_ids
         .iter()
-        .map(|&id| doc.layout.get(id).expect("missing layout data for child during RTL fixup").style.position)
+        .map(|&id| {
+            doc.layout
+                .get(id)
+                .expect("missing layout data for child during RTL fixup")
+                .style
+                .position
+        })
         .collect();
     dir.fixup_children(
         display,

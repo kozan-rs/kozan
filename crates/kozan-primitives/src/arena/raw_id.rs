@@ -38,21 +38,21 @@ pub struct RawId {
 impl RawId {
     /// Create a new `RawId` with the given index and generation.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn new(index: u32, generation: u32) -> Self {
         Self { index, generation }
     }
 
     /// The slot index in the arena.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn index(self) -> u32 {
         self.index
     }
 
     /// The generation counter (for stale-handle detection).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn generation(self) -> u32 {
         self.generation
     }

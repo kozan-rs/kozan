@@ -75,7 +75,15 @@ pub(crate) fn dispatch(
         ctx.set_phase(Phase::AtTarget);
         ctx.set_current_target(target.index());
         if cell.read(|doc| doc.is_alive_id(target)) {
-            fire_listeners(event_store, target.index(), type_id, event, &ctx, false, true);
+            fire_listeners(
+                event_store,
+                target.index(),
+                type_id,
+                event,
+                &ctx,
+                false,
+                true,
+            );
         }
     }
 
@@ -173,11 +181,13 @@ impl<'a> EventStoreAccess<'a> {
     }
 
     fn take(&mut self, node_index: u32, type_id: TypeId) -> Option<Vec<RegisteredListener>> {
-        self.cell.write(|doc| doc.take_event_listeners(node_index, type_id))
+        self.cell
+            .write(|doc| doc.take_event_listeners(node_index, type_id))
     }
 
     fn put(&mut self, node_index: u32, type_id: TypeId, listeners: Vec<RegisteredListener>) {
-        self.cell.write(|doc| doc.put_event_listeners(node_index, type_id, listeners));
+        self.cell
+            .write(|doc| doc.put_event_listeners(node_index, type_id, listeners));
     }
 }
 
@@ -187,22 +197,34 @@ mod tests {
     use std::rc::Rc;
 
     use crate::dom::document::Document;
+    use crate::dom::traits::{ContainerNode, HasHandle};
     use crate::events::{Bubbles, Cancelable, Event, EventTarget};
     use crate::html::{HtmlButtonElement, HtmlDivElement};
-    use crate::dom::traits::{ContainerNode, HasHandle};
 
     struct TestEvent;
     impl Event for TestEvent {
-        fn bubbles(&self) -> Bubbles { Bubbles::Yes }
-        fn cancelable(&self) -> Cancelable { Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> Bubbles {
+            Bubbles::Yes
+        }
+        fn cancelable(&self) -> Cancelable {
+            Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     struct NonBubblingEvent;
     impl Event for NonBubblingEvent {
-        fn bubbles(&self) -> Bubbles { Bubbles::No }
-        fn cancelable(&self) -> Cancelable { Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> Bubbles {
+            Bubbles::No
+        }
+        fn cancelable(&self) -> Cancelable {
+            Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     #[test]

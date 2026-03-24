@@ -39,7 +39,9 @@ pub fn run(scheduler: &mut Scheduler, ctx: &mut ViewContext, rx: &mpsc::Receiver
         }
 
         // 5. Store timing for next frame's FrameInfo.
-        scheduler.frame_scheduler_mut().set_frame_timing(ctx.last_frame_timing());
+        scheduler
+            .frame_scheduler_mut()
+            .set_frame_timing(ctx.last_frame_timing());
 
         // 6. Park until next event or timeout.
         match result.park_timeout {
@@ -85,7 +87,10 @@ fn on_lifecycle(scheduler: &mut Scheduler, ctx: &mut ViewContext, lc: LifecycleE
             // resize() sets layout+paint dirty — no style recalc needed.
             ctx.on_resize(width, height);
         }
-        LifecycleEvent::ScaleFactorChanged { scale_factor, refresh_rate_millihertz } => {
+        LifecycleEvent::ScaleFactorChanged {
+            scale_factor,
+            refresh_rate_millihertz,
+        } => {
             ctx.on_scale_factor_changed(scale_factor);
             if let Some(mhz) = refresh_rate_millihertz {
                 let budget = std::time::Duration::from_micros(1_000_000_000 / mhz as u64);

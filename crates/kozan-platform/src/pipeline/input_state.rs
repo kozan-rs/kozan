@@ -49,10 +49,18 @@ impl InputState {
 
     pub fn set_modifiers_from_keyboard(&mut self, shift: bool, ctrl: bool, alt: bool, meta: bool) {
         let mut m = Modifiers::EMPTY;
-        if shift { m = m.with_shift(); }
-        if ctrl { m = m.with_ctrl(); }
-        if alt { m = m.with_alt(); }
-        if meta { m = m.with_meta(); }
+        if shift {
+            m = m.with_shift();
+        }
+        if ctrl {
+            m = m.with_ctrl();
+        }
+        if alt {
+            m = m.with_alt();
+        }
+        if meta {
+            m = m.with_meta();
+        }
         let mouse_bits = self.modifiers.bits() & Self::MOUSE_BUTTON_MASK;
         self.modifiers = Modifiers::from_bits(m.bits() | mouse_bits);
     }

@@ -3,9 +3,9 @@
 //! Chrome: `RenderWidgetHostImpl` — per-widget state on the browser main thread.
 
 use crate::event::ViewEvent;
+use crate::pipeline::WindowPipeline;
 use crate::pipeline::input_state::InputState;
 use crate::pipeline::render_loop::RenderEvent;
-use crate::pipeline::WindowPipeline;
 
 /// Per-window state managed by WindowManager.
 pub(crate) struct WindowState {

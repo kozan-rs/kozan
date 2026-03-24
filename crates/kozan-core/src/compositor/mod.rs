@@ -178,12 +178,17 @@ mod tests {
 
     fn test_scroll_state() -> (ScrollTree, ScrollOffsets) {
         let mut tree = ScrollTree::new();
-        tree.set(1, ScrollNode {
-            dom_id: 1, parent: None,
-            container: Size::new(800.0, 600.0),
-            content: Size::new(800.0, 2000.0),
-            scrollable_x: false, scrollable_y: true,
-        });
+        tree.set(
+            1,
+            ScrollNode {
+                dom_id: 1,
+                parent: None,
+                container: Size::new(800.0, 600.0),
+                content: Size::new(800.0, 2000.0),
+                scrollable_x: false,
+                scrollable_y: true,
+            },
+        );
         let mut offsets = ScrollOffsets::new();
         offsets.set_offset(1, Offset::ZERO);
         (tree, offsets)
@@ -203,7 +208,10 @@ mod tests {
         let (tree, _offsets) = test_scroll_state();
         c.commit(Arc::clone(&dl), LayerTree::new(), tree);
         assert!(c.has_content());
-        assert!(Arc::ptr_eq(&c.produce_frame().expect("frame").display_list, &dl));
+        assert!(Arc::ptr_eq(
+            &c.produce_frame().expect("frame").display_list,
+            &dl
+        ));
     }
 
     #[test]

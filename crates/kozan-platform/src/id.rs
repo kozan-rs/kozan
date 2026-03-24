@@ -14,13 +14,13 @@ pub struct ViewId(RawId);
 impl ViewId {
     /// Create from a raw arena ID. Used by windowing backends.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn from_raw(raw: RawId) -> Self {
         Self(raw)
     }
 
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn raw(self) -> RawId {
         self.0
     }
@@ -49,7 +49,7 @@ impl WindowId {
 
     /// Get the raw u64 value.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn raw(self) -> u64 {
         self.0
     }

@@ -16,8 +16,7 @@
 /// The current lifecycle state of a document.
 ///
 /// Chrome: `DocumentLifecycle::LifecycleState`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum LifecycleState {
     /// Something visual changed — needs work.
     VisualUpdatePending,
@@ -40,11 +39,10 @@ pub enum LifecycleState {
     PaintClean,
 }
 
-
 impl LifecycleState {
     /// Whether this state is "clean" (not in the middle of a phase).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_clean(self) -> bool {
         matches!(
             self,
@@ -54,14 +52,14 @@ impl LifecycleState {
 
     /// Whether layout results are up-to-date.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_layout_clean(self) -> bool {
         self >= Self::LayoutClean
     }
 
     /// Whether paint results are up-to-date.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_paint_clean(self) -> bool {
         self >= Self::PaintClean
     }
@@ -77,7 +75,7 @@ impl LifecycleState {
 
     /// Whether any work needs to be done.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn needs_update(self) -> bool {
         self != Self::PaintClean
     }

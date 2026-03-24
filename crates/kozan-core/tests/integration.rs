@@ -594,9 +594,15 @@ fn capture_fires_before_bubble() {
 
     struct Click;
     impl Event for Click {
-        fn bubbles(&self) -> events::Bubbles { events::Bubbles::Yes }
-        fn cancelable(&self) -> events::Cancelable { events::Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> events::Bubbles {
+            events::Bubbles::Yes
+        }
+        fn cancelable(&self) -> events::Cancelable {
+            events::Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     let doc = Document::new();
@@ -626,9 +632,15 @@ fn at_target_fires_both_capture_and_bubble() {
 
     struct Click;
     impl Event for Click {
-        fn bubbles(&self) -> events::Bubbles { events::Bubbles::No }
-        fn cancelable(&self) -> events::Cancelable { events::Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> events::Bubbles {
+            events::Bubbles::No
+        }
+        fn cancelable(&self) -> events::Cancelable {
+            events::Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     let doc = Document::new();
@@ -660,9 +672,15 @@ fn stop_propagation_prevents_ancestor() {
 
     struct Click;
     impl Event for Click {
-        fn bubbles(&self) -> events::Bubbles { events::Bubbles::Yes }
-        fn cancelable(&self) -> events::Cancelable { events::Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> events::Bubbles {
+            events::Bubbles::Yes
+        }
+        fn cancelable(&self) -> events::Cancelable {
+            events::Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     let doc = Document::new();
@@ -691,9 +709,15 @@ fn stop_immediate_propagation_stops_same_node() {
 
     struct Click;
     impl Event for Click {
-        fn bubbles(&self) -> events::Bubbles { events::Bubbles::Yes }
-        fn cancelable(&self) -> events::Cancelable { events::Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> events::Bubbles {
+            events::Bubbles::Yes
+        }
+        fn cancelable(&self) -> events::Cancelable {
+            events::Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     let doc = Document::new();
@@ -718,9 +742,15 @@ fn off_on_node_with_no_listeners_is_noop() {
     // allocate an EventListenerMap or panic.
     struct Click;
     impl Event for Click {
-        fn bubbles(&self) -> events::Bubbles { events::Bubbles::No }
-        fn cancelable(&self) -> events::Cancelable { events::Cancelable::No }
-        fn as_any(&self) -> &dyn core::any::Any { self }
+        fn bubbles(&self) -> events::Bubbles {
+            events::Bubbles::No
+        }
+        fn cancelable(&self) -> events::Cancelable {
+            events::Cancelable::No
+        }
+        fn as_any(&self) -> &dyn core::any::Any {
+            self
+        }
     }
 
     let doc = Document::new();

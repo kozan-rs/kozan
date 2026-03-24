@@ -28,15 +28,15 @@ use std::sync::Arc;
 
 use crate::dom::document::Document;
 use crate::dom::handle::Handle;
-use crate::id::RawId;
 use crate::events::keyboard_event::{KeyDownEvent, KeyUpEvent};
 use crate::events::mouse_event::{
-    ClickEvent, ContextMenuEvent, DblClickEvent, MouseDownEvent, MouseEnterEvent,
-    MouseLeaveEvent, MouseMoveEvent, MouseOutEvent, MouseOverEvent, MouseUpEvent,
+    ClickEvent, ContextMenuEvent, DblClickEvent, MouseDownEvent, MouseEnterEvent, MouseLeaveEvent,
+    MouseMoveEvent, MouseOutEvent, MouseOverEvent, MouseUpEvent,
 };
 use crate::events::wheel_event::WheelEvent;
-use crate::input::{ButtonState, InputEvent, KeyCode, MouseButton};
+use crate::id::RawId;
 use crate::input::default_action::DefaultAction;
+use crate::input::{ButtonState, InputEvent, KeyCode, MouseButton};
 use crate::layout::fragment::Fragment;
 use crate::layout::hit_test::{HitTestCache, HitTestResult, HitTester};
 use crate::scroll::ScrollTree;
@@ -62,7 +62,10 @@ pub(crate) struct InputResult {
 
 impl InputResult {
     fn state(changed: bool) -> Self {
-        Self { state_changed: changed, default_action: DefaultAction::None }
+        Self {
+            state_changed: changed,
+            default_action: DefaultAction::None,
+        }
     }
 }
 
@@ -176,7 +179,9 @@ impl EventHandler {
     }
 
     fn hit_at(&mut self, ctx: &InputContext, point: Point) -> HitTestResult {
-        self.hit_cache.test(ctx.hit_tester, ctx.fragment, point).clone()
+        self.hit_cache
+            .test(ctx.hit_tester, ctx.fragment, point)
+            .clone()
     }
 
     fn on_mouse_move(&mut self, ctx: &InputContext, me: crate::input::MouseMoveEvent) -> bool {
@@ -196,7 +201,9 @@ impl EventHandler {
 
         if let Some(handle) = hit.node_index.and_then(|i| ctx.surface.handle_for_index(i)) {
             handle.dispatch_event(&MouseMoveEvent {
-                x: point.x, y: point.y, modifiers: me.modifiers,
+                x: point.x,
+                y: point.y,
+                modifiers: me.modifiers,
             });
         }
         changed
@@ -220,7 +227,10 @@ impl EventHandler {
                     ctx.surface.set_active_chain(idx, true);
                 }
                 handle.dispatch_event(&MouseDownEvent {
-                    x: point.x, y: point.y, button: me.button, modifiers: me.modifiers,
+                    x: point.x,
+                    y: point.y,
+                    button: me.button,
+                    modifiers: me.modifiers,
                 });
             }
             ButtonState::Released => {
@@ -230,7 +240,10 @@ impl EventHandler {
                     }
                 }
                 handle.dispatch_event(&MouseUpEvent {
-                    x: point.x, y: point.y, button: me.button, modifiers: me.modifiers,
+                    x: point.x,
+                    y: point.y,
+                    button: me.button,
+                    modifiers: me.modifiers,
                 });
                 self.dispatch_click_events(&handle, raw_id, point, &me);
                 self.mousedown_node = None;
@@ -251,34 +264,48 @@ impl EventHandler {
             return;
         }
         handle.dispatch_event(&ClickEvent {
-            x: point.x, y: point.y, button: me.button, modifiers: me.modifiers,
+            x: point.x,
+            y: point.y,
+            button: me.button,
+            modifiers: me.modifiers,
         });
         if me.click_count == 2 {
             handle.dispatch_event(&DblClickEvent {
-                x: point.x, y: point.y, button: me.button, modifiers: me.modifiers,
+                x: point.x,
+                y: point.y,
+                button: me.button,
+                modifiers: me.modifiers,
             });
         }
         if me.button == MouseButton::Right {
             handle.dispatch_event(&ContextMenuEvent {
-                x: point.x, y: point.y, modifiers: me.modifiers,
+                x: point.x,
+                y: point.y,
+                modifiers: me.modifiers,
             });
         }
     }
 
     /// Chrome: `EventHandler::KeyEvent()` → dispatch → `DefaultKeyboardEventHandler()`.
     fn on_keyboard(&mut self, ctx: &InputContext, ke: crate::input::KeyboardEvent) -> InputResult {
-        let handle = self.focused_node
+        let handle = self
+            .focused_node
             .and_then(|id| ctx.surface.resolve(id))
             .or_else(|| ctx.surface.root_handle());
-        let Some(handle) = handle else { return InputResult::state(false) };
+        let Some(handle) = handle else {
+            return InputResult::state(false);
+        };
 
         let allow_default = match ke.state {
             ButtonState::Pressed => handle.dispatch_event(&KeyDownEvent {
-                key: ke.key, modifiers: ke.modifiers, text: ke.text,
+                key: ke.key,
+                modifiers: ke.modifiers,
+                text: ke.text,
             }),
             ButtonState::Released => {
                 handle.dispatch_event(&KeyUpEvent {
-                    key: ke.key, modifiers: ke.modifiers,
+                    key: ke.key,
+                    modifiers: ke.modifiers,
                 });
                 return InputResult::state(true);
             }
@@ -290,7 +317,10 @@ impl EventHandler {
             DefaultAction::None
         };
 
-        InputResult { state_changed: true, default_action: action }
+        InputResult {
+            state_changed: true,
+            default_action: action,
+        }
     }
 
     /// Chrome: `ScrollManager::BubblingScroll()` — maps keys to scroll deltas.
@@ -312,11 +342,17 @@ impl EventHandler {
             KeyCode::PageDown => Offset::new(0.0, ctx.viewport_height - LINE_PX),
             KeyCode::Home => Offset::new(0.0, -f32::MAX),
             KeyCode::End => Offset::new(0.0, f32::MAX),
-            KeyCode::Space if modifiers.shift() => Offset::new(0.0, -(ctx.viewport_height - LINE_PX)),
-            KeyCode::Space if self.focused_node.is_none() => Offset::new(0.0, ctx.viewport_height - LINE_PX),
+            KeyCode::Space if modifiers.shift() => {
+                Offset::new(0.0, -(ctx.viewport_height - LINE_PX))
+            }
+            KeyCode::Space if self.focused_node.is_none() => {
+                Offset::new(0.0, ctx.viewport_height - LINE_PX)
+            }
             KeyCode::Tab if modifiers.shift() => return DefaultAction::FocusPrev,
             KeyCode::Tab => return DefaultAction::FocusNext,
-            KeyCode::Enter | KeyCode::Space if self.focused_node.is_some() => return DefaultAction::Activate,
+            KeyCode::Enter | KeyCode::Space if self.focused_node.is_some() => {
+                return DefaultAction::Activate;
+            }
             _ => return DefaultAction::None,
         };
 
@@ -343,7 +379,8 @@ impl EventHandler {
 
         // W3C: positive deltaY = scroll down (opposite of platform convention).
         let allow_default = handle.dispatch_event(&WheelEvent {
-            x: point.x, y: point.y,
+            x: point.x,
+            y: point.y,
             delta_x: -(we.delta.dx() as f32),
             delta_y: -(we.delta.dy() as f32),
             modifiers: we.modifiers,
@@ -355,18 +392,27 @@ impl EventHandler {
             DefaultAction::ScrollPrevented
         };
 
-        InputResult { state_changed: false, default_action: action }
+        InputResult {
+            state_changed: false,
+            default_action: action,
+        }
     }
 
     fn on_mouse_leave(&mut self, ctx: &InputContext, me: crate::input::MouseLeaveEvent) -> bool {
-        let Some(old_id) = self.hovered_node.take() else { return false };
+        let Some(old_id) = self.hovered_node.take() else {
+            return false;
+        };
         ctx.surface.set_hover_chain(old_id.index(), false);
         if let Some(handle) = ctx.surface.resolve(old_id) {
             handle.dispatch_event(&MouseLeaveEvent {
-                x: self.last_cursor.x, y: self.last_cursor.y, modifiers: me.modifiers,
+                x: self.last_cursor.x,
+                y: self.last_cursor.y,
+                modifiers: me.modifiers,
             });
             handle.dispatch_event(&MouseOutEvent {
-                x: self.last_cursor.x, y: self.last_cursor.y, modifiers: me.modifiers,
+                x: self.last_cursor.x,
+                y: self.last_cursor.y,
+                modifiers: me.modifiers,
             });
         }
         true
@@ -471,8 +517,10 @@ mod tests {
         ButtonState, InputEvent, KeyCode, Modifiers, MouseButton,
         default_action::DefaultAction,
         keyboard::KeyboardEvent as RawKeyboardEvent,
-        mouse::{MouseButtonEvent as RawMouseButtonEvent, MouseMoveEvent as RawMouseMoveEvent,
-                MouseEnterEvent as RawMouseEnterEvent, MouseLeaveEvent as RawMouseLeaveEvent},
+        mouse::{
+            MouseButtonEvent as RawMouseButtonEvent, MouseEnterEvent as RawMouseEnterEvent,
+            MouseLeaveEvent as RawMouseLeaveEvent, MouseMoveEvent as RawMouseMoveEvent,
+        },
         wheel::{WheelDelta, WheelEvent as RawWheelEvent},
     };
     use crate::layout::fragment::{BoxFragmentData, Fragment};
@@ -509,33 +557,71 @@ mod tests {
         let (frag, offsets, tree) = make_ctx(&doc);
         let hit_tester = HitTester::new(&offsets);
         let ctx = InputContext {
-            surface: &doc, fragment: &frag, hit_tester: &hit_tester,
-            viewport_height: 600.0, scroll_tree: &tree,
+            surface: &doc,
+            fragment: &frag,
+            hit_tester: &hit_tester,
+            viewport_height: 600.0,
+            scroll_tree: &tree,
         };
         let now = Instant::now();
 
-        handler.handle_input(InputEvent::MouseMove(RawMouseMoveEvent {
-            x: 0.0, y: 0.0, modifiers: Modifiers::EMPTY, timestamp: now,
-        }), &ctx);
-        handler.handle_input(InputEvent::MouseButton(RawMouseButtonEvent {
-            x: 0.0, y: 0.0, button: MouseButton::Left,
-            state: ButtonState::Pressed, modifiers: Modifiers::EMPTY,
-            click_count: 1, timestamp: now,
-        }), &ctx);
-        handler.handle_input(InputEvent::Keyboard(RawKeyboardEvent {
-            key: KeyCode::Enter, state: ButtonState::Pressed,
-            modifiers: Modifiers::EMPTY, text: None, timestamp: now,
-        }), &ctx);
-        handler.handle_input(InputEvent::Wheel(RawWheelEvent {
-            x: 0.0, y: 0.0, delta: WheelDelta::Lines(0.0, -1.0),
-            modifiers: Modifiers::EMPTY, timestamp: now,
-        }), &ctx);
-        handler.handle_input(InputEvent::MouseEnter(RawMouseEnterEvent {
-            x: 0.0, y: 0.0, modifiers: Modifiers::EMPTY, timestamp: now,
-        }), &ctx);
-        handler.handle_input(InputEvent::MouseLeave(RawMouseLeaveEvent {
-            modifiers: Modifiers::EMPTY, timestamp: now,
-        }), &ctx);
+        handler.handle_input(
+            InputEvent::MouseMove(RawMouseMoveEvent {
+                x: 0.0,
+                y: 0.0,
+                modifiers: Modifiers::EMPTY,
+                timestamp: now,
+            }),
+            &ctx,
+        );
+        handler.handle_input(
+            InputEvent::MouseButton(RawMouseButtonEvent {
+                x: 0.0,
+                y: 0.0,
+                button: MouseButton::Left,
+                state: ButtonState::Pressed,
+                modifiers: Modifiers::EMPTY,
+                click_count: 1,
+                timestamp: now,
+            }),
+            &ctx,
+        );
+        handler.handle_input(
+            InputEvent::Keyboard(RawKeyboardEvent {
+                key: KeyCode::Enter,
+                state: ButtonState::Pressed,
+                modifiers: Modifiers::EMPTY,
+                text: None,
+                timestamp: now,
+            }),
+            &ctx,
+        );
+        handler.handle_input(
+            InputEvent::Wheel(RawWheelEvent {
+                x: 0.0,
+                y: 0.0,
+                delta: WheelDelta::Lines(0.0, -1.0),
+                modifiers: Modifiers::EMPTY,
+                timestamp: now,
+            }),
+            &ctx,
+        );
+        handler.handle_input(
+            InputEvent::MouseEnter(RawMouseEnterEvent {
+                x: 0.0,
+                y: 0.0,
+                modifiers: Modifiers::EMPTY,
+                timestamp: now,
+            }),
+            &ctx,
+        );
+        handler.handle_input(
+            InputEvent::MouseLeave(RawMouseLeaveEvent {
+                modifiers: Modifiers::EMPTY,
+                timestamp: now,
+            }),
+            &ctx,
+        );
     }
 
     #[test]
@@ -545,14 +631,23 @@ mod tests {
         let (frag, offsets, tree) = make_ctx(&doc);
         let hit_tester = HitTester::new(&offsets);
         let ctx = InputContext {
-            surface: &doc, fragment: &frag, hit_tester: &hit_tester,
-            viewport_height: 600.0, scroll_tree: &tree,
+            surface: &doc,
+            fragment: &frag,
+            hit_tester: &hit_tester,
+            viewport_height: 600.0,
+            scroll_tree: &tree,
         };
 
-        let result = handler.handle_input(InputEvent::Keyboard(RawKeyboardEvent {
-            key: KeyCode::ArrowDown, state: ButtonState::Pressed,
-            modifiers: Modifiers::EMPTY, text: None, timestamp: Instant::now(),
-        }), &ctx);
+        let result = handler.handle_input(
+            InputEvent::Keyboard(RawKeyboardEvent {
+                key: KeyCode::ArrowDown,
+                state: ButtonState::Pressed,
+                modifiers: Modifiers::EMPTY,
+                text: None,
+                timestamp: Instant::now(),
+            }),
+            &ctx,
+        );
 
         match result.default_action {
             DefaultAction::Scroll { delta, .. } => assert_eq!(delta.dy, 40.0),
@@ -567,14 +662,23 @@ mod tests {
         let (frag, offsets, tree) = make_ctx(&doc);
         let hit_tester = HitTester::new(&offsets);
         let ctx = InputContext {
-            surface: &doc, fragment: &frag, hit_tester: &hit_tester,
-            viewport_height: 800.0, scroll_tree: &tree,
+            surface: &doc,
+            fragment: &frag,
+            hit_tester: &hit_tester,
+            viewport_height: 800.0,
+            scroll_tree: &tree,
         };
 
-        let result = handler.handle_input(InputEvent::Keyboard(RawKeyboardEvent {
-            key: KeyCode::PageDown, state: ButtonState::Pressed,
-            modifiers: Modifiers::EMPTY, text: None, timestamp: Instant::now(),
-        }), &ctx);
+        let result = handler.handle_input(
+            InputEvent::Keyboard(RawKeyboardEvent {
+                key: KeyCode::PageDown,
+                state: ButtonState::Pressed,
+                modifiers: Modifiers::EMPTY,
+                text: None,
+                timestamp: Instant::now(),
+            }),
+            &ctx,
+        );
 
         match result.default_action {
             DefaultAction::Scroll { delta, .. } => assert_eq!(delta.dy, 760.0),
@@ -589,14 +693,23 @@ mod tests {
         let (frag, offsets, tree) = make_ctx(&doc);
         let hit_tester = HitTester::new(&offsets);
         let ctx = InputContext {
-            surface: &doc, fragment: &frag, hit_tester: &hit_tester,
-            viewport_height: 600.0, scroll_tree: &tree,
+            surface: &doc,
+            fragment: &frag,
+            hit_tester: &hit_tester,
+            viewport_height: 600.0,
+            scroll_tree: &tree,
         };
 
-        let result = handler.handle_input(InputEvent::Keyboard(RawKeyboardEvent {
-            key: KeyCode::Tab, state: ButtonState::Pressed,
-            modifiers: Modifiers::EMPTY, text: None, timestamp: Instant::now(),
-        }), &ctx);
+        let result = handler.handle_input(
+            InputEvent::Keyboard(RawKeyboardEvent {
+                key: KeyCode::Tab,
+                state: ButtonState::Pressed,
+                modifiers: Modifiers::EMPTY,
+                text: None,
+                timestamp: Instant::now(),
+            }),
+            &ctx,
+        );
 
         assert!(matches!(result.default_action, DefaultAction::FocusNext));
     }
@@ -608,14 +721,23 @@ mod tests {
         let (frag, offsets, tree) = make_ctx(&doc);
         let hit_tester = HitTester::new(&offsets);
         let ctx = InputContext {
-            surface: &doc, fragment: &frag, hit_tester: &hit_tester,
-            viewport_height: 600.0, scroll_tree: &tree,
+            surface: &doc,
+            fragment: &frag,
+            hit_tester: &hit_tester,
+            viewport_height: 600.0,
+            scroll_tree: &tree,
         };
 
-        let result = handler.handle_input(InputEvent::Keyboard(RawKeyboardEvent {
-            key: KeyCode::Tab, state: ButtonState::Pressed,
-            modifiers: Modifiers::EMPTY.with_shift(), text: None, timestamp: Instant::now(),
-        }), &ctx);
+        let result = handler.handle_input(
+            InputEvent::Keyboard(RawKeyboardEvent {
+                key: KeyCode::Tab,
+                state: ButtonState::Pressed,
+                modifiers: Modifiers::EMPTY.with_shift(),
+                text: None,
+                timestamp: Instant::now(),
+            }),
+            &ctx,
+        );
 
         assert!(matches!(result.default_action, DefaultAction::FocusPrev));
     }

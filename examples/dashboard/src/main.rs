@@ -105,32 +105,112 @@ struct NavItem {
 }
 
 const NAV_MAIN: &[NavItem] = &[
-    NavItem { icon: "blue",   label: "Dashboard",     active: true },
-    NavItem { icon: "purple", label: "Analytics",      active: false },
-    NavItem { icon: "teal",   label: "Reports",        active: false },
-    NavItem { icon: "orange", label: "Calendar",       active: false },
-    NavItem { icon: "green",  label: "Projects",       active: false },
-    NavItem { icon: "cyan",   label: "Tasks",          active: false },
-    NavItem { icon: "pink",   label: "Messages",       active: false },
-    NavItem { icon: "amber",  label: "Notifications",  active: false },
+    NavItem {
+        icon: "blue",
+        label: "Dashboard",
+        active: true,
+    },
+    NavItem {
+        icon: "purple",
+        label: "Analytics",
+        active: false,
+    },
+    NavItem {
+        icon: "teal",
+        label: "Reports",
+        active: false,
+    },
+    NavItem {
+        icon: "orange",
+        label: "Calendar",
+        active: false,
+    },
+    NavItem {
+        icon: "green",
+        label: "Projects",
+        active: false,
+    },
+    NavItem {
+        icon: "cyan",
+        label: "Tasks",
+        active: false,
+    },
+    NavItem {
+        icon: "pink",
+        label: "Messages",
+        active: false,
+    },
+    NavItem {
+        icon: "amber",
+        label: "Notifications",
+        active: false,
+    },
 ];
 
 const NAV_SETTINGS: &[NavItem] = &[
-    NavItem { icon: "zinc",   label: "General",        active: false },
-    NavItem { icon: "indigo", label: "Team",           active: false },
-    NavItem { icon: "orange", label: "Billing",        active: false },
-    NavItem { icon: "rose",   label: "Integrations",   active: false },
-    NavItem { icon: "teal",   label: "API Keys",       active: false },
-    NavItem { icon: "purple", label: "Security",       active: false },
-    NavItem { icon: "sky",    label: "Appearance",     active: false },
+    NavItem {
+        icon: "zinc",
+        label: "General",
+        active: false,
+    },
+    NavItem {
+        icon: "indigo",
+        label: "Team",
+        active: false,
+    },
+    NavItem {
+        icon: "orange",
+        label: "Billing",
+        active: false,
+    },
+    NavItem {
+        icon: "rose",
+        label: "Integrations",
+        active: false,
+    },
+    NavItem {
+        icon: "teal",
+        label: "API Keys",
+        active: false,
+    },
+    NavItem {
+        icon: "purple",
+        label: "Security",
+        active: false,
+    },
+    NavItem {
+        icon: "sky",
+        label: "Appearance",
+        active: false,
+    },
 ];
 
 const NAV_SUPPORT: &[NavItem] = &[
-    NavItem { icon: "blue",   label: "Documentation",  active: false },
-    NavItem { icon: "lime",   label: "Changelog",      active: false },
-    NavItem { icon: "green",  label: "Help Center",    active: false },
-    NavItem { icon: "cyan",   label: "Community",      active: false },
-    NavItem { icon: "amber",  label: "Feedback",       active: false },
+    NavItem {
+        icon: "blue",
+        label: "Documentation",
+        active: false,
+    },
+    NavItem {
+        icon: "lime",
+        label: "Changelog",
+        active: false,
+    },
+    NavItem {
+        icon: "green",
+        label: "Help Center",
+        active: false,
+    },
+    NavItem {
+        icon: "cyan",
+        label: "Community",
+        active: false,
+    },
+    NavItem {
+        icon: "amber",
+        label: "Feedback",
+        active: false,
+    },
 ];
 
 fn build_sidebar(doc: &Document) -> HtmlDivElement {
@@ -200,7 +280,9 @@ fn build_nav_section(doc: &Document, title: &str, items: &[NavItem]) -> HtmlDivE
 fn build_nav_item(doc: &Document, nav: &NavItem) -> HtmlDivElement {
     let item = doc.div();
     item.class_add("nav-item");
-    if nav.active { item.class_add("nav-active"); }
+    if nav.active {
+        item.class_add("nav-active");
+    }
 
     let icon = doc.div();
     icon.class_add("nav-icon");
@@ -267,10 +349,34 @@ struct CardSpec {
 }
 
 const CARDS: &[CardSpec] = &[
-    CardSpec { accent: "blue",   value: "$2,847", label: "Revenue",  delay_ms: 400,  fill: 0.78 },
-    CardSpec { accent: "purple", value: "1,024",  label: "Users",    delay_ms: 600,  fill: 0.52 },
-    CardSpec { accent: "teal",   value: "98.2%",  label: "Uptime",   delay_ms: 800,  fill: 0.91 },
-    CardSpec { accent: "orange", value: "142",    label: "Issues",   delay_ms: 1000, fill: 0.35 },
+    CardSpec {
+        accent: "blue",
+        value: "$2,847",
+        label: "Revenue",
+        delay_ms: 400,
+        fill: 0.78,
+    },
+    CardSpec {
+        accent: "purple",
+        value: "1,024",
+        label: "Users",
+        delay_ms: 600,
+        fill: 0.52,
+    },
+    CardSpec {
+        accent: "teal",
+        value: "98.2%",
+        label: "Uptime",
+        delay_ms: 800,
+        fill: 0.91,
+    },
+    CardSpec {
+        accent: "orange",
+        value: "142",
+        label: "Issues",
+        delay_ms: 1000,
+        fill: 0.35,
+    },
 ];
 
 fn build_cards_row(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
@@ -405,11 +511,31 @@ struct Activity {
 }
 
 const ACTIVITIES: &[Activity] = &[
-    Activity { color: "green",  text: "Deployment succeeded",    time: "2m ago" },
-    Activity { color: "blue",   text: "New user registered",     time: "5m ago" },
-    Activity { color: "orange", text: "Payment processed",       time: "12m ago" },
-    Activity { color: "purple", text: "Report generated",        time: "1h ago" },
-    Activity { color: "rose",   text: "Alert triggered",         time: "2h ago" },
+    Activity {
+        color: "green",
+        text: "Deployment succeeded",
+        time: "2m ago",
+    },
+    Activity {
+        color: "blue",
+        text: "New user registered",
+        time: "5m ago",
+    },
+    Activity {
+        color: "orange",
+        text: "Payment processed",
+        time: "12m ago",
+    },
+    Activity {
+        color: "purple",
+        text: "Report generated",
+        time: "1h ago",
+    },
+    Activity {
+        color: "rose",
+        text: "Alert triggered",
+        time: "2h ago",
+    },
 ];
 
 fn build_activity_panel(doc: &Document) -> HtmlDivElement {

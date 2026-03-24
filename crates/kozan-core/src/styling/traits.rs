@@ -4,30 +4,30 @@
 //! `ElementData` lives in `Storage<ElementData>` — one array lookup, all fields.
 //! No `doc().read()` closures in selector matching. No `HashMap`.
 
+use selectors::OpaqueElement;
+use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
+use selectors::bloom::{BLOOM_HASH_MASK, BloomFilter};
+use selectors::matching::{ElementSelectorFlags, MatchingContext, QuirksMode, VisitedHandlingMode};
+use selectors::sink::Push;
+use servo_arc::ArcBorrow;
+use style::applicable_declarations::ApplicableDeclarationBlock;
+use style::bloom::each_relevant_element_hash;
+use style::context::SharedStyleContext;
+use style::data::{ElementDataMut, ElementDataRef};
 use style::dom::{
     AttributeProvider, LayoutIterator, NodeInfo, OpaqueNode, TDocument, TElement, TNode,
     TShadowRoot,
 };
-use style::bloom::each_relevant_element_hash;
-use style::context::SharedStyleContext;
-use style::data::{ElementDataMut, ElementDataRef};
 use style::properties::PropertyDeclarationBlock;
+use style::selector_parser::{AttrValue, Lang};
 use style::selector_parser::{NonTSPseudoClass, PseudoElement, SelectorImpl};
 use style::shared_lock::{Locked, SharedRwLock};
 use style::values::AtomIdent;
 use style::{Atom, LocalName, Namespace};
 use style_dom::ElementState;
-use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
-use selectors::bloom::{BloomFilter, BLOOM_HASH_MASK};
-use selectors::matching::{ElementSelectorFlags, MatchingContext, QuirksMode, VisitedHandlingMode};
-use selectors::OpaqueElement;
-use selectors::sink::Push;
-use servo_arc::ArcBorrow;
-use style::applicable_declarations::ApplicableDeclarationBlock;
-use style::selector_parser::{AttrValue, Lang};
 
-use crate::dom::element_data::ElementData;
 use super::node::{KozanNode, doc};
+use crate::dom::element_data::ElementData;
 
 /// Child iterator for Stylo's `traversal_children()`.
 pub(crate) struct KozanChildIter {
@@ -68,8 +68,12 @@ impl KozanNode {
 // ═══════════════════════════════════════════════════════════════════
 
 impl NodeInfo for KozanNode {
-    fn is_element(&self) -> bool { self.is_element() }
-    fn is_text_node(&self) -> bool { self.is_text() }
+    fn is_element(&self) -> bool {
+        self.is_element()
+    }
+    fn is_text_node(&self) -> bool {
+        self.is_text()
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -78,9 +82,15 @@ impl NodeInfo for KozanNode {
 
 impl TDocument for KozanNode {
     type ConcreteNode = KozanNode;
-    fn as_node(&self) -> Self::ConcreteNode { *self }
-    fn is_html_document(&self) -> bool { true }
-    fn quirks_mode(&self) -> QuirksMode { QuirksMode::NoQuirks }
+    fn as_node(&self) -> Self::ConcreteNode {
+        *self
+    }
+    fn is_html_document(&self) -> bool {
+        true
+    }
+    fn quirks_mode(&self) -> QuirksMode {
+        QuirksMode::NoQuirks
+    }
 
     fn shared_lock(&self) -> &SharedRwLock {
         unsafe { &(*doc().as_ptr()).style_engine.guard }
@@ -93,9 +103,18 @@ impl TDocument for KozanNode {
 
 impl TShadowRoot for KozanNode {
     type ConcreteNode = KozanNode;
-    fn as_node(&self) -> Self::ConcreteNode { *self }
-    fn host(&self) -> <Self::ConcreteNode as TNode>::ConcreteElement { unreachable!("no shadow DOM") }
-    fn style_data<'a>(&self) -> Option<&'a style::stylist::CascadeData> where Self: 'a { None }
+    fn as_node(&self) -> Self::ConcreteNode {
+        *self
+    }
+    fn host(&self) -> <Self::ConcreteNode as TNode>::ConcreteElement {
+        unreachable!("no shadow DOM")
+    }
+    fn style_data<'a>(&self) -> Option<&'a style::stylist::CascadeData>
+    where
+        Self: 'a,
+    {
+        None
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -107,23 +126,40 @@ impl TNode for KozanNode {
     type ConcreteDocument = KozanNode;
     type ConcreteShadowRoot = KozanNode;
 
-    fn parent_node(&self) -> Option<Self> { KozanNode::parent_node(self) }
-    fn first_child(&self) -> Option<Self> { KozanNode::first_child(self) }
-    fn last_child(&self) -> Option<Self> { KozanNode::last_child(self) }
-    fn prev_sibling(&self) -> Option<Self> { KozanNode::prev_sibling(self) }
-    fn next_sibling(&self) -> Option<Self> { KozanNode::next_sibling(self) }
+    fn parent_node(&self) -> Option<Self> {
+        KozanNode::parent_node(self)
+    }
+    fn first_child(&self) -> Option<Self> {
+        KozanNode::first_child(self)
+    }
+    fn last_child(&self) -> Option<Self> {
+        KozanNode::last_child(self)
+    }
+    fn prev_sibling(&self) -> Option<Self> {
+        KozanNode::prev_sibling(self)
+    }
+    fn next_sibling(&self) -> Option<Self> {
+        KozanNode::next_sibling(self)
+    }
 
     fn owner_doc(&self) -> Self::ConcreteDocument {
         let mut c = *self;
-        while let Some(p) = c.parent_node() { c = p; }
+        while let Some(p) = c.parent_node() {
+            c = p;
+        }
         c
     }
 
     fn is_in_document(&self) -> bool {
         let mut c = *self;
         loop {
-            if c.is_document() { return true; }
-            match c.parent_node() { Some(p) => c = p, None => return false }
+            if c.is_document() {
+                return true;
+            }
+            match c.parent_node() {
+                Some(p) => c = p,
+                None => return false,
+            }
         }
     }
 
@@ -131,16 +167,26 @@ impl TNode for KozanNode {
         self.parent_node().and_then(|n| n.as_element())
     }
 
-    fn opaque(&self) -> OpaqueNode { OpaqueNode(self.idx() as usize) }
-    fn debug_id(self) -> usize { self.idx() as usize }
+    fn opaque(&self) -> OpaqueNode {
+        OpaqueNode(self.idx() as usize)
+    }
+    fn debug_id(self) -> usize {
+        self.idx() as usize
+    }
 
     fn as_element(&self) -> Option<Self::ConcreteElement> {
         if self.is_element() { Some(*self) } else { None }
     }
     fn as_document(&self) -> Option<Self::ConcreteDocument> {
-        if self.is_document() { Some(*self) } else { None }
+        if self.is_document() {
+            Some(*self)
+        } else {
+            None
+        }
     }
-    fn as_shadow_root(&self) -> Option<Self::ConcreteShadowRoot> { None }
+    fn as_shadow_root(&self) -> Option<Self::ConcreteShadowRoot> {
+        None
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -161,32 +207,61 @@ impl selectors::Element for KozanNode {
         KozanNode::parent_node(self).filter(|n| n.is_element())
     }
 
-    fn parent_node_is_shadow_root(&self) -> bool { false }
-    fn containing_shadow_host(&self) -> Option<Self> { None }
-    fn is_pseudo_element(&self) -> bool { false }
+    fn parent_node_is_shadow_root(&self) -> bool {
+        false
+    }
+    fn containing_shadow_host(&self) -> Option<Self> {
+        None
+    }
+    fn is_pseudo_element(&self) -> bool {
+        false
+    }
 
     fn prev_sibling_element(&self) -> Option<Self> {
         let mut n = KozanNode::prev_sibling(self)?;
-        loop { if n.is_element() { return Some(n); } n = n.prev_sibling()?; }
+        loop {
+            if n.is_element() {
+                return Some(n);
+            }
+            n = n.prev_sibling()?;
+        }
     }
 
     fn next_sibling_element(&self) -> Option<Self> {
         let mut n = KozanNode::next_sibling(self)?;
-        loop { if n.is_element() { return Some(n); } n = n.next_sibling()?; }
+        loop {
+            if n.is_element() {
+                return Some(n);
+            }
+            n = n.next_sibling()?;
+        }
     }
 
     fn first_element_child(&self) -> Option<Self> {
         let mut n = KozanNode::first_child(self)?;
-        loop { if n.is_element() { return Some(n); } n = n.next_sibling()?; }
+        loop {
+            if n.is_element() {
+                return Some(n);
+            }
+            n = n.next_sibling()?;
+        }
     }
 
-    fn is_html_element_in_html_document(&self) -> bool { self.is_element() }
+    fn is_html_element_in_html_document(&self) -> bool {
+        self.is_element()
+    }
 
-    fn has_local_name(&self, name: &<SelectorImpl as selectors::SelectorImpl>::BorrowedLocalName) -> bool {
+    fn has_local_name(
+        &self,
+        name: &<SelectorImpl as selectors::SelectorImpl>::BorrowedLocalName,
+    ) -> bool {
         self.ed().is_some_and(|d| *d.local_name == *name)
     }
 
-    fn has_namespace(&self, ns: &<SelectorImpl as selectors::SelectorImpl>::BorrowedNamespaceUrl) -> bool {
+    fn has_namespace(
+        &self,
+        ns: &<SelectorImpl as selectors::SelectorImpl>::BorrowedNamespaceUrl,
+    ) -> bool {
         self.ed().is_some_and(|d| *d.namespace == *ns)
     }
 
@@ -207,14 +282,21 @@ impl selectors::Element for KozanNode {
             NamespaceConstraint::Specific(ns) if !ns.is_empty() => return false,
             _ => {}
         }
-        let ed = match self.ed() { Some(d) => d, None => return false };
+        let ed = match self.ed() {
+            Some(d) => d,
+            None => return false,
+        };
         match ed.attributes.get(local_name.as_ref()) {
             Some(v) => operation.eval_str(v),
             None => false,
         }
     }
 
-    fn match_non_ts_pseudo_class(&self, pc: &NonTSPseudoClass, _: &mut MatchingContext<SelectorImpl>) -> bool {
+    fn match_non_ts_pseudo_class(
+        &self,
+        pc: &NonTSPseudoClass,
+        _: &mut MatchingContext<SelectorImpl>,
+    ) -> bool {
         let state = self.ed().map_or(ElementState::empty(), |d| d.element_state);
         match *pc {
             NonTSPseudoClass::Hover => state.contains(ElementState::HOVER),
@@ -225,16 +307,22 @@ impl selectors::Element for KozanNode {
             NonTSPseudoClass::Enabled => state.contains(ElementState::ENABLED),
             NonTSPseudoClass::Disabled => state.contains(ElementState::DISABLED),
             NonTSPseudoClass::Checked => state.contains(ElementState::CHECKED),
-            NonTSPseudoClass::Link | NonTSPseudoClass::AnyLink => {
-                self.ed().is_some_and(|d| d.tag_name == "a" && d.attributes.get("href").is_some())
-            }
+            NonTSPseudoClass::Link | NonTSPseudoClass::AnyLink => self
+                .ed()
+                .is_some_and(|d| d.tag_name == "a" && d.attributes.get("href").is_some()),
             NonTSPseudoClass::Visited => false,
             NonTSPseudoClass::Defined => true,
             _ => false,
         }
     }
 
-    fn match_pseudo_element(&self, _: &PseudoElement, _: &mut MatchingContext<SelectorImpl>) -> bool { false }
+    fn match_pseudo_element(
+        &self,
+        _: &PseudoElement,
+        _: &mut MatchingContext<SelectorImpl>,
+    ) -> bool {
+        false
+    }
 
     fn apply_selector_flags(&self, flags: ElementSelectorFlags) {
         if let Some(d) = self.ed() {
@@ -243,25 +331,50 @@ impl selectors::Element for KozanNode {
     }
 
     fn is_link(&self) -> bool {
-        self.ed().is_some_and(|d| d.tag_name == "a" && d.attributes.get("href").is_some())
+        self.ed()
+            .is_some_and(|d| d.tag_name == "a" && d.attributes.get("href").is_some())
     }
-    fn is_html_slot_element(&self) -> bool { false }
+    fn is_html_slot_element(&self) -> bool {
+        false
+    }
 
-    fn has_id(&self, id: &<SelectorImpl as selectors::SelectorImpl>::Identifier, cs: CaseSensitivity) -> bool {
+    fn has_id(
+        &self,
+        id: &<SelectorImpl as selectors::SelectorImpl>::Identifier,
+        cs: CaseSensitivity,
+    ) -> bool {
         self.ed()
             .and_then(|d| d.id.as_ref())
             .is_some_and(|a| cs.eq(a.as_ref().as_bytes(), id.as_ref().as_bytes()))
     }
 
-    fn has_class(&self, name: &<SelectorImpl as selectors::SelectorImpl>::Identifier, cs: CaseSensitivity) -> bool {
-        self.ed()
-            .is_some_and(|d| d.classes.iter().any(|c| cs.eq(c.as_ref().as_bytes(), name.as_ref().as_bytes())))
+    fn has_class(
+        &self,
+        name: &<SelectorImpl as selectors::SelectorImpl>::Identifier,
+        cs: CaseSensitivity,
+    ) -> bool {
+        self.ed().is_some_and(|d| {
+            d.classes
+                .iter()
+                .any(|c| cs.eq(c.as_ref().as_bytes(), name.as_ref().as_bytes()))
+        })
     }
 
-    fn has_custom_state(&self, _: &<SelectorImpl as selectors::SelectorImpl>::Identifier) -> bool { false }
-    fn imported_part(&self, _: &<SelectorImpl as selectors::SelectorImpl>::Identifier) -> Option<<SelectorImpl as selectors::SelectorImpl>::Identifier> { None }
-    fn is_part(&self, _: &<SelectorImpl as selectors::SelectorImpl>::Identifier) -> bool { false }
-    fn is_empty(&self) -> bool { KozanNode::first_child(self).is_none() }
+    fn has_custom_state(&self, _: &<SelectorImpl as selectors::SelectorImpl>::Identifier) -> bool {
+        false
+    }
+    fn imported_part(
+        &self,
+        _: &<SelectorImpl as selectors::SelectorImpl>::Identifier,
+    ) -> Option<<SelectorImpl as selectors::SelectorImpl>::Identifier> {
+        None
+    }
+    fn is_part(&self, _: &<SelectorImpl as selectors::SelectorImpl>::Identifier) -> bool {
+        false
+    }
+    fn is_empty(&self) -> bool {
+        KozanNode::first_child(self).is_none()
+    }
 
     fn is_root(&self) -> bool {
         KozanNode::parent_node(self).is_some_and(|p| p.is_document())
@@ -279,8 +392,13 @@ impl selectors::Element for KozanNode {
 
 impl AttributeProvider for KozanNode {
     fn get_attr(&self, attr: &LocalName, namespace: &Namespace) -> Option<String> {
-        if !namespace.is_empty() { return None; }
-        self.ed()?.attributes.get(attr.as_ref()).map(|v| v.to_string())
+        if !namespace.is_empty() {
+            return None;
+        }
+        self.ed()?
+            .attributes
+            .get(attr.as_ref())
+            .map(|v| v.to_string())
     }
 }
 
@@ -292,35 +410,65 @@ impl TElement for KozanNode {
     type ConcreteNode = KozanNode;
     type TraversalChildrenIterator = KozanChildIter;
 
-    fn as_node(&self) -> Self::ConcreteNode { *self }
+    fn as_node(&self) -> Self::ConcreteNode {
+        *self
+    }
 
     fn traversal_children(&self) -> LayoutIterator<Self::TraversalChildrenIterator> {
-        LayoutIterator(KozanChildIter { current: KozanNode::first_child(self) })
+        LayoutIterator(KozanChildIter {
+            current: KozanNode::first_child(self),
+        })
     }
 
-    fn is_html_element(&self) -> bool { true }
-    fn is_mathml_element(&self) -> bool { false }
-    fn is_svg_element(&self) -> bool { false }
+    fn is_html_element(&self) -> bool {
+        true
+    }
+    fn is_mathml_element(&self) -> bool {
+        false
+    }
+    fn is_svg_element(&self) -> bool {
+        false
+    }
 
     fn style_attribute(&self) -> Option<ArcBorrow<'_, Locked<PropertyDeclarationBlock>>> {
-        self.ed()?.style_attribute.as_ref().map(|arc| arc.borrow_arc())
+        self.ed()?
+            .style_attribute
+            .as_ref()
+            .map(|arc| arc.borrow_arc())
     }
 
-    fn animation_rule(&self, _: &SharedStyleContext) -> Option<servo_arc::Arc<Locked<PropertyDeclarationBlock>>> { None }
-    fn transition_rule(&self, _: &SharedStyleContext) -> Option<servo_arc::Arc<Locked<PropertyDeclarationBlock>>> { None }
+    fn animation_rule(
+        &self,
+        _: &SharedStyleContext,
+    ) -> Option<servo_arc::Arc<Locked<PropertyDeclarationBlock>>> {
+        None
+    }
+    fn transition_rule(
+        &self,
+        _: &SharedStyleContext,
+    ) -> Option<servo_arc::Arc<Locked<PropertyDeclarationBlock>>> {
+        None
+    }
 
     fn state(&self) -> ElementState {
         self.ed().map_or(ElementState::empty(), |d| d.element_state)
     }
 
-    fn has_part_attr(&self) -> bool { false }
-    fn exports_any_part(&self) -> bool { false }
+    fn has_part_attr(&self) -> bool {
+        false
+    }
+    fn exports_any_part(&self) -> bool {
+        false
+    }
 
     fn id(&self) -> Option<&Atom> {
         self.ed()?.id.as_ref()
     }
 
-    fn each_class<F>(&self, mut cb: F) where F: FnMut(&AtomIdent) {
+    fn each_class<F>(&self, mut cb: F)
+    where
+        F: FnMut(&AtomIdent),
+    {
         if let Some(d) = self.ed() {
             for class in &d.classes {
                 cb(&AtomIdent::from(&**class));
@@ -328,9 +476,16 @@ impl TElement for KozanNode {
         }
     }
 
-    fn each_custom_state<F>(&self, _: F) where F: FnMut(&AtomIdent) {}
+    fn each_custom_state<F>(&self, _: F)
+    where
+        F: FnMut(&AtomIdent),
+    {
+    }
 
-    fn each_attr_name<F>(&self, mut cb: F) where F: FnMut(&LocalName) {
+    fn each_attr_name<F>(&self, mut cb: F)
+    where
+        F: FnMut(&LocalName),
+    {
         if let Some(d) = self.ed() {
             for attr in d.attributes.iter() {
                 cb(&LocalName::from(attr.name()));
@@ -351,19 +506,27 @@ impl TElement for KozanNode {
     }
 
     unsafe fn set_handled_snapshot(&self) {
-        if let Some(d) = self.ed() { d.handled_snapshot.set(true); }
+        if let Some(d) = self.ed() {
+            d.handled_snapshot.set(true);
+        }
     }
 
     unsafe fn set_dirty_descendants(&self) {
-        if let Some(d) = self.ed_mut() { d.dirty_descendants.set(true); }
+        if let Some(d) = self.ed_mut() {
+            d.dirty_descendants.set(true);
+        }
     }
 
     unsafe fn unset_dirty_descendants(&self) {
-        if let Some(d) = self.ed() { d.dirty_descendants.set(false); }
+        if let Some(d) = self.ed() {
+            d.dirty_descendants.set(false);
+        }
     }
 
     fn store_children_to_process(&self, n: isize) {
-        if let Some(d) = self.ed() { d.children_to_process.set(n); }
+        if let Some(d) = self.ed() {
+            d.children_to_process.set(n);
+        }
     }
 
     fn did_process_child(&self) -> isize {
@@ -371,11 +534,16 @@ impl TElement for KozanNode {
             let r = d.children_to_process.get() - 1;
             d.children_to_process.set(r);
             r
-        } else { 0 }
+        } else {
+            0
+        }
     }
 
     unsafe fn ensure_data(&self) -> ElementDataMut<'_> {
-        self.ed().expect("ensure_data on non-element").stylo_data.borrow_mut()
+        self.ed()
+            .expect("ensure_data on non-element")
+            .stylo_data
+            .borrow_mut()
     }
 
     unsafe fn clear_data(&self) {
@@ -398,17 +566,33 @@ impl TElement for KozanNode {
         Some(self.ed()?.stylo_data.borrow_mut())
     }
 
-    fn skip_item_display_fixup(&self) -> bool { false }
-    fn may_have_animations(&self) -> bool { false }
-    fn has_animations(&self, _: &SharedStyleContext) -> bool { false }
-    fn has_css_animations(&self, _: &SharedStyleContext, _: Option<PseudoElement>) -> bool { false }
-    fn has_css_transitions(&self, _: &SharedStyleContext, _: Option<PseudoElement>) -> bool { false }
-    fn shadow_root(&self) -> Option<<Self::ConcreteNode as TNode>::ConcreteShadowRoot> { None }
-    fn containing_shadow(&self) -> Option<<Self::ConcreteNode as TNode>::ConcreteShadowRoot> { None }
+    fn skip_item_display_fixup(&self) -> bool {
+        false
+    }
+    fn may_have_animations(&self) -> bool {
+        false
+    }
+    fn has_animations(&self, _: &SharedStyleContext) -> bool {
+        false
+    }
+    fn has_css_animations(&self, _: &SharedStyleContext, _: Option<PseudoElement>) -> bool {
+        false
+    }
+    fn has_css_transitions(&self, _: &SharedStyleContext, _: Option<PseudoElement>) -> bool {
+        false
+    }
+    fn shadow_root(&self) -> Option<<Self::ConcreteNode as TNode>::ConcreteShadowRoot> {
+        None
+    }
+    fn containing_shadow(&self) -> Option<<Self::ConcreteNode as TNode>::ConcreteShadowRoot> {
+        None
+    }
 
     fn lang_attr(&self) -> Option<AttrValue> {
         let ed = self.ed()?;
-        ed.attributes.get("lang").map(|v| AttrValue::from(v as &str))
+        ed.attributes
+            .get("lang")
+            .map(|v| AttrValue::from(v as &str))
     }
 
     fn match_element_lang(&self, override_lang: Option<Option<AttrValue>>, value: &Lang) -> bool {
@@ -416,8 +600,14 @@ impl TElement for KozanNode {
             Some(Some(ref l)) => l.as_ref().to_string(),
             Some(None) => return false,
             None => {
-                let ed = match self.ed() { Some(d) => d, None => return false };
-                match ed.attributes.get("lang") { Some(v) => v.to_string(), None => return false }
+                let ed = match self.ed() {
+                    Some(d) => d,
+                    None => return false,
+                };
+                match ed.attributes.get("lang") {
+                    Some(v) => v.to_string(),
+                    None => return false,
+                }
             }
         };
         lang.starts_with(value.as_ref())
@@ -427,28 +617,41 @@ impl TElement for KozanNode {
         self.ed().is_some_and(|d| d.tag_name == "body")
     }
 
-    fn synthesize_presentational_hints_for_legacy_attributes<V>(&self, _: VisitedHandlingMode, _: &mut V)
-    where V: Push<ApplicableDeclarationBlock> {}
+    fn synthesize_presentational_hints_for_legacy_attributes<V>(
+        &self,
+        _: VisitedHandlingMode,
+        _: &mut V,
+    ) where
+        V: Push<ApplicableDeclarationBlock>,
+    {
+    }
 
     fn local_name(&self) -> &<SelectorImpl as selectors::parser::SelectorImpl>::BorrowedLocalName {
         let ed = self.ed().expect("local_name on non-element");
         &ed.local_name
     }
 
-    fn namespace(&self) -> &<SelectorImpl as selectors::parser::SelectorImpl>::BorrowedNamespaceUrl {
+    fn namespace(
+        &self,
+    ) -> &<SelectorImpl as selectors::parser::SelectorImpl>::BorrowedNamespaceUrl {
         let ed = self.ed().expect("namespace on non-element");
         &ed.namespace
     }
 
-    fn query_container_size(&self, _: &style::values::computed::Display) -> euclid::default::Size2D<Option<app_units::Au>> {
+    fn query_container_size(
+        &self,
+        _: &style::values::computed::Display,
+    ) -> euclid::default::Size2D<Option<app_units::Au>> {
         euclid::default::Size2D::new(None, None)
     }
 
     fn has_selector_flags(&self, flags: ElementSelectorFlags) -> bool {
-        self.ed().is_some_and(|d| d.selector_flags.get().contains(flags))
+        self.ed()
+            .is_some_and(|d| d.selector_flags.get().contains(flags))
     }
 
     fn relative_selector_search_direction(&self) -> ElementSelectorFlags {
-        self.ed().map_or(ElementSelectorFlags::empty(), |d| d.selector_flags.get())
+        self.ed()
+            .map_or(ElementSelectorFlags::empty(), |d| d.selector_flags.get())
     }
 }

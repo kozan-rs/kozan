@@ -43,14 +43,14 @@ pub enum Dimension {
 }
 
 impl Dimension {
-    #[must_use] 
+    #[must_use]
     pub fn is_auto(self) -> bool {
         matches!(self, Dimension::Auto)
     }
 
     /// True for any value that resolves to a concrete number (not
     /// auto/min-content/max-content/fit-content).
-    #[must_use] 
+    #[must_use]
     pub fn is_definite(self) -> bool {
         matches!(
             self,
@@ -66,7 +66,7 @@ impl Dimension {
     }
 
     /// True for values that the layout algorithm determines.
-    #[must_use] 
+    #[must_use]
     pub fn is_intrinsic(self) -> bool {
         matches!(
             self,
@@ -79,7 +79,7 @@ impl Dimension {
     /// Only resolves [`Px`](Dimension::Px) and [`Percent`](Dimension::Percent).
     /// For font-relative and viewport-relative values, use
     /// [`resolve_full`](Self::resolve_full).
-    #[must_use] 
+    #[must_use]
     pub fn resolve(self, parent: f32) -> Option<f32> {
         match self {
             Dimension::Px(v) => Some(v),
@@ -89,7 +89,7 @@ impl Dimension {
     }
 
     /// Resolve with all context values available.
-    #[must_use] 
+    #[must_use]
     pub fn resolve_full(self, ctx: &ResolveContext) -> Option<f32> {
         match self {
             Dimension::Px(v) => Some(v),
@@ -108,7 +108,7 @@ impl Dimension {
     }
 
     /// Resolve, falling back to a default for unresolvable values.
-    #[must_use] 
+    #[must_use]
     pub fn resolve_or(self, parent: f32, fallback: f32) -> f32 {
         self.resolve(parent).unwrap_or(fallback)
     }
@@ -130,37 +130,37 @@ pub struct ResolveContext {
 }
 
 /// Shorthand: absolute pixels.
-#[must_use] 
+#[must_use]
 pub fn px(value: f32) -> Dimension {
     Dimension::Px(value)
 }
 
 /// Shorthand: percentage of parent.
-#[must_use] 
+#[must_use]
 pub fn pct(value: f32) -> Dimension {
     Dimension::Percent(value)
 }
 
 /// Shorthand: relative to element's font-size.
-#[must_use] 
+#[must_use]
 pub fn em(value: f32) -> Dimension {
     Dimension::Em(value)
 }
 
 /// Shorthand: relative to root font-size.
-#[must_use] 
+#[must_use]
 pub fn rem(value: f32) -> Dimension {
     Dimension::Rem(value)
 }
 
 /// Shorthand: percentage of viewport width.
-#[must_use] 
+#[must_use]
 pub fn vw(value: f32) -> Dimension {
     Dimension::Vw(value)
 }
 
 /// Shorthand: percentage of viewport height.
-#[must_use] 
+#[must_use]
 pub fn vh(value: f32) -> Dimension {
     Dimension::Vh(value)
 }

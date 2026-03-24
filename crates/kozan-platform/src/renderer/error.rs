@@ -68,7 +68,10 @@ mod tests {
     #[test]
     fn display_surface_creation_includes_inner_message() {
         let err = RendererError::SurfaceCreation("unsupported format".into());
-        assert_eq!(err.to_string(), "surface creation failed: unsupported format");
+        assert_eq!(
+            err.to_string(),
+            "surface creation failed: unsupported format"
+        );
     }
 
     #[test]

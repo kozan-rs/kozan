@@ -78,7 +78,7 @@ impl InputType {
     /// Parse an input type from its string representation.
     ///
     /// Unknown types default to `Text` (per HTML spec).
-    #[must_use] 
+    #[must_use]
     pub fn parse(s: &str) -> Self {
         match s.to_ascii_lowercase().as_str() {
             "text" => Self::Text,
@@ -106,7 +106,7 @@ impl InputType {
     }
 
     /// Whether this input type is a text-editing type.
-    #[must_use] 
+    #[must_use]
     pub fn is_text_type(&self) -> bool {
         matches!(
             self,
@@ -121,13 +121,13 @@ impl InputType {
     }
 
     /// Whether this input type has a checked state.
-    #[must_use] 
+    #[must_use]
     pub fn is_checkable(&self) -> bool {
         matches!(self, Self::Checkbox | Self::Radio)
     }
 
     /// Whether this input type is a button.
-    #[must_use] 
+    #[must_use]
     pub fn is_button_type(&self) -> bool {
         matches!(
             self,
@@ -136,7 +136,7 @@ impl InputType {
     }
 
     /// Whether this input type is focusable.
-    #[must_use] 
+    #[must_use]
     pub fn is_focusable(&self) -> bool {
         !matches!(self, Self::Hidden)
     }

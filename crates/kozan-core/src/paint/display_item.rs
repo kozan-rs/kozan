@@ -16,7 +16,6 @@
 //! | `ClipRectOp` | `DisplayItem::PushClip` |
 //! | `SaveLayerAlphaOp` | `DisplayItem::PushOpacity` |
 
-
 use kozan_primitives::color::Color;
 use kozan_primitives::geometry::Rect;
 
@@ -190,7 +189,6 @@ pub enum DrawCommand {
     // TODO(M7): LinearGradient { rect, stops, angle } — Chrome: PaintOp::DrawPaintOp + cc::PaintShader::MakeLinearGradient.
     // TODO(M7): RadialGradient { rect, stops, center, radius } — Chrome: PaintOp::DrawPaintOp + cc::PaintShader::MakeRadialGradient.
     // TODO(M7): TextShadow { x, y, runs, offset_x, offset_y, blur, color } — Chrome: TextPainter::PaintTextWithShadows().
-
     /// Draw a box shadow.
     /// Chrome: painted via `PaintOp::DrawRRectOp` with blur filter.
     BoxShadow {
@@ -311,13 +309,13 @@ impl Default for BorderColors {
 
 impl DisplayItem {
     /// Whether this item is a draw command (produces pixels).
-    #[must_use] 
+    #[must_use]
     pub fn is_draw(&self) -> bool {
         matches!(self, DisplayItem::Draw(_))
     }
 
     /// Whether this item is a push operation (needs a matching pop).
-    #[must_use] 
+    #[must_use]
     pub fn is_push(&self) -> bool {
         matches!(
             self,

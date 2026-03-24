@@ -39,13 +39,13 @@ pub struct PaintChunk {
 
 impl PaintChunk {
     /// Number of display items in this chunk.
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.end - self.start
     }
 
     /// Whether this chunk is empty.
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.start == self.end
     }
@@ -66,37 +66,37 @@ pub struct DisplayList {
 
 impl DisplayList {
     /// Create a new empty display list.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Start building a new display list.
-    #[must_use] 
+    #[must_use]
     pub fn builder() -> DisplayListBuilder {
         DisplayListBuilder::new()
     }
 
     /// Total number of display items.
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.items.len()
     }
 
     /// Whether the display list is empty.
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
 
     /// Get all display items in paint order.
-    #[must_use] 
+    #[must_use]
     pub fn items(&self) -> &[DisplayItem] {
         &self.items
     }
 
     /// Get all paint chunks.
-    #[must_use] 
+    #[must_use]
     pub fn chunks(&self) -> &[PaintChunk] {
         &self.chunks
     }
@@ -107,7 +107,7 @@ impl DisplayList {
     }
 
     /// Get items for a specific chunk.
-    #[must_use] 
+    #[must_use]
     pub fn chunk_items(&self, chunk: &PaintChunk) -> &[DisplayItem] {
         &self.items[chunk.start..chunk.end]
     }
@@ -136,7 +136,7 @@ pub struct DisplayListBuilder {
 
 impl DisplayListBuilder {
     /// Create a new builder with root property state.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             items: Vec::new(),
@@ -163,7 +163,7 @@ impl DisplayListBuilder {
     }
 
     /// Finish building and return the display list.
-    #[must_use] 
+    #[must_use]
     pub fn finish(mut self) -> DisplayList {
         self.finish_chunk();
         DisplayList {

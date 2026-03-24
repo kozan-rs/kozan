@@ -42,7 +42,7 @@ pub struct ListenerOptions {
 }
 
 impl ListenerOptions {
-    #[must_use] 
+    #[must_use]
     pub fn capture() -> Self {
         Self {
             capture: true,
@@ -50,7 +50,7 @@ impl ListenerOptions {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn passive() -> Self {
         Self {
             passive: true,
@@ -58,7 +58,7 @@ impl ListenerOptions {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn once() -> Self {
         Self {
             once: true,

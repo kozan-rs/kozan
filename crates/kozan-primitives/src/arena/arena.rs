@@ -54,7 +54,7 @@ pub struct Arena<T> {
 
 impl<T> Arena<T> {
     /// Create a new empty arena.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             allocator: IdAllocator::new(),
@@ -79,7 +79,7 @@ impl<T> Arena<T> {
     ///
     /// O(1) — array index + generation check.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn get(&self, id: RawId) -> Option<&T> {
         if !self.allocator.is_alive(id) {
             return None;
@@ -111,28 +111,28 @@ impl<T> Arena<T> {
 
     /// Check if an ID is still alive (not freed, correct generation).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_alive(&self, id: RawId) -> bool {
         self.allocator.is_alive(id)
     }
 
     /// Number of currently alive entries.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn count(&self) -> u32 {
         self.allocator.count()
     }
 
     /// Whether the arena has no alive entries.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.allocator.count() == 0
     }
 
     /// Total capacity (alive + freed slots, not including unallocated).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.allocator.capacity()
     }
@@ -143,7 +143,7 @@ impl<T> Arena<T> {
     ///
     /// The caller must ensure the ID is alive.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub unsafe fn get_unchecked(&self, id: RawId) -> &T {
         unsafe { self.storage.get_unchecked(id.index()) }
     }
@@ -194,7 +194,7 @@ impl<T> Arena<T> {
 
     /// Access the underlying allocator (for advanced use cases).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn allocator(&self) -> &IdAllocator {
         &self.allocator
     }
@@ -202,7 +202,7 @@ impl<T> Arena<T> {
     /// Access the underlying storage (for advanced use cases like
     /// parallel column access in kozan-core's `Document`).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn storage(&self) -> &Storage<T> {
         &self.storage
     }

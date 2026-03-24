@@ -41,10 +41,7 @@ impl EventPath {
             let Some(cur_gen) = cell.read(|doc| doc.generation(current)) else {
                 break;
             };
-            let Some(tree) = cell.read(|doc| doc.tree_data(RawId::new(
-                current,
-                cur_gen,
-            ))) else {
+            let Some(tree) = cell.read(|doc| doc.tree_data(RawId::new(current, cur_gen))) else {
                 break;
             };
 
@@ -64,25 +61,25 @@ impl EventPath {
     }
 
     /// Number of nodes in the path.
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
     /// Is the path empty? (target was dead)
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
     /// The target node (first entry).
-    #[must_use] 
+    #[must_use]
     pub fn target(&self) -> Option<(u32, u32)> {
         self.entries.first().copied()
     }
 
     /// Index of the target in the path (always 0 if non-empty).
-    #[must_use] 
+    #[must_use]
     pub fn target_index(&self) -> usize {
         0
     }
@@ -131,7 +128,10 @@ mod tests {
 
         // Path: target (btn) → div → root. Length = 3.
         assert_eq!(path.len(), 3);
-        assert_eq!(path.target().expect("non-empty path").0, btn.handle().raw().index());
+        assert_eq!(
+            path.target().expect("non-empty path").0,
+            btn.handle().raw().index()
+        );
         // Last entry is the root.
         let (root_idx, _) = path.get(2).expect("root entry");
         assert_eq!(root_idx, doc.root().raw().index());
@@ -206,6 +206,9 @@ mod tests {
         let path = EventPath::build(cell, btn.handle().raw());
 
         assert_eq!(path.len(), 1);
-        assert_eq!(path.target().expect("has target").0, btn.handle().raw().index());
+        assert_eq!(
+            path.target().expect("has target").0,
+            btn.handle().raw().index()
+        );
     }
 }

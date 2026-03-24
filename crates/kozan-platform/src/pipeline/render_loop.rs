@@ -151,11 +151,8 @@ impl<S: RenderSurface> RenderLoop<S> {
     }
 
     fn commit(&mut self, output: FrameOutput) {
-        self.compositor.commit(
-            output.display_list,
-            output.layer_tree,
-            output.scroll_tree,
-        );
+        self.compositor
+            .commit(output.display_list, output.layer_tree, output.scroll_tree);
     }
 
     fn apply_scroll(&mut self, delta: Offset, point: Point) {
@@ -166,14 +163,16 @@ impl<S: RenderSurface> RenderLoop<S> {
 
         // Hit test: find the scrollable container under the cursor.
         // Chrome: InputHandler::HitTestScrollNode() on compositor thread.
-        let target = self.compositor.hit_test_scroll_target(point)
+        let target = self
+            .compositor
+            .hit_test_scroll_target(point)
             .or_else(|| self.compositor.scroll_tree().root_scroller());
 
         if let Some(target) = target {
             if self.compositor.try_scroll(target, delta) {
-                let _ = self.view_tx.send(
-                    ViewEvent::ScrollSync(self.compositor.scroll_offsets().clone()),
-                );
+                let _ = self.view_tx.send(ViewEvent::ScrollSync(
+                    self.compositor.scroll_offsets().clone(),
+                ));
             }
         }
     }

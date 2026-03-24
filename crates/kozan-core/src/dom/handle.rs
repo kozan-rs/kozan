@@ -56,14 +56,14 @@ impl Handle {
 
     /// The raw node ID (index + generation). Can be sent across threads.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn raw(&self) -> RawId {
         self.id
     }
 
     /// Check if this node is still alive.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_alive(&self) -> bool {
         self.cell.read(|doc| doc.is_alive_id(self.id))
     }
@@ -92,7 +92,9 @@ impl Handle {
     pub(crate) fn mark_parent_needs_layout(&self) {
         let index = self.id.index();
         self.cell.write(|doc| {
-            let parent_idx = doc.tree.get(index)
+            let parent_idx = doc
+                .tree
+                .get(index)
                 .map(|td| td.parent)
                 .filter(|&p| p != crate::id::INVALID);
             if let Some(_parent) = parent_idx {
@@ -108,9 +110,10 @@ impl Handle {
     // ---- Element data (attributes) ----
 
     /// Tag name (e.g., "div", "button"). None for non-element nodes.
-    #[must_use] 
+    #[must_use]
     pub fn tag_name(&self) -> Option<&'static str> {
-        self.cell.read(|doc| doc.read_element_data(self.id, |ed| ed.tag_name))
+        self.cell
+            .read(|doc| doc.read_element_data(self.id, |ed| ed.tag_name))
     }
 
     /// Get the `id` attribute.
@@ -140,9 +143,7 @@ impl Handle {
     pub fn attribute(&self, name: &str) -> Option<String> {
         self.cell
             .read(|doc| {
-                doc.read_element_data(self.id, |ed| {
-                    ed.attributes.get(name).map(|v| v.to_string())
-                })
+                doc.read_element_data(self.id, |ed| ed.attributes.get(name).map(|v| v.to_string()))
             })
             .flatten()
     }
@@ -162,18 +163,19 @@ impl Handle {
     }
 
     /// Remove an attribute.
-    #[must_use] 
+    #[must_use]
     pub fn remove_attribute(&self, name: &str) -> Option<String> {
         let index = self.id.index();
-        self.cell
-            .write(|doc| {
-                let removed = doc.write_element_data(self.id, |ed| {
+        self.cell.write(|doc| {
+            let removed = doc
+                .write_element_data(self.id, |ed| {
                     ed.on_attribute_removed(name);
                     ed.attributes.remove(name)
-                }).flatten();
-                doc.mark_for_restyle(index);
-                removed
-            })
+                })
+                .flatten();
+            doc.mark_for_restyle(index);
+            removed
+        })
     }
 
     // ---- ClassList — Chrome: element.classList (DOMTokenList) ----
@@ -183,9 +185,9 @@ impl Handle {
     pub fn class_add(&self, name: &str) {
         let index = self.id.index();
         self.cell.write(|doc| {
-            let changed = doc.write_element_data(self.id, |ed| {
-                ed.class_add(name)
-            }).unwrap_or(false);
+            let changed = doc
+                .write_element_data(self.id, |ed| ed.class_add(name))
+                .unwrap_or(false);
             if changed {
                 doc.mark_for_restyle(index);
             }
@@ -197,9 +199,9 @@ impl Handle {
     pub fn class_remove(&self, name: &str) {
         let index = self.id.index();
         self.cell.write(|doc| {
-            let changed = doc.write_element_data(self.id, |ed| {
-                ed.class_remove(name)
-            }).unwrap_or(false);
+            let changed = doc
+                .write_element_data(self.id, |ed| ed.class_remove(name))
+                .unwrap_or(false);
             if changed {
                 doc.mark_for_restyle(index);
             }
@@ -208,13 +210,13 @@ impl Handle {
 
     /// Toggle a CSS class. Returns true if now present.
     /// Chrome equivalent: `element.classList.toggle("name")`.
-    #[must_use] 
+    #[must_use]
     pub fn class_toggle(&self, name: &str) -> bool {
         let index = self.id.index();
         self.cell.write(|doc| {
-            let present = doc.write_element_data(self.id, |ed| {
-                ed.class_toggle(name)
-            }).unwrap_or(false);
+            let present = doc
+                .write_element_data(self.id, |ed| ed.class_toggle(name))
+                .unwrap_or(false);
             doc.mark_for_restyle(index);
             present
         })
@@ -224,9 +226,9 @@ impl Handle {
     /// Chrome equivalent: `element.classList.contains("name")`.
     #[must_use]
     pub fn class_contains(&self, name: &str) -> bool {
-        self.cell.read(|doc| {
-            doc.read_element_data(self.id, |ed| ed.class_contains(name))
-        }).unwrap_or(false)
+        self.cell
+            .read(|doc| doc.read_element_data(self.id, |ed| ed.class_contains(name)))
+            .unwrap_or(false)
     }
 
     // ---- Tree operations ----
@@ -290,68 +292,78 @@ impl Handle {
     // ---- Tree queries ----
 
     /// Parent node.
-    #[must_use] 
+    #[must_use]
     pub fn parent(&self) -> Option<Handle> {
-        self.cell.read(|doc| {
-            let tree = doc.tree_data(self.id)?;
-            if tree.parent == INVALID {
-                return None;
-            }
-            let id = doc.raw_id(tree.parent)?;
-            Some(id)
-        }).map(|id| Handle::new(id, self.cell))
+        self.cell
+            .read(|doc| {
+                let tree = doc.tree_data(self.id)?;
+                if tree.parent == INVALID {
+                    return None;
+                }
+                let id = doc.raw_id(tree.parent)?;
+                Some(id)
+            })
+            .map(|id| Handle::new(id, self.cell))
     }
 
     /// First child.
-    #[must_use] 
+    #[must_use]
     pub fn first_child(&self) -> Option<Handle> {
-        self.cell.read(|doc| {
-            let tree = doc.tree_data(self.id)?;
-            if tree.first_child == INVALID {
-                return None;
-            }
-            doc.raw_id(tree.first_child)
-        }).map(|id| Handle::new(id, self.cell))
+        self.cell
+            .read(|doc| {
+                let tree = doc.tree_data(self.id)?;
+                if tree.first_child == INVALID {
+                    return None;
+                }
+                doc.raw_id(tree.first_child)
+            })
+            .map(|id| Handle::new(id, self.cell))
     }
 
     /// Last child.
-    #[must_use] 
+    #[must_use]
     pub fn last_child(&self) -> Option<Handle> {
-        self.cell.read(|doc| {
-            let tree = doc.tree_data(self.id)?;
-            if tree.last_child == INVALID {
-                return None;
-            }
-            doc.raw_id(tree.last_child)
-        }).map(|id| Handle::new(id, self.cell))
+        self.cell
+            .read(|doc| {
+                let tree = doc.tree_data(self.id)?;
+                if tree.last_child == INVALID {
+                    return None;
+                }
+                doc.raw_id(tree.last_child)
+            })
+            .map(|id| Handle::new(id, self.cell))
     }
 
     /// Next sibling.
-    #[must_use] 
+    #[must_use]
     pub fn next_sibling(&self) -> Option<Handle> {
-        self.cell.read(|doc| {
-            let tree = doc.tree_data(self.id)?;
-            if tree.next_sibling == INVALID {
-                return None;
-            }
-            doc.raw_id(tree.next_sibling)
-        }).map(|id| Handle::new(id, self.cell))
+        self.cell
+            .read(|doc| {
+                let tree = doc.tree_data(self.id)?;
+                if tree.next_sibling == INVALID {
+                    return None;
+                }
+                doc.raw_id(tree.next_sibling)
+            })
+            .map(|id| Handle::new(id, self.cell))
     }
 
     /// Previous sibling.
-    #[must_use] 
+    #[must_use]
     pub fn prev_sibling(&self) -> Option<Handle> {
-        self.cell.read(|doc| {
-            let tree = doc.tree_data(self.id)?;
-            if tree.prev_sibling == INVALID {
-                return None;
-            }
-            doc.raw_id(tree.prev_sibling)
-        }).map(|id| Handle::new(id, self.cell))
+        self.cell
+            .read(|doc| {
+                let tree = doc.tree_data(self.id)?;
+                if tree.prev_sibling == INVALID {
+                    return None;
+                }
+                doc.raw_id(tree.prev_sibling)
+            })
+            .map(|id| Handle::new(id, self.cell))
     }
 
     /// All children.
-    #[must_use] 
+    #[must_use]
     pub fn children(&self) -> Vec<Handle> {
         let ids = self.cell.read(|doc| doc.children_ids(self.id));
         ids.into_iter()
@@ -361,19 +373,19 @@ impl Handle {
 
     // ---- Node kind ----
 
-    #[must_use] 
+    #[must_use]
     pub fn node_kind(&self) -> Option<NodeType> {
         self.cell.read(|doc| doc.node_kind(self.id))
     }
-    #[must_use] 
+    #[must_use]
     pub fn is_element(&self) -> bool {
         self.node_kind() == Some(NodeType::Element)
     }
-    #[must_use] 
+    #[must_use]
     pub fn is_text(&self) -> bool {
         self.node_kind() == Some(NodeType::Text)
     }
-    #[must_use] 
+    #[must_use]
     pub fn is_document(&self) -> bool {
         self.node_kind() == Some(NodeType::Document)
     }
@@ -386,7 +398,7 @@ impl Handle {
     /// div.style().color(AbsoluteColor::RED);
     /// div.style().display(Display::Flex);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn style(&self) -> crate::styling::builder::StyleAccess {
         crate::styling::builder::StyleAccess::new(self.cell, self.id)
     }
@@ -406,8 +418,7 @@ impl Handle {
         if !self.is_alive() {
             return false;
         }
-        let mut store =
-            crate::events::dispatcher::EventStoreAccess::new(self.cell);
+        let mut store = crate::events::dispatcher::EventStoreAccess::new(self.cell);
         crate::events::dispatch(self.cell, self.id, event, &mut store)
     }
 }

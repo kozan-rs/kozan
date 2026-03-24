@@ -40,7 +40,11 @@ impl ViewThreadHandle {
         wake_sender: WakeSender,
         join_handle: thread::JoinHandle<()>,
     ) -> Self {
-        Self { sender, wake_sender, join_handle: Some(join_handle) }
+        Self {
+            sender,
+            wake_sender,
+            join_handle: Some(join_handle),
+        }
     }
 
     pub fn send(&self, event: ViewEvent) -> bool {
@@ -53,10 +57,14 @@ impl ViewThreadHandle {
 
     pub fn shutdown(&mut self) {
         let _ = self.sender.send(ViewEvent::Shutdown);
-        if let Some(h) = self.join_handle.take() { let _ = h.join(); }
+        if let Some(h) = self.join_handle.take() {
+            let _ = h.join();
+        }
     }
 }
 
 impl Drop for ViewThreadHandle {
-    fn drop(&mut self) { self.shutdown(); }
+    fn drop(&mut self) {
+        self.shutdown();
+    }
 }

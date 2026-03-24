@@ -13,12 +13,12 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::mpsc;
 
+use kozan_core::Document;
 use kozan_core::compositor::layer_tree::LayerTree;
+use kozan_core::paint::DisplayList;
 use kozan_core::scroll::ScrollOffsets;
 use kozan_core::scroll::ScrollTree;
 use kozan_core::widget::FrameWidget;
-use kozan_core::Document;
-use kozan_core::paint::DisplayList;
 use kozan_scheduler::WakeSender;
 
 use crate::host::PlatformHost;
@@ -141,7 +141,10 @@ impl ViewContext {
     /// // Runtime — from a file:
     /// ctx.register_font(std::fs::read("font.ttf").unwrap());
     /// ```
-    pub fn register_font(&self, data: impl Into<kozan_core::layout::inline::font_system::FontBlob>) -> Vec<String> {
+    pub fn register_font(
+        &self,
+        data: impl Into<kozan_core::layout::inline::font_system::FontBlob>,
+    ) -> Vec<String> {
         self.frame.font_system().register_font(data)
     }
 
@@ -249,8 +252,13 @@ impl ViewContext {
     ///     true // keep running
     /// });
     /// ```
-    pub fn request_frame(&self, callback: impl FnMut(kozan_scheduler::FrameInfo) -> bool + 'static) {
-        self.staged_frame_callbacks.borrow_mut().push(Box::new(callback));
+    pub fn request_frame(
+        &self,
+        callback: impl FnMut(kozan_scheduler::FrameInfo) -> bool + 'static,
+    ) {
+        self.staged_frame_callbacks
+            .borrow_mut()
+            .push(Box::new(callback));
     }
 
     // ── Internal (view thread only) ───────────────────────────────────────
@@ -324,5 +332,4 @@ impl ViewContext {
     pub(crate) fn on_scale_factor_changed(&mut self, factor: f64) {
         self.frame.set_scale_factor(factor);
     }
-
 }

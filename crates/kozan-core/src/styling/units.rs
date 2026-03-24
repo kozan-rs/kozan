@@ -10,12 +10,10 @@
 //! div.style().margin_top(em(1.5));
 //! ```
 
-use style::values::specified::length::{
-    AbsoluteLength, FontRelativeLength, NoCalcLength,
-};
-use style::values::specified::{self, LengthPercentage, NonNegativeLengthPercentage};
-use style::values::generics::length::{GenericSize, GenericMargin};
 use style::values::generics::NonNegative;
+use style::values::generics::length::{GenericMargin, GenericSize};
+use style::values::specified::length::{AbsoluteLength, FontRelativeLength, NoCalcLength};
+use style::values::specified::{self, LengthPercentage, NonNegativeLengthPercentage};
 
 /// A CSS dimension value that can be used in any property context.
 ///
@@ -43,59 +41,67 @@ pub enum CssValue {
 // ---- Constructor functions ----
 
 /// Create a pixel value: `px(200.0)` → `200px`.
-#[must_use] 
-pub fn px(v: f32) -> CssValue { CssValue::Px(v) }
+#[must_use]
+pub fn px(v: f32) -> CssValue {
+    CssValue::Px(v)
+}
 
 /// Create a percentage: `pct(50.0)` → `50%`.
-#[must_use] 
-pub fn pct(v: f32) -> CssValue { CssValue::Pct(v) }
+#[must_use]
+pub fn pct(v: f32) -> CssValue {
+    CssValue::Pct(v)
+}
 
 /// Create an em value: `em(1.5)` → `1.5em`.
-#[must_use] 
-pub fn em(v: f32) -> CssValue { CssValue::Em(v) }
+#[must_use]
+pub fn em(v: f32) -> CssValue {
+    CssValue::Em(v)
+}
 
 /// Create a rem value: `rem(2.0)` → `2rem`.
-#[must_use] 
-pub fn rem(v: f32) -> CssValue { CssValue::Rem(v) }
+#[must_use]
+pub fn rem(v: f32) -> CssValue {
+    CssValue::Rem(v)
+}
 
 /// Create a viewport-width value: `vw(100.0)` → `100vw`.
-#[must_use] 
-pub fn vw(v: f32) -> CssValue { CssValue::Vw(v) }
+#[must_use]
+pub fn vw(v: f32) -> CssValue {
+    CssValue::Vw(v)
+}
 
 /// Create a viewport-height value: `vh(100.0)` → `100vh`.
-#[must_use] 
-pub fn vh(v: f32) -> CssValue { CssValue::Vh(v) }
+#[must_use]
+pub fn vh(v: f32) -> CssValue {
+    CssValue::Vh(v)
+}
 
 /// The `auto` keyword.
-#[must_use] 
-pub fn auto() -> CssValue { CssValue::Auto }
+#[must_use]
+pub fn auto() -> CssValue {
+    CssValue::Auto
+}
 
 // ---- Internal: convert to Stylo's LengthPercentage ----
 
 fn to_length_percentage(v: CssValue) -> LengthPercentage {
     match v {
-        CssValue::Px(n) => LengthPercentage::Length(
-            NoCalcLength::Absolute(AbsoluteLength::Px(n))
-        ),
-        CssValue::Pct(n) => LengthPercentage::Percentage(
-            style::values::computed::Percentage(n / 100.0)
-        ),
-        CssValue::Em(n) => LengthPercentage::Length(
-            NoCalcLength::FontRelative(FontRelativeLength::Em(n))
-        ),
-        CssValue::Rem(n) => LengthPercentage::Length(
-            NoCalcLength::FontRelative(FontRelativeLength::Rem(n))
-        ),
-        CssValue::Vw(n) => LengthPercentage::Length(
-            NoCalcLength::ViewportPercentage(
-                style::values::specified::length::ViewportPercentageLength::Vw(n)
-            )
-        ),
-        CssValue::Vh(n) => LengthPercentage::Length(
-            NoCalcLength::ViewportPercentage(
-                style::values::specified::length::ViewportPercentageLength::Vh(n)
-            )
-        ),
+        CssValue::Px(n) => LengthPercentage::Length(NoCalcLength::Absolute(AbsoluteLength::Px(n))),
+        CssValue::Pct(n) => {
+            LengthPercentage::Percentage(style::values::computed::Percentage(n / 100.0))
+        }
+        CssValue::Em(n) => {
+            LengthPercentage::Length(NoCalcLength::FontRelative(FontRelativeLength::Em(n)))
+        }
+        CssValue::Rem(n) => {
+            LengthPercentage::Length(NoCalcLength::FontRelative(FontRelativeLength::Rem(n)))
+        }
+        CssValue::Vw(n) => LengthPercentage::Length(NoCalcLength::ViewportPercentage(
+            style::values::specified::length::ViewportPercentageLength::Vw(n),
+        )),
+        CssValue::Vh(n) => LengthPercentage::Length(NoCalcLength::ViewportPercentage(
+            style::values::specified::length::ViewportPercentageLength::Vh(n),
+        )),
         CssValue::Auto => {
             // Auto doesn't map to LengthPercentage — fallback to 0px.
             LengthPercentage::Length(NoCalcLength::Absolute(AbsoluteLength::Px(0.0)))
@@ -110,9 +116,7 @@ impl From<CssValue> for specified::Size {
     fn from(v: CssValue) -> Self {
         match v {
             CssValue::Auto => GenericSize::Auto,
-            other => GenericSize::LengthPercentage(
-                NonNegative(to_length_percentage(other))
-            ),
+            other => GenericSize::LengthPercentage(NonNegative(to_length_percentage(other))),
         }
     }
 }
@@ -139,25 +143,25 @@ impl From<CssValue> for NonNegativeLengthPercentage {
 use style::color::AbsoluteColor;
 
 /// Create an sRGB color from f32 [0.0, 1.0]: `rgb(0.9, 0.3, 0.2)`.
-#[must_use] 
+#[must_use]
 pub fn rgb(r: f32, g: f32, b: f32) -> AbsoluteColor {
     AbsoluteColor::new(style::color::ColorSpace::Srgb, r, g, b, 1.0)
 }
 
 /// Create an sRGB color with alpha: `rgba(0.9, 0.3, 0.2, 0.5)`.
-#[must_use] 
+#[must_use]
 pub fn rgba(r: f32, g: f32, b: f32, a: f32) -> AbsoluteColor {
     AbsoluteColor::new(style::color::ColorSpace::Srgb, r, g, b, a)
 }
 
 /// Create a color from 0-255 u8 values: `rgb8(232, 76, 61)`.
-#[must_use] 
+#[must_use]
 pub fn rgb8(r: u8, g: u8, b: u8) -> AbsoluteColor {
     AbsoluteColor::srgb_legacy(r, g, b, 1.0)
 }
 
 /// Create a color from hex: `hex(0xE84C3D)`.
-#[must_use] 
+#[must_use]
 pub fn hex(v: u32) -> AbsoluteColor {
     let r = ((v >> 16) & 0xFF) as u8;
     let g = ((v >> 8) & 0xFF) as u8;

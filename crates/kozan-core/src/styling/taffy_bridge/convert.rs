@@ -34,9 +34,7 @@ pub(crate) mod stylo {
 
     pub(crate) type Gap = GenericLengthPercentageOrNormal<NonNegative<LengthPercentage>>;
 
-
     // Float/Clear available from Stylo but not from taffy 0.9
-
 
     pub(crate) use style::{
         computed_values::{flex_direction::T as FlexDirection, flex_wrap::T as FlexWrap},
@@ -44,7 +42,6 @@ pub(crate) mod stylo {
     };
 
     pub(crate) type FlexBasis = GenericFlexBasis<Size>;
-
 
     pub(crate) use style::values::computed::text::TextAlign;
 
@@ -63,12 +60,13 @@ use taffy::CompactLength;
 use taffy::style_helpers::*;
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn length_percentage(val: &stylo::LengthPercentage) -> taffy::LengthPercentage {
     match val.unpack() {
         stylo::UnpackedLengthPercentage::Calc(calc_ptr) => {
-            let val =
-                CompactLength::calc(std::ptr::from_ref::<stylo::CalcLengthPercentage>(calc_ptr) as *const ());
+            let val = CompactLength::calc(std::ptr::from_ref::<stylo::CalcLengthPercentage>(
+                calc_ptr,
+            ) as *const ());
             // SAFETY: calc is a valid value for LengthPercentage
             unsafe { taffy::LengthPercentage::from_raw(val) }
         }
@@ -78,7 +76,7 @@ pub fn length_percentage(val: &stylo::LengthPercentage) -> taffy::LengthPercenta
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn dimension(val: &stylo::Size) -> taffy::Dimension {
     match val {
         stylo::Size::LengthPercentage(val) => length_percentage(&val.0).into(),
@@ -99,7 +97,7 @@ pub fn dimension(val: &stylo::Size) -> taffy::Dimension {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn max_size_dimension(val: &stylo::MaxSize) -> taffy::Dimension {
     match val {
         stylo::MaxSize::LengthPercentage(val) => length_percentage(&val.0).into(),
@@ -113,13 +111,14 @@ pub fn max_size_dimension(val: &stylo::MaxSize) -> taffy::Dimension {
         stylo::MaxSize::Stretch => taffy::Dimension::AUTO,
         stylo::MaxSize::WebkitFillAvailable => taffy::Dimension::AUTO,
 
-        stylo::MaxSize::AnchorSizeFunction(_)
-        | stylo::MaxSize::AnchorContainingCalcFunction(_) => taffy::Dimension::AUTO,
+        stylo::MaxSize::AnchorSizeFunction(_) | stylo::MaxSize::AnchorContainingCalcFunction(_) => {
+            taffy::Dimension::AUTO
+        }
     }
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn margin(val: &stylo::MarginVal) -> taffy::LengthPercentageAuto {
     match val {
         stylo::MarginVal::Auto => taffy::LengthPercentageAuto::AUTO,
@@ -131,7 +130,7 @@ pub fn margin(val: &stylo::MarginVal) -> taffy::LengthPercentageAuto {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn border(
     width: &stylo::BorderSideWidth,
     style: stylo::BorderStyle,
@@ -143,7 +142,7 @@ pub fn border(
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn inset(val: &stylo::InsetVal) -> taffy::LengthPercentageAuto {
     match val {
         stylo::InsetVal::Auto => taffy::LengthPercentageAuto::AUTO,
@@ -156,7 +155,7 @@ pub fn inset(val: &stylo::InsetVal) -> taffy::LengthPercentageAuto {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn is_block(input: stylo::Display) -> bool {
     matches!(input.outside(), stylo::DisplayOutside::Block)
         && matches!(
@@ -166,13 +165,13 @@ pub fn is_block(input: stylo::Display) -> bool {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn is_table(input: stylo::Display) -> bool {
     matches!(input.inside(), stylo::DisplayInside::Table)
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn display(input: stylo::Display) -> taffy::Display {
     let mut display = match input.inside() {
         stylo::DisplayInside::None => taffy::Display::None,
@@ -188,7 +187,6 @@ pub fn display(input: stylo::Display) -> taffy::Display {
         stylo::DisplayInside::TableCell => taffy::Display::Block,
         // TODO(M7): display: contents — Chrome: LayoutNGBlockNode::IsDisplayContents() (no box, children promoted).
         // TODO(M9): display: table / table-cell / table-row — Chrome: LayoutNGTable (full table layout algorithm).
-
         stylo::DisplayInside::Table => taffy::Display::Grid,
         _ => {
             // println!("FALLBACK {:?} {:?}", input.inside(), input.outside());
@@ -212,7 +210,7 @@ pub fn display(input: stylo::Display) -> taffy::Display {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn box_generation_mode(input: stylo::Display) -> taffy::BoxGenerationMode {
     match input.inside() {
         stylo::DisplayInside::None => taffy::BoxGenerationMode::None,
@@ -222,7 +220,7 @@ pub fn box_generation_mode(input: stylo::Display) -> taffy::BoxGenerationMode {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn box_sizing(input: stylo::BoxSizing) -> taffy::BoxSizing {
     match input {
         stylo::BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
@@ -231,7 +229,7 @@ pub fn box_sizing(input: stylo::BoxSizing) -> taffy::BoxSizing {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn position(input: stylo::Position) -> taffy::Position {
     match input {
         // TODO: support position:static
@@ -247,7 +245,7 @@ pub fn position(input: stylo::Position) -> taffy::Position {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn overflow(input: stylo::Overflow) -> taffy::Overflow {
     match input {
         stylo::Overflow::Visible => taffy::Overflow::Visible,
@@ -262,7 +260,7 @@ pub fn overflow(input: stylo::Overflow) -> taffy::Overflow {
 // direction removed — taffy 0.9 handles direction internally
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn aspect_ratio(input: stylo::AspectRatio) -> Option<f32> {
     match input.ratio {
         stylo::PreferredRatio::None => None,
@@ -271,7 +269,7 @@ pub fn aspect_ratio(input: stylo::AspectRatio) -> Option<f32> {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn content_alignment(input: stylo::ContentDistribution) -> Option<taffy::AlignContent> {
     match input.primary().value() {
         stylo::AlignFlags::NORMAL => None,
@@ -293,7 +291,7 @@ pub fn content_alignment(input: stylo::ContentDistribution) -> Option<taffy::Ali
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn item_alignment(input: stylo::AlignFlags) -> Option<taffy::AlignItems> {
     match input.value() {
         stylo::AlignFlags::AUTO => None,
@@ -315,7 +313,7 @@ pub fn item_alignment(input: stylo::AlignFlags) -> Option<taffy::AlignItems> {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn gap(input: &stylo::Gap) -> taffy::LengthPercentage {
     match input {
         // For Flexbox and CSS Grid the "normal" value is 0px. This may need to be updated
@@ -336,7 +334,7 @@ pub(crate) fn text_align(input: stylo::TextAlign) -> taffy::TextAlign {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn flex_basis(input: &stylo::FlexBasis) -> taffy::Dimension {
     // TODO: Support flex-basis: content in Taffy
     match input {
@@ -346,7 +344,7 @@ pub fn flex_basis(input: &stylo::FlexBasis) -> taffy::Dimension {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn flex_direction(input: stylo::FlexDirection) -> taffy::FlexDirection {
     match input {
         stylo::FlexDirection::Row => taffy::FlexDirection::Row,
@@ -357,7 +355,7 @@ pub fn flex_direction(input: stylo::FlexDirection) -> taffy::FlexDirection {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn flex_wrap(input: stylo::FlexWrap) -> taffy::FlexWrap {
     match input {
         stylo::FlexWrap::Wrap => taffy::FlexWrap::Wrap,
@@ -374,7 +372,7 @@ pub fn flex_wrap(input: stylo::FlexWrap) -> taffy::FlexWrap {
 // ===============
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn grid_auto_flow(input: stylo::GridAutoFlow) -> taffy::GridAutoFlow {
     let is_row = input.contains(stylo::GridAutoFlow::ROW);
     let is_dense = input.contains(stylo::GridAutoFlow::DENSE);
@@ -388,7 +386,7 @@ pub fn grid_auto_flow(input: stylo::GridAutoFlow) -> taffy::GridAutoFlow {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn grid_line(input: &stylo::GridLine) -> taffy::GridPlacement<Atom> {
     if input.is_auto() {
         taffy::GridPlacement::Auto
@@ -425,7 +423,7 @@ pub fn grid_line(input: &stylo::GridLine) -> taffy::GridPlacement<Atom> {
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn grid_template_tracks(
     input: &stylo::GridTemplateComponent,
 ) -> Vec<taffy::GridTemplateComponent<Atom>> {
@@ -464,7 +462,7 @@ pub fn grid_template_tracks(
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn grid_template_line_names(
     input: &stylo::GridTemplateComponent,
 ) -> Option<super::wrapper::StyloLineNameIter<'_>> {
@@ -481,7 +479,7 @@ pub fn grid_template_line_names(
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn grid_template_area(input: &stylo::NamedArea) -> taffy::GridTemplateArea<Atom> {
     // Grid template area indices are small non-negative integers derived from the
     // number of rows/columns in the template. Clamp to u16 range for safety.
@@ -512,17 +510,19 @@ pub fn grid_auto_tracks(input: &stylo::ImplicitGridTracks) -> Vec<taffy::TrackSi
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn track_repeat(input: stylo::RepeatCount<i32>) -> taffy::RepetitionCount {
     match input {
-        stylo::RepeatCount::Number(val) => taffy::RepetitionCount::Count(val.try_into().unwrap_or(u16::MAX)),
+        stylo::RepeatCount::Number(val) => {
+            taffy::RepetitionCount::Count(val.try_into().unwrap_or(u16::MAX))
+        }
         stylo::RepeatCount::AutoFill => taffy::RepetitionCount::AutoFill,
         stylo::RepeatCount::AutoFit => taffy::RepetitionCount::AutoFit,
     }
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn track_size(input: &stylo::TrackSize<stylo::LengthPercentage>) -> taffy::TrackSizingFunction {
     use taffy::MaxTrackSizingFunction;
 
@@ -552,7 +552,7 @@ pub fn track_size(input: &stylo::TrackSize<stylo::LengthPercentage>) -> taffy::T
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn min_track(
     input: &stylo::TrackBreadth<stylo::LengthPercentage>,
 ) -> taffy::MinTrackSizingFunction {
@@ -569,7 +569,7 @@ pub fn min_track(
 }
 
 #[inline]
-#[must_use] 
+#[must_use]
 pub fn max_track(
     input: &stylo::TrackBreadth<stylo::LengthPercentage>,
 ) -> taffy::MaxTrackSizingFunction {
@@ -594,11 +594,7 @@ mod tests {
     use super::stylo::RepeatCount;
     use super::*;
 
-    fn make_grid_line(
-        is_span: bool,
-        line_num: i32,
-        atom: style::Atom,
-    ) -> stylo::GridLine {
+    fn make_grid_line(is_span: bool, line_num: i32, atom: style::Atom) -> stylo::GridLine {
         stylo::GridLine {
             ident: CustomIdent(atom),
             line_num,
@@ -688,7 +684,7 @@ mod tests {
 }
 
 /// Eagerly convert an entire [`stylo::ComputedValues`] into a [`taffy::Style`]
-#[must_use] 
+#[must_use]
 pub fn to_taffy_style(style: &stylo::ComputedValues) -> taffy::Style<Atom> {
     let display = style.clone_display();
     let pos = style.get_position();
@@ -801,4 +797,3 @@ pub fn to_taffy_style(style: &stylo::ComputedValues) -> taffy::Style<Atom> {
         },
     }
 }
-

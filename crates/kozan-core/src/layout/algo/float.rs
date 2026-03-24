@@ -46,7 +46,7 @@ pub struct ExclusionSpace {
 }
 
 impl ExclusionSpace {
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self { floats: Vec::new() }
     }
@@ -60,7 +60,7 @@ impl ExclusionSpace {
     ///
     /// Returns (`left_offset`, `available_width`) after accounting for
     /// all active floats at this block position.
-    #[must_use] 
+    #[must_use]
     pub fn available_inline_at(&self, block_pos: f32, container_width: f32) -> (f32, f32) {
         let mut left_offset: f32 = 0.0;
         let mut right_offset: f32 = 0.0;
@@ -86,7 +86,7 @@ impl ExclusionSpace {
     /// Find the block position where a float of given size can be placed.
     ///
     /// The float must not overlap with existing floats on the same side.
-    #[must_use] 
+    #[must_use]
     pub fn find_float_position(
         &self,
         side: FloatSide,
@@ -145,7 +145,7 @@ impl ExclusionSpace {
     /// Get the clear position (block offset below all floats on a side).
     ///
     /// CSS `clear: left/right/both`.
-    #[must_use] 
+    #[must_use]
     pub fn clear_position(&self, side: ClearSide) -> f32 {
         let mut max_end: f32 = 0.0;
         for float in &self.floats {
@@ -160,7 +160,6 @@ impl ExclusionSpace {
         }
         max_end
     }
-
 }
 
 /// Which sides to clear.

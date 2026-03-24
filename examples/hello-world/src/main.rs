@@ -21,7 +21,10 @@ fn build_standard_dom(doc: &Document) {
     // Colored boxes
     for color in ["rgb(231,76,60)", "rgb(46,204,113)", "rgb(52,152,219)"] {
         let box_ = doc.create::<HtmlDivElement>();
-        box_.set_attribute("style", format!("width: 60px; height: 60px; border-radius: 8px; background-color: {color}"));
+        box_.set_attribute(
+            "style",
+            format!("width: 60px; height: 60px; border-radius: 8px; background-color: {color}"),
+        );
         row.append(box_);
     }
 
@@ -31,20 +34,36 @@ fn build_standard_dom(doc: &Document) {
 /// Row 2 — Shortcuts API with Arabic text (RTL).
 fn build_with_shortcuts(doc: &Document) {
     let row = doc.div();
-    row.style().flex().gap(px(16.0)).pad(px(20.0)).align_items_center().bg(rgb8(39, 174, 96)).color(rgb8(255, 255, 255));
+    row.style()
+        .flex()
+        .gap(px(16.0))
+        .pad(px(20.0))
+        .align_items_center()
+        .bg(rgb8(39, 174, 96))
+        .color(rgb8(255, 255, 255));
 
     // Arabic text (RTL — HarfRust handles joining + bidi automatically)
     let label = doc.create_text("مرحبا بالعالم!");
     row.append(label);
 
     let red = doc.div();
-    red.style().size(px(60.0)).border_radius(px(8.0)).bg(rgb8(231, 76, 60));
+    red.style()
+        .size(px(60.0))
+        .border_radius(px(8.0))
+        .bg(rgb8(231, 76, 60));
 
     let green = doc.div();
-    green.style().size(px(60.0)).border_radius(px(8.0)).bg(rgb8(46, 204, 113));
+    green
+        .style()
+        .size(px(60.0))
+        .border_radius(px(8.0))
+        .bg(rgb8(46, 204, 113));
 
     let blue = doc.div();
-    blue.style().size(px(60.0)).border_radius(px(8.0)).bg(rgb8(52, 152, 219));
+    blue.style()
+        .size(px(60.0))
+        .border_radius(px(8.0))
+        .bg(rgb8(52, 152, 219));
 
     doc.body().child(row.child(red).child(green).child(blue));
 }
@@ -52,7 +71,12 @@ fn build_with_shortcuts(doc: &Document) {
 /// Row 3 — Mixed LTR + RTL text.
 fn build_mixed_text(doc: &Document) {
     let row = doc.div();
-    row.style().flex_col().gap(px(8.0)).pad(px(20.0)).bg(rgb8(52, 73, 94)).color(rgb8(255, 255, 255));
+    row.style()
+        .flex_col()
+        .gap(px(8.0))
+        .pad(px(20.0))
+        .bg(rgb8(52, 73, 94))
+        .color(rgb8(255, 255, 255));
 
     let en = doc.create_text("Kozan renders text beautifully.");
     row.append(en);

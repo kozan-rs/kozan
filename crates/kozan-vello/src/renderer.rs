@@ -53,20 +53,23 @@ impl VelloRenderer {
             .map_err(|_| RendererError::AdapterNotFound)?;
 
         let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: Some("kozan-vello"),
-                    required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::default(),
-                    memory_hints: wgpu::MemoryHints::default(),
-                    ..Default::default()
-                },
-            )
+            .request_device(&wgpu::DeviceDescriptor {
+                label: Some("kozan-vello"),
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::default(),
+                ..Default::default()
+            })
             .await
             .map_err(|e: wgpu::RequestDeviceError| RendererError::DeviceCreation(e.to_string()))?;
 
         Ok(Self {
-            gpu: Arc::new(GpuContext { instance, adapter, device, queue }),
+            gpu: Arc::new(GpuContext {
+                instance,
+                adapter,
+                device,
+                queue,
+            }),
         })
     }
 }

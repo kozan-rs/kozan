@@ -51,7 +51,9 @@ const _: () = assert!(std::mem::size_of::<KozanNode>() == std::mem::size_of::<us
 impl KozanNode {
     #[inline]
     pub(crate) fn new(index: u32) -> Self {
-        Self { index: index as usize }
+        Self {
+            index: index as usize,
+        }
     }
 
     #[inline]
@@ -61,7 +63,13 @@ impl KozanNode {
 
     #[inline]
     fn at(&self, index: u32) -> Option<Self> {
-        if index == INVALID { None } else { Some(Self { index: index as usize }) }
+        if index == INVALID {
+            None
+        } else {
+            Some(Self {
+                index: index as usize,
+            })
+        }
     }
 
     // ── Tree navigation ──
@@ -94,12 +102,23 @@ impl KozanNode {
     // ── Node type ──
 
     pub fn node_type(&self) -> Option<NodeType> {
-        Some(doc().read(|d| d.node_meta_by_index(self.idx()))?.flags.node_type())
+        Some(
+            doc()
+                .read(|d| d.node_meta_by_index(self.idx()))?
+                .flags
+                .node_type(),
+        )
     }
 
-    pub fn is_element(&self) -> bool { self.node_type() == Some(NodeType::Element) }
-    pub fn is_text(&self) -> bool { self.node_type() == Some(NodeType::Text) }
-    pub fn is_document(&self) -> bool { self.node_type() == Some(NodeType::Document) }
+    pub fn is_element(&self) -> bool {
+        self.node_type() == Some(NodeType::Element)
+    }
+    pub fn is_text(&self) -> bool {
+        self.node_type() == Some(NodeType::Text)
+    }
+    pub fn is_document(&self) -> bool {
+        self.node_type() == Some(NodeType::Document)
+    }
 
     // ── Element data ──
 
@@ -126,10 +145,14 @@ impl std::fmt::Debug for KozanNode {
 }
 
 impl PartialEq for KozanNode {
-    fn eq(&self, other: &Self) -> bool { self.index == other.index }
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index
+    }
 }
 impl Eq for KozanNode {}
 
 impl std::hash::Hash for KozanNode {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) { self.index.hash(state); }
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.index.hash(state);
+    }
 }

@@ -18,7 +18,10 @@ pub(crate) struct ScrolledNodes {
 
 impl ScrolledNodes {
     fn new() -> Self {
-        Self { buf: [0; 4], len: 0 }
+        Self {
+            buf: [0; 4],
+            len: 0,
+        }
     }
 
     fn push(&mut self, id: u32) {
@@ -28,7 +31,9 @@ impl ScrolledNodes {
         }
     }
 
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 
     pub fn iter(&self) -> impl Iterator<Item = u32> + '_ {
         self.buf[..self.len as usize].iter().copied()
@@ -59,7 +64,9 @@ impl<'a> ScrollController<'a> {
             if delta.dx == 0.0 && delta.dy == 0.0 {
                 break;
             }
-            let Some(node) = self.tree.get(node_id) else { break };
+            let Some(node) = self.tree.get(node_id) else {
+                break;
+            };
             let consumed = self.apply_delta(node, delta);
 
             if consumed.dx != 0.0 || consumed.dy != 0.0 {
@@ -86,7 +93,8 @@ impl<'a> ScrollController<'a> {
             old.dy
         };
 
-        self.offsets.set_offset(node.dom_id, Offset::new(new_dx, new_dy));
+        self.offsets
+            .set_offset(node.dom_id, Offset::new(new_dx, new_dy));
         Offset::new(new_dx - old.dx, new_dy - old.dy)
     }
 }
@@ -100,18 +108,28 @@ mod tests {
         let mut tree = ScrollTree::new();
         let mut offsets = ScrollOffsets::new();
 
-        tree.set(1, ScrollNode {
-            dom_id: 1, parent: None,
-            container: Size::new(800.0, 600.0),
-            content: Size::new(800.0, 2000.0),
-            scrollable_x: false, scrollable_y: true,
-        });
-        tree.set(5, ScrollNode {
-            dom_id: 5, parent: Some(1),
-            container: Size::new(300.0, 200.0),
-            content: Size::new(300.0, 800.0),
-            scrollable_x: false, scrollable_y: true,
-        });
+        tree.set(
+            1,
+            ScrollNode {
+                dom_id: 1,
+                parent: None,
+                container: Size::new(800.0, 600.0),
+                content: Size::new(800.0, 2000.0),
+                scrollable_x: false,
+                scrollable_y: true,
+            },
+        );
+        tree.set(
+            5,
+            ScrollNode {
+                dom_id: 5,
+                parent: Some(1),
+                container: Size::new(300.0, 200.0),
+                content: Size::new(300.0, 800.0),
+                scrollable_x: false,
+                scrollable_y: true,
+            },
+        );
 
         offsets.set_offset(1, Offset::ZERO);
         offsets.set_offset(5, Offset::ZERO);

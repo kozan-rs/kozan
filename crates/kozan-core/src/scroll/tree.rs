@@ -22,7 +22,10 @@ pub struct ScrollTree {
 
 impl ScrollTree {
     pub fn new() -> Self {
-        Self { nodes: Storage::new(), root: None }
+        Self {
+            nodes: Storage::new(),
+            root: None,
+        }
     }
 
     pub fn set(&mut self, dom_id: u32, node: ScrollNode) {
@@ -53,7 +56,10 @@ impl ScrollTree {
 
     /// Iterate the scroll chain from `start` toward the root scroller.
     pub fn chain(&self, start: u32) -> ScrollChain<'_> {
-        ScrollChain { nodes: &self.nodes, current: Some(start) }
+        ScrollChain {
+            nodes: &self.nodes,
+            current: Some(start),
+        }
     }
 
     /// Rebuild from the fragment tree. Finds all scrollable boxes and
@@ -66,7 +72,9 @@ impl ScrollTree {
     }
 
     fn sync_recursive(&mut self, fragment: &Fragment, parent_scroll: Option<u32>) {
-        let FragmentKind::Box(ref data) = fragment.kind else { return };
+        let FragmentKind::Box(ref data) = fragment.kind else {
+            return;
+        };
 
         let dom_id = fragment.dom_node;
         let scrollable_x = data.overflow_x.is_user_scrollable();
@@ -88,14 +96,17 @@ impl ScrollTree {
                     (data.scrollable_overflow.width - data.border.left).max(0.0),
                     (data.scrollable_overflow.height - data.border.top).max(0.0),
                 );
-                self.set(id, ScrollNode {
-                    dom_id: id,
-                    parent: parent_scroll,
-                    container,
-                    content,
-                    scrollable_x,
-                    scrollable_y,
-                });
+                self.set(
+                    id,
+                    ScrollNode {
+                        dom_id: id,
+                        parent: parent_scroll,
+                        container,
+                        content,
+                        scrollable_x,
+                        scrollable_y,
+                    },
+                );
                 Some(id)
             } else {
                 parent_scroll

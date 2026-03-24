@@ -233,7 +233,7 @@ fn find_break_point(
 }
 
 /// Convert lines to line box fragments.
-#[must_use] 
+#[must_use]
 pub fn lines_to_fragments(lines: Vec<Line>, available_width: f32) -> Vec<ChildFragment> {
     let mut result = Vec::with_capacity(lines.len());
     let mut block_offset: f32 = 0.0;
@@ -431,8 +431,8 @@ impl LineBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::layout::inline::measurer::resolve_line_height;
     use crate::layout::inline::FontSystem;
+    use crate::layout::inline::measurer::resolve_line_height;
     use style::properties::ComputedValues;
 
     fn initial_style() -> servo_arc::Arc<ComputedValues> {
@@ -642,7 +642,13 @@ mod tests {
         let items = vec![measured_text_item("The quick brown fox")];
         // Use a width that fits ~1 word but not the full text.
         let one_word_w = measurer.measure("quick", 16.0).width;
-        let lines = break_into_lines(&items, one_word_w * 1.5, TextWrapMode::Wrap, &strut, &measurer);
+        let lines = break_into_lines(
+            &items,
+            one_word_w * 1.5,
+            TextWrapMode::Wrap,
+            &strut,
+            &measurer,
+        );
         assert!(
             lines.len() >= 2,
             "should break into at least 2 lines, got {}",
@@ -751,7 +757,8 @@ mod tests {
         assert!(
             lines[0].height >= tall_height,
             "line height must accommodate tall item: line={}, item={}",
-            lines[0].height, tall_height,
+            lines[0].height,
+            tall_height,
         );
     }
 

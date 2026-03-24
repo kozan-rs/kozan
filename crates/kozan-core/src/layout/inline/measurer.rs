@@ -52,7 +52,7 @@ pub struct FontMetrics {
 impl FontMetrics {
     /// Content height = ascent + descent.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn height(&self) -> f32 {
         self.ascent + self.descent
     }
@@ -61,7 +61,7 @@ impl FontMetrics {
     /// Chrome: `FontMetrics::FixedLineSpacing()`.
     /// This is what CSS `line-height: normal` resolves to.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn line_spacing(&self) -> f32 {
         self.ascent + self.descent + self.line_gap
     }
@@ -94,7 +94,7 @@ pub struct FontHeight {
 impl FontHeight {
     /// Total line height = ascent + descent.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn height(&self) -> f32 {
         self.ascent + self.descent
     }
@@ -105,7 +105,7 @@ impl FontHeight {
     /// `CalculateLeadingSpace()` → `AddLeading()`.
     ///
     /// Leading = `line_height` - `font_height`. Split equally above/below.
-    #[must_use] 
+    #[must_use]
     pub fn from_metrics_and_line_height(font_metrics: &FontMetrics, line_height: f32) -> Self {
         let font_height = font_metrics.height();
         let leading = (line_height - font_height).max(0.0);
@@ -200,7 +200,12 @@ pub trait TextMeasurer {
     ///
     /// Default implementation uses word-level wrapping with `measure()`.
     /// `FontSystem` overrides with Parley's real line breaker.
-    fn measure_wrapped(&self, text: &str, font_size: f32, max_width: Option<f32>) -> WrappedTextMetrics {
+    fn measure_wrapped(
+        &self,
+        text: &str,
+        font_size: f32,
+        max_width: Option<f32>,
+    ) -> WrappedTextMetrics {
         let fm = self.font_metrics(font_size);
         let line_h = fm.ascent + fm.descent;
         let max_w = max_width.unwrap_or(f32::INFINITY);
@@ -247,7 +252,7 @@ pub trait TextMeasurer {
 ///   from the actual font — NOT a hardcoded multiplier).
 /// - `Number(n)` → `font_size * n` (unitless multiplier).
 /// - `Length(px)` → absolute pixel value (already resolved by Stylo).
-#[must_use] 
+#[must_use]
 pub fn resolve_line_height(
     line_height: &LineHeight,
     font_size: f32,
@@ -413,7 +418,11 @@ mod tests {
         use style::values::generics::NonNegative;
         let fm = test_font_metrics();
         assert_eq!(
-            resolve_line_height(&LineHeight::Length(NonNegative(CSSPixelLength::new(28.0))), 20.0, &fm),
+            resolve_line_height(
+                &LineHeight::Length(NonNegative(CSSPixelLength::new(28.0))),
+                20.0,
+                &fm
+            ),
             28.0
         );
     }

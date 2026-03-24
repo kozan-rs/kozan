@@ -27,7 +27,12 @@ fn stylo_color_to_color(c: &style::values::computed::Color) -> Color {
 
 fn abs_color_to_color(abs: &style::color::AbsoluteColor) -> Color {
     let c = abs.components;
-    Color { r: c.0, g: c.1, b: c.2, a: abs.alpha }
+    Color {
+        r: c.0,
+        g: c.1,
+        b: c.2,
+        a: abs.alpha,
+    }
 }
 
 fn has_border_radius(s: &ComputedValues) -> bool {
@@ -60,7 +65,10 @@ fn resolve_outline_style(s: &ComputedValues) -> BorderStyle {
 
 fn compute_inner_radii(
     outer: &super::display_item::BorderRadii,
-    bt: f32, br: f32, bb: f32, bl: f32,
+    bt: f32,
+    br: f32,
+    bb: f32,
+    bl: f32,
 ) -> super::display_item::BorderRadii {
     super::display_item::BorderRadii {
         top_left: (outer.top_left - bl.max(bt)).max(0.0),
@@ -134,19 +142,19 @@ impl<'a> Painter<'a> {
         let border_box = Rect::from_origin_size(origin, fragment.size);
         let style = fragment.style.as_ref();
 
-        if style.is_some_and(|s| {
-            s.clone_visibility() == style::computed_values::visibility::T::Hidden
-        }) {
+        if style
+            .is_some_and(|s| s.clone_visibility() == style::computed_values::visibility::T::Hidden)
+        {
             self.paint_children(&data.children, origin);
             return;
         }
 
-        let needs_transform =
-            style.is_some_and(|s| !s.get_box().clone_transform().0.is_empty());
+        let needs_transform = style.is_some_and(|s| !s.get_box().clone_transform().0.is_empty());
         if needs_transform {
             self.emit(DisplayItem::PushTransform(
                 super::display_item::TransformData {
-                    translate_x: 0.0, translate_y: 0.0,
+                    translate_x: 0.0,
+                    translate_y: 0.0,
                     scroll_node: None,
                 },
             ));
@@ -216,26 +224,36 @@ impl<'a> Painter<'a> {
 
             if bg != Color::TRANSPARENT {
                 self.emit(DisplayItem::Draw(DrawCommand::RoundedRect {
-                    rect: padding_box, radii: inner_radii, color: bg,
+                    rect: padding_box,
+                    radii: inner_radii,
+                    color: bg,
                 }));
             }
             if has_border {
                 self.emit(DisplayItem::Draw(DrawCommand::RoundedBorderRing {
-                    outer_rect: border_box, outer_radii,
-                    inner_rect: padding_box, inner_radii,
+                    outer_rect: border_box,
+                    outer_radii,
+                    inner_rect: padding_box,
+                    inner_radii,
                     color: stylo_color_to_color(&border_styles.clone_border_top_color()),
                 }));
             }
         } else {
             if bg != Color::TRANSPARENT {
                 self.emit(DisplayItem::Draw(DrawCommand::Rect {
-                    rect: border_box, color: bg,
+                    rect: border_box,
+                    color: bg,
                 }));
             }
             if has_border {
                 self.emit(DisplayItem::Draw(DrawCommand::Border {
                     rect: border_box,
-                    widths: BorderWidths { top: bt, right: br, bottom: bb, left: bl },
+                    widths: BorderWidths {
+                        top: bt,
+                        right: br,
+                        bottom: bb,
+                        left: bl,
+                    },
                     colors: BorderColors {
                         top: stylo_color_to_color(&border_styles.clone_border_top_color()),
                         right: stylo_color_to_color(&border_styles.clone_border_right_color()),
@@ -275,7 +293,10 @@ impl<'a> Painter<'a> {
                 let outer_radii = extract_outer_radii(s);
                 let inner_radii = compute_inner_radii(&outer_radii, bt, br, bb, bl);
                 self.emit(DisplayItem::PushRoundedClip(
-                    super::display_item::RoundedClipData { rect: padding_box, radii: inner_radii },
+                    super::display_item::RoundedClipData {
+                        rect: padding_box,
+                        radii: inner_radii,
+                    },
                 ));
             } else {
                 self.emit(DisplayItem::PushClip(ClipData { rect: padding_box }));
@@ -286,11 +307,12 @@ impl<'a> Painter<'a> {
         // even at offset zero — so the compositor can override it without
         // waiting for the view thread to repaint.
         // overflow:hidden clips but never gets a scroll transform.
-        let is_user_scrollable = data.overflow_x.is_user_scrollable()
-            || data.overflow_y.is_user_scrollable();
+        let is_user_scrollable =
+            data.overflow_x.is_user_scrollable() || data.overflow_y.is_user_scrollable();
 
         if is_user_scrollable {
-            let scroll_offset = fragment.dom_node
+            let scroll_offset = fragment
+                .dom_node
                 .map(|id| self.scroll_offsets.offset(id))
                 .unwrap_or(Offset::ZERO);
             self.emit(DisplayItem::PushTransform(
@@ -341,9 +363,24 @@ impl<'a> Painter<'a> {
             let outline_box = border_box.outset(ow, ow, ow, ow);
             self.emit(DisplayItem::Draw(DrawCommand::Border {
                 rect: outline_box,
-                widths: BorderWidths { top: ow, right: ow, bottom: ow, left: ow },
-                colors: BorderColors { top: oc, right: oc, bottom: oc, left: oc },
-                styles: super::display_item::BorderStyles { top: os, right: os, bottom: os, left: os },
+                widths: BorderWidths {
+                    top: ow,
+                    right: ow,
+                    bottom: ow,
+                    left: ow,
+                },
+                colors: BorderColors {
+                    top: oc,
+                    right: oc,
+                    bottom: oc,
+                    left: oc,
+                },
+                styles: super::display_item::BorderStyles {
+                    top: os,
+                    right: os,
+                    bottom: os,
+                    left: os,
+                },
             }));
         }
     }
@@ -357,9 +394,10 @@ impl<'a> Painter<'a> {
 
         for (i, child) in children.iter().enumerate() {
             let z = child.fragment.style.as_ref().and_then(|s| z_index(s));
-            let is_positioned = child.fragment.style.as_ref().is_some_and(|s| {
-                s.clone_position() != style::computed_values::position::T::Static
-            });
+            let is_positioned =
+                child.fragment.style.as_ref().is_some_and(|s| {
+                    s.clone_position() != style::computed_values::position::T::Static
+                });
 
             match z {
                 Some(z) if z < 0 => negative_z.push((z, i)),
@@ -432,24 +470,33 @@ impl<'a> Painter<'a> {
 
         if td.contains(TextDecorationLine::UNDERLINE) {
             self.emit(DisplayItem::Draw(DrawCommand::Line {
-                x0: origin.x, y0: baseline_y + 2.0,
-                x1: origin.x + text_width, y1: baseline_y + 2.0,
-                width: thickness, color: dec_color,
+                x0: origin.x,
+                y0: baseline_y + 2.0,
+                x1: origin.x + text_width,
+                y1: baseline_y + 2.0,
+                width: thickness,
+                color: dec_color,
             }));
         }
         if td.contains(TextDecorationLine::OVERLINE) {
             self.emit(DisplayItem::Draw(DrawCommand::Line {
-                x0: origin.x, y0: origin.y,
-                x1: origin.x + text_width, y1: origin.y,
-                width: thickness, color: dec_color,
+                x0: origin.x,
+                y0: origin.y,
+                x1: origin.x + text_width,
+                y1: origin.y,
+                width: thickness,
+                color: dec_color,
             }));
         }
         if td.contains(TextDecorationLine::LINE_THROUGH) {
             let mid_y = origin.y + baseline * 0.5;
             self.emit(DisplayItem::Draw(DrawCommand::Line {
-                x0: origin.x, y0: mid_y,
-                x1: origin.x + text_width, y1: mid_y,
-                width: thickness, color: dec_color,
+                x0: origin.x,
+                y0: mid_y,
+                x1: origin.x + text_width,
+                y1: mid_y,
+                width: thickness,
+                color: dec_color,
             }));
         }
     }
@@ -467,8 +514,8 @@ fn paint_no_scroll(root: &Fragment, viewport: Size) -> super::DisplayList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use crate::layout::fragment::{BoxFragmentData, Fragment, OverflowClip, PhysicalInsets};
+    use std::sync::Arc;
 
     fn make_unstyled_box(w: f32, h: f32) -> Arc<Fragment> {
         Fragment::new_box(Size::new(w, h), BoxFragmentData::default())
@@ -507,7 +554,10 @@ mod tests {
         let root = make_unstyled_box(800.0, 600.0);
         let list = paint_no_scroll(&root, viewport());
         let draw_count = list.items().iter().filter(|i| i.is_draw()).count();
-        assert_eq!(draw_count, 1, "unstyled box should only emit viewport background");
+        assert_eq!(
+            draw_count, 1,
+            "unstyled box should only emit viewport background"
+        );
     }
 
     #[test]
@@ -515,7 +565,12 @@ mod tests {
         let root = Fragment::new_box_styled(
             Size::new(200.0, 100.0),
             BoxFragmentData {
-                border: PhysicalInsets { top: 2.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                border: PhysicalInsets {
+                    top: 2.0,
+                    right: 0.0,
+                    bottom: 0.0,
+                    left: 0.0,
+                },
                 ..Default::default()
             },
             crate::styling::initial_values_arc(),
@@ -537,15 +592,28 @@ mod tests {
             dom_node: None,
         });
         let list = paint_no_scroll(&root, viewport());
-        assert!(list.items().iter().any(|item| matches!(item, DisplayItem::PushClip(_))));
-        assert!(list.items().iter().any(|item| matches!(item, DisplayItem::PopClip)));
+        assert!(
+            list.items()
+                .iter()
+                .any(|item| matches!(item, DisplayItem::PushClip(_)))
+        );
+        assert!(
+            list.items()
+                .iter()
+                .any(|item| matches!(item, DisplayItem::PopClip))
+        );
     }
 
     #[test]
     fn opacity_not_emitted_when_one() {
         let root = make_styled_box_initial(200.0, 100.0);
         let list = paint_no_scroll(&root, viewport());
-        assert!(!list.items().iter().any(|item| matches!(item, DisplayItem::PushOpacity(_))));
+        assert!(
+            !list
+                .items()
+                .iter()
+                .any(|item| matches!(item, DisplayItem::PushOpacity(_)))
+        );
     }
 
     #[test]
@@ -575,7 +643,8 @@ mod tests {
         let text_frag = Arc::new(Fragment {
             size: Size::new(80.0, 20.0),
             kind: FragmentKind::Text(TextFragmentData {
-                text_range: 0..5, baseline: 16.0,
+                text_range: 0..5,
+                baseline: 16.0,
                 text: Some(Arc::from("Hello")),
                 shaped_runs: Vec::new(),
             }),
@@ -586,14 +655,21 @@ mod tests {
             size: Size::new(200.0, 20.0),
             kind: FragmentKind::Box(BoxFragmentData {
                 children: vec![ChildFragment {
-                    offset: Point::ZERO, fragment: text_frag,
+                    offset: Point::ZERO,
+                    fragment: text_frag,
                 }],
                 ..Default::default()
             }),
-            style: None, dom_node: None,
+            style: None,
+            dom_node: None,
         });
         let list = paint_no_scroll(&root, viewport());
-        assert!(!list.items().iter().any(|item| matches!(item, DisplayItem::Draw(DrawCommand::Text { .. }))));
+        assert!(
+            !list
+                .items()
+                .iter()
+                .any(|item| matches!(item, DisplayItem::Draw(DrawCommand::Text { .. })))
+        );
     }
 
     #[test]
@@ -607,13 +683,23 @@ mod tests {
             size: Size::new(200.0, 200.0),
             kind: FragmentKind::Box(BoxFragmentData {
                 children: vec![
-                    ChildFragment { offset: Point::new(0.0, 0.0), fragment: a },
-                    ChildFragment { offset: Point::new(50.0, 0.0), fragment: b },
-                    ChildFragment { offset: Point::new(100.0, 0.0), fragment: c },
+                    ChildFragment {
+                        offset: Point::new(0.0, 0.0),
+                        fragment: a,
+                    },
+                    ChildFragment {
+                        offset: Point::new(50.0, 0.0),
+                        fragment: b,
+                    },
+                    ChildFragment {
+                        offset: Point::new(100.0, 0.0),
+                        fragment: c,
+                    },
                 ],
                 ..Default::default()
             }),
-            style: None, dom_node: None,
+            style: None,
+            dom_node: None,
         });
         let list = paint_no_scroll(&root, viewport());
         assert!(!list.is_empty());
@@ -627,7 +713,10 @@ mod tests {
         let root = Arc::new(Fragment {
             size: Size::new(200.0, 200.0),
             kind: FragmentKind::Box(BoxFragmentData {
-                children: vec![ChildFragment { offset: Point::ZERO, fragment: child }],
+                children: vec![ChildFragment {
+                    offset: Point::ZERO,
+                    fragment: child,
+                }],
                 overflow_y: OverflowClip::Scroll,
                 ..Default::default()
             }),
@@ -639,9 +728,13 @@ mod tests {
         offsets.set_offset(5, Offset::new(0.0, 150.0));
 
         let list = Painter::new(&offsets).paint(&root, viewport());
-        let has_transform = list.items().iter().any(|item| {
-            matches!(item, DisplayItem::PushTransform(t) if t.translate_y == -150.0)
-        });
-        assert!(has_transform, "scrolled node should emit negative translate");
+        let has_transform = list
+            .items()
+            .iter()
+            .any(|item| matches!(item, DisplayItem::PushTransform(t) if t.translate_y == -150.0));
+        assert!(
+            has_transform,
+            "scrolled node should emit negative translate"
+        );
     }
 }

@@ -11,13 +11,13 @@
 //! The renderer has ZERO font logic. No font selection, no shaping.
 //! `parley::FontData` = `peniko::Font` — same type, zero conversion.
 
+use vello::NormalizedCoord;
 use vello::Scene;
 use vello::kurbo::{Affine, BezPath, Line, Shape, Stroke};
 use vello::peniko::{Fill, Mix};
-use vello::NormalizedCoord;
 
-use kozan_core::paint::display_item::{BorderRadii as KBorderRadii, DrawCommand, DisplayItem};
 use kozan_core::paint::DisplayList;
+use kozan_core::paint::display_item::{BorderRadii as KBorderRadii, DisplayItem, DrawCommand};
 use kozan_core::scroll::ScrollOffsets;
 use kozan_primitives::geometry::Rect as KRect;
 
@@ -35,11 +35,7 @@ impl SceneBuilder {
     /// `scroll_adjustments`: compositor overrides for scroll transforms.
     /// When a `PushTransform` has a `scroll_node`, the compositor's offset
     /// replaces the baked-in value — enabling vsync-rate scroll without repaint.
-    pub fn build(
-        list: &DisplayList,
-        scale_factor: f64,
-        scroll_offsets: &ScrollOffsets,
-    ) -> Scene {
+    pub fn build(list: &DisplayList, scale_factor: f64, scroll_offsets: &ScrollOffsets) -> Scene {
         let mut scene = Scene::new();
         let mut transforms: Vec<Affine> = vec![Affine::scale(scale_factor)];
 
@@ -48,7 +44,6 @@ impl SceneBuilder {
 
             match item {
                 // ── Draw commands ────────────────────────────────────────────
-
                 DisplayItem::Draw(cmd) => match cmd {
                     DrawCommand::Rect { rect, color } => {
                         scene.fill(
@@ -70,7 +65,14 @@ impl SceneBuilder {
                         );
                     }
 
-                    DrawCommand::Line { x0, y0, x1, y1, width, color } => {
+                    DrawCommand::Line {
+                        x0,
+                        y0,
+                        x1,
+                        y1,
+                        width,
+                        color,
+                    } => {
                         let line = Line::new((*x0 as f64, *y0 as f64), (*x1 as f64, *y1 as f64));
                         scene.stroke(
                             &Stroke::new(*width as f64),
@@ -83,26 +85,61 @@ impl SceneBuilder {
 
                     // TODO(M7): border-style dashed/dotted/double/wavy — need dash path generation.
                     // Currently all borders render as solid fills regardless of style.
-                    DrawCommand::Border { rect, widths, colors, styles: _ } => {
+                    DrawCommand::Border {
+                        rect,
+                        widths,
+                        colors,
+                        styles: _,
+                    } => {
                         let r = *rect;
                         let w = *widths;
                         let c = *colors;
 
                         if w.top > 0.0 {
-                            scene.fill(Fill::NonZero, current_transform, to_peniko_color(c.top), None,
-                                &to_kurbo_rect(KRect::new(r.x(), r.y(), r.width(), w.top)));
+                            scene.fill(
+                                Fill::NonZero,
+                                current_transform,
+                                to_peniko_color(c.top),
+                                None,
+                                &to_kurbo_rect(KRect::new(r.x(), r.y(), r.width(), w.top)),
+                            );
                         }
                         if w.bottom > 0.0 {
-                            scene.fill(Fill::NonZero, current_transform, to_peniko_color(c.bottom), None,
-                                &to_kurbo_rect(KRect::new(r.x(), r.bottom() - w.bottom, r.width(), w.bottom)));
+                            scene.fill(
+                                Fill::NonZero,
+                                current_transform,
+                                to_peniko_color(c.bottom),
+                                None,
+                                &to_kurbo_rect(KRect::new(
+                                    r.x(),
+                                    r.bottom() - w.bottom,
+                                    r.width(),
+                                    w.bottom,
+                                )),
+                            );
                         }
                         if w.left > 0.0 {
-                            scene.fill(Fill::NonZero, current_transform, to_peniko_color(c.left), None,
-                                &to_kurbo_rect(KRect::new(r.x(), r.y(), w.left, r.height())));
+                            scene.fill(
+                                Fill::NonZero,
+                                current_transform,
+                                to_peniko_color(c.left),
+                                None,
+                                &to_kurbo_rect(KRect::new(r.x(), r.y(), w.left, r.height())),
+                            );
                         }
                         if w.right > 0.0 {
-                            scene.fill(Fill::NonZero, current_transform, to_peniko_color(c.right), None,
-                                &to_kurbo_rect(KRect::new(r.right() - w.right, r.y(), w.right, r.height())));
+                            scene.fill(
+                                Fill::NonZero,
+                                current_transform,
+                                to_peniko_color(c.right),
+                                None,
+                                &to_kurbo_rect(KRect::new(
+                                    r.right() - w.right,
+                                    r.y(),
+                                    w.right,
+                                    r.height(),
+                                )),
+                            );
                         }
                     }
 
@@ -113,8 +150,10 @@ impl SceneBuilder {
                         // parley::FontData = peniko::Font — zero conversion.
                         for run in runs {
                             let run_transform = current_transform
-                                * Affine::translate((*x as f64 + run.offset as f64,
-                                                     *y as f64 + run.baseline as f64));
+                                * Affine::translate((
+                                    *x as f64 + run.offset as f64,
+                                    *y as f64 + run.baseline as f64,
+                                ));
 
                             let brush_color = vello::peniko::Color::new([
                                 run.color[0] as f32 / 255.0,
@@ -123,8 +162,10 @@ impl SceneBuilder {
                                 run.color[3] as f32 / 255.0,
                             ]);
 
-                            let glyphs = run.glyphs.iter().map(|g| {
-                                vello::Glyph { id: g.id, x: g.x, y: g.y }
+                            let glyphs = run.glyphs.iter().map(|g| vello::Glyph {
+                                id: g.id,
+                                x: g.x,
+                                y: g.y,
                             });
 
                             // Variable font axis values — tells vello which instance
@@ -144,7 +185,11 @@ impl SceneBuilder {
                     }
 
                     DrawCommand::RoundedBorderRing {
-                        outer_rect, outer_radii, inner_rect, inner_radii, color,
+                        outer_rect,
+                        outer_radii,
+                        inner_rect,
+                        inner_radii,
+                        color,
                     } => {
                         // Chrome: DrawDRRectOp — compound path (outer CW + inner CCW)
                         // filled with EvenOdd produces only the ring area.
@@ -173,7 +218,11 @@ impl SceneBuilder {
                     }
 
                     DrawCommand::Outline {
-                        rect, radii, width, offset, color,
+                        rect,
+                        radii,
+                        width,
+                        offset,
+                        color,
                     } => {
                         let expand = width + offset;
                         let outer_rect = rect.outset(expand, expand, expand, expand);
@@ -211,7 +260,6 @@ impl SceneBuilder {
 
                     // TODO(M7): LinearGradient DrawCommand — Chrome: PaintOp::DrawPaintOp + cc::PaintShader.
                     // TODO(M7): RadialGradient DrawCommand — Chrome: PaintOp::DrawPaintOp + cc::PaintShader.
-
                     DrawCommand::Image { .. } => {
                         // TODO(M5.1.5): image rendering.
                     }
@@ -222,28 +270,44 @@ impl SceneBuilder {
                 },
 
                 // ── Clip stack ───────────────────────────────────────────────
-
                 DisplayItem::PushClip(data) => {
-                    scene.push_clip_layer(Fill::NonZero, current_transform, &to_kurbo_rect(data.rect));
+                    scene.push_clip_layer(
+                        Fill::NonZero,
+                        current_transform,
+                        &to_kurbo_rect(data.rect),
+                    );
                 }
-                DisplayItem::PopClip => { scene.pop_layer(); }
+                DisplayItem::PopClip => {
+                    scene.pop_layer();
+                }
 
                 DisplayItem::PushRoundedClip(data) => {
-                    scene.push_clip_layer(Fill::NonZero, current_transform,
-                        &to_kurbo_rounded_rect(data.rect, data.radii));
+                    scene.push_clip_layer(
+                        Fill::NonZero,
+                        current_transform,
+                        &to_kurbo_rounded_rect(data.rect, data.radii),
+                    );
                 }
-                DisplayItem::PopRoundedClip => { scene.pop_layer(); }
+                DisplayItem::PopRoundedClip => {
+                    scene.pop_layer();
+                }
 
                 // ── Opacity stack ────────────────────────────────────────────
-
                 DisplayItem::PushOpacity(alpha) => {
                     let bounds = vello::kurbo::Rect::new(-1e6, -1e6, 1e6, 1e6);
-                    scene.push_layer(Fill::NonZero, Mix::Normal, *alpha, current_transform, &bounds);
+                    scene.push_layer(
+                        Fill::NonZero,
+                        Mix::Normal,
+                        *alpha,
+                        current_transform,
+                        &bounds,
+                    );
                 }
-                DisplayItem::PopOpacity => { scene.pop_layer(); }
+                DisplayItem::PopOpacity => {
+                    scene.pop_layer();
+                }
 
                 // ── Transform stack ──────────────────────────────────────────
-
                 DisplayItem::PushTransform(data) => {
                     let (tx, ty) = match data.scroll_node {
                         Some(id) => {
@@ -255,11 +319,12 @@ impl SceneBuilder {
                     transforms.push(current_transform * Affine::translate((tx, ty)));
                 }
                 DisplayItem::PopTransform => {
-                    if transforms.len() > 1 { transforms.pop(); }
+                    if transforms.len() > 1 {
+                        transforms.pop();
+                    }
                 }
 
                 // ── External GPU surface ─────────────────────────────────────
-
                 DisplayItem::ExternalSurface(_) => {
                     // TODO(M6): compositor integration for 3D/video.
                 }

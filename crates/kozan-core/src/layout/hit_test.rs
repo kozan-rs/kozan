@@ -46,12 +46,7 @@ impl<'a> HitTester<'a> {
         self.test_fragment(fragment, point, Point::ZERO)
     }
 
-    fn test_fragment(
-        &self,
-        fragment: &Fragment,
-        point: Point,
-        origin: Point,
-    ) -> HitTestResult {
+    fn test_fragment(&self, fragment: &Fragment, point: Point, origin: Point) -> HitTestResult {
         let local = point - origin;
         let in_bounds = local.dx >= 0.0
             && local.dy >= 0.0
@@ -70,7 +65,8 @@ impl<'a> HitTester<'a> {
             let is_user_scrollable = box_data.overflow_x.is_user_scrollable()
                 || box_data.overflow_y.is_user_scrollable();
             let scroll_offset = if is_user_scrollable {
-                fragment.dom_node
+                fragment
+                    .dom_node
                     .map(|id| self.scroll_offsets.offset(id))
                     .unwrap_or(Offset::ZERO)
             } else {
@@ -79,9 +75,8 @@ impl<'a> HitTester<'a> {
 
             // Walk children in REVERSE order (last painted = front = checked first).
             for child in box_data.children.iter().rev() {
-                let child_origin = origin
-                    + Offset::new(child.offset.x, child.offset.y)
-                    - scroll_offset;
+                let child_origin =
+                    origin + Offset::new(child.offset.x, child.offset.y) - scroll_offset;
                 let result = self.test_fragment(&child.fragment, point, child_origin);
                 if result.node_index.is_some() {
                     return result;
@@ -149,11 +144,10 @@ impl HitTestCache {
     ) -> &HitTestResult {
         let ptr = Arc::as_ptr(fragment) as usize;
         let same_fragment = self.last_fragment_ptr == ptr;
-        let close_enough =
-            (point.x - self.last_point.x).abs() < TOLERANCE
+        let close_enough = (point.x - self.last_point.x).abs() < TOLERANCE
             && (point.y - self.last_point.y).abs() < TOLERANCE;
 
-        if same_fragment &&  close_enough {
+        if same_fragment && close_enough {
             return &self.last_result;
         }
 
@@ -175,11 +169,7 @@ mod tests {
     use crate::layout::fragment::*;
     use kozan_primitives::geometry::Size;
 
-    fn make_box(
-        size: Size,
-        dom_node: Option<u32>,
-        children: Vec<ChildFragment>,
-    ) -> Arc<Fragment> {
+    fn make_box(size: Size, dom_node: Option<u32>, children: Vec<ChildFragment>) -> Arc<Fragment> {
         Fragment::new_box_styled_with_node(size, dom_node, children)
     }
 
@@ -234,8 +224,12 @@ mod tests {
     fn nested_child_hit() {
         let child = make_box(Size::new(100.0, 50.0), Some(1), vec![]);
         let root = make_box(
-            Size::new(800.0, 600.0), Some(0),
-            vec![ChildFragment { offset: Point::new(50.0, 50.0), fragment: child }],
+            Size::new(800.0, 600.0),
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::new(50.0, 50.0),
+                fragment: child,
+            }],
         );
         let result = tester(&no_scroll()).test(&root, Point::new(75.0, 60.0));
         assert_eq!(result.node_index, Some(1));
@@ -247,10 +241,17 @@ mod tests {
         let a = make_box(Size::new(100.0, 100.0), Some(1), vec![]);
         let b = make_box(Size::new(100.0, 100.0), Some(2), vec![]);
         let root = make_box(
-            Size::new(800.0, 600.0), Some(0),
+            Size::new(800.0, 600.0),
+            Some(0),
             vec![
-                ChildFragment { offset: Point::new(10.0, 10.0), fragment: a },
-                ChildFragment { offset: Point::new(10.0, 10.0), fragment: b },
+                ChildFragment {
+                    offset: Point::new(10.0, 10.0),
+                    fragment: a,
+                },
+                ChildFragment {
+                    offset: Point::new(10.0, 10.0),
+                    fragment: b,
+                },
             ],
         );
         let result = tester(&no_scroll()).test(&root, Point::new(50.0, 50.0));
@@ -261,12 +262,20 @@ mod tests {
     fn deeply_nested() {
         let gc = make_box(Size::new(20.0, 20.0), Some(3), vec![]);
         let child = make_box(
-            Size::new(100.0, 100.0), Some(2),
-            vec![ChildFragment { offset: Point::new(10.0, 10.0), fragment: gc }],
+            Size::new(100.0, 100.0),
+            Some(2),
+            vec![ChildFragment {
+                offset: Point::new(10.0, 10.0),
+                fragment: gc,
+            }],
         );
         let root = make_box(
-            Size::new(800.0, 600.0), Some(1),
-            vec![ChildFragment { offset: Point::new(50.0, 50.0), fragment: child }],
+            Size::new(800.0, 600.0),
+            Some(1),
+            vec![ChildFragment {
+                offset: Point::new(50.0, 50.0),
+                fragment: child,
+            }],
         );
         let result = tester(&no_scroll()).test(&root, Point::new(65.0, 65.0));
         assert_eq!(result.node_index, Some(3));
@@ -281,8 +290,12 @@ mod tests {
             dom_node: None,
         });
         let root = make_box(
-            Size::new(800.0, 600.0), Some(0),
-            vec![ChildFragment { offset: Point::ZERO, fragment: anon }],
+            Size::new(800.0, 600.0),
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::ZERO,
+                fragment: anon,
+            }],
         );
         let result = tester(&no_scroll()).test(&root, Point::new(50.0, 50.0));
         assert_eq!(result.node_index, Some(0));
@@ -301,8 +314,12 @@ mod tests {
             dom_node: Some(1),
         });
         let root = make_box(
-            Size::new(800.0, 600.0), Some(0),
-            vec![ChildFragment { offset: Point::ZERO, fragment: child }],
+            Size::new(800.0, 600.0),
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::ZERO,
+                fragment: child,
+            }],
         );
         let result = tester(&no_scroll()).test(&root, Point::new(50.0, 50.0));
         assert_eq!(result.node_index, Some(1));
@@ -325,7 +342,10 @@ mod tests {
         let root = Arc::new(Fragment {
             size: Size::new(200.0, 200.0),
             kind: FragmentKind::Box(BoxFragmentData {
-                children: vec![ChildFragment { offset: Point::ZERO, fragment: child }],
+                children: vec![ChildFragment {
+                    offset: Point::ZERO,
+                    fragment: child,
+                }],
                 overflow_y: OverflowClip::Scroll,
                 ..Default::default()
             }),

@@ -92,7 +92,7 @@ pub struct FontQuery {
 
 impl FontQuery {
     /// Create a query from full properties.
-    #[must_use] 
+    #[must_use]
     pub fn new(
         font_size: f32,
         font_weight: u16,
@@ -110,7 +110,7 @@ impl FontQuery {
     }
 
     /// Create a query with just font size (default weight + sans-serif).
-    #[must_use] 
+    #[must_use]
     pub fn from_size(font_size: f32) -> Self {
         Self {
             font_size,
@@ -123,7 +123,7 @@ impl FontQuery {
     }
 
     /// Create from Stylo `ComputedValues`.
-    #[must_use] 
+    #[must_use]
     pub fn from_computed(cv: &style::properties::ComputedValues) -> Self {
         let font = cv.get_font();
         let fs = font.clone_font_size().computed_size().px();
@@ -144,10 +144,12 @@ impl FontQuery {
         // Stylo: `Spacing<CSSPixelLength>` — `Value(px)` or `Normal` (= 0).
         let text = cv.get_inherited_text();
         let zero = style::values::computed::CSSPixelLength::new(0.0);
-        let letter_spacing = text.clone_letter_spacing().0
-            .percentage_relative_to(zero).px();
-        let word_spacing = text.clone_word_spacing()
-            .percentage_relative_to(zero).px();
+        let letter_spacing = text
+            .clone_letter_spacing()
+            .0
+            .percentage_relative_to(zero)
+            .px();
+        let word_spacing = text.clone_word_spacing().percentage_relative_to(zero).px();
 
         Self {
             font_size: fs,
@@ -181,7 +183,7 @@ impl FontSystem {
     ///
     /// Chrome: `FontCache::Create()` → enumerates platform fonts.
     /// Parley/Fontique scans the system font directories.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             font_cx: RefCell::new(FontContext::new()),
@@ -275,7 +277,9 @@ impl FontSystem {
 
         // Read ascent/descent/leading from the first line's real font metrics.
         // Parley always produces at least one line for non-empty text.
-        let line = layout.lines().next()
+        let line = layout
+            .lines()
+            .next()
             .expect("Parley always produces at least one line for non-empty text");
         let m = line.metrics();
         FontMetrics {
@@ -351,12 +355,7 @@ impl TextMeasurer for FontSystem {
         }
     }
 
-    fn shape_glyphs(
-        &self,
-        text: &str,
-        query: &FontQuery,
-        color: [u8; 4],
-    ) -> Vec<ShapedTextRun> {
+    fn shape_glyphs(&self, text: &str, query: &FontQuery, color: [u8; 4]) -> Vec<ShapedTextRun> {
         // Delegates to the inherent method on FontSystem.
         FontSystem::shape_glyphs(self, text, query, color)
     }
@@ -484,8 +483,7 @@ impl FontSystem {
                 // instance to render. Without this, vello draws the default
                 // instance (Regular/400) even though HarfRust shaped correctly.
                 // Chrome: reads fvar axis values from ComputedStyle.
-                let normalized_coords: Vec<i16> = run
-                    .normalized_coords().to_vec();
+                let normalized_coords: Vec<i16> = run.normalized_coords().to_vec();
 
                 runs.push(ShapedTextRun {
                     font: font_data,

@@ -21,7 +21,11 @@ pub struct LayerTree {
 
 impl LayerTree {
     pub fn new() -> Self {
-        Self { layers: Storage::new(), next_id: 0, root: None }
+        Self {
+            layers: Storage::new(),
+            next_id: 0,
+            root: None,
+        }
     }
 
     pub fn push(&mut self, layer: Layer) -> LayerId {
@@ -40,11 +44,15 @@ impl LayerTree {
     }
 
     pub fn layer(&self, id: LayerId) -> &Layer {
-        self.layers.get(id.0).expect("LayerId points to valid layer")
+        self.layers
+            .get(id.0)
+            .expect("LayerId points to valid layer")
     }
 
     pub fn layer_mut(&mut self, id: LayerId) -> &mut Layer {
-        self.layers.get_mut(id.0).expect("LayerId points to valid layer")
+        self.layers
+            .get_mut(id.0)
+            .expect("LayerId points to valid layer")
     }
 
     pub fn len(&self) -> u32 {
@@ -52,7 +60,8 @@ impl LayerTree {
     }
 
     pub fn layer_for_dom_node(&self, dom_id: u32) -> Option<LayerId> {
-        self.layers.iter()
+        self.layers
+            .iter()
             .find(|(_, l)| l.dom_node == Some(dom_id))
             .map(|(i, _)| LayerId(i))
     }

@@ -18,7 +18,9 @@ pub struct ScrollOffsets {
 
 impl ScrollOffsets {
     pub fn new() -> Self {
-        Self { offsets: Storage::new() }
+        Self {
+            offsets: Storage::new(),
+        }
     }
 
     /// Returns `Offset::ZERO` for nodes that have never been scrolled.

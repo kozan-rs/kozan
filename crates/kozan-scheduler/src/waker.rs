@@ -72,7 +72,7 @@ impl CrossThreadTask {
 
     /// The priority this task should be routed to.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn priority(&self) -> TaskPriority {
         self.priority
     }
@@ -179,7 +179,7 @@ impl WakeReceiver {
     ///
     /// Returns `None` if no tasks are available.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn try_recv(&self) -> Option<CrossThreadTask> {
         self.receiver.try_recv().ok()
     }
@@ -245,11 +245,14 @@ impl std::error::Error for SendError {}
 ///     queue.push(Task::new(task.priority(), move || task.run()));
 /// });
 /// ```
-#[must_use] 
+#[must_use]
 pub fn cross_thread_channel() -> (WakeSender, WakeReceiver) {
     let (sender, receiver) = mpsc::sync_channel(CHANNEL_CAPACITY);
     (
-        WakeSender { sender, notify: None },
+        WakeSender {
+            sender,
+            notify: None,
+        },
         WakeReceiver {
             receiver,
             _not_send: std::marker::PhantomData,

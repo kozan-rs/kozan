@@ -46,11 +46,7 @@ pub(crate) struct AppHandler<R: Renderer> {
 }
 
 impl<R: Renderer> AppHandler<R> {
-    pub fn new(
-        renderer: R,
-        pending: Vec<PendingWindow>,
-        host: Arc<WinitPlatformHost>,
-    ) -> Self {
+    pub fn new(renderer: R, pending: Vec<PendingWindow>, host: Arc<WinitPlatformHost>) -> Self {
         Self {
             manager: WindowManager::new(renderer),
             os_windows: HashMap::new(),
@@ -100,7 +96,10 @@ impl<R: Renderer> AppHandler<R> {
             },
         };
 
-        if let Err(e) = self.manager.create_window(&window, create_config, move |ctx| view_init(ctx)) {
+        if let Err(e) = self
+            .manager
+            .create_window(&window, create_config, move |ctx| view_init(ctx))
+        {
             eprintln!("kozan: failed to create window: {e}");
             return;
         }
@@ -160,7 +159,9 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
         winit_id: WinitWindowId,
         event: WindowEvent,
     ) {
-        let Some(&kozan_id) = self.winit_to_kozan.get(&winit_id) else { return };
+        let Some(&kozan_id) = self.winit_to_kozan.get(&winit_id) else {
+            return;
+        };
 
         match event {
             // ── Lifecycle ────────────────────────────────────
@@ -180,10 +181,13 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
             }
 
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
-                let refresh_rate = self.os_windows.get(&winit_id)
+                let refresh_rate = self
+                    .os_windows
+                    .get(&winit_id)
                     .and_then(|w| w.current_monitor())
                     .and_then(|m| m.refresh_rate_millihertz());
-                self.manager.on_scale_factor_changed(kozan_id, scale_factor, refresh_rate);
+                self.manager
+                    .on_scale_factor_changed(kozan_id, scale_factor, refresh_rate);
             }
 
             WindowEvent::RedrawRequested => {}
@@ -204,12 +208,14 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
                 let key = convert_key_code(&event.physical_key);
                 let state = convert_button_state(event.state);
                 let text = event.text.map(|s| s.to_string());
-                self.manager.on_keyboard_input(kozan_id, key, state, text, event.repeat);
+                self.manager
+                    .on_keyboard_input(kozan_id, key, state, text, event.repeat);
             }
 
             // ── Mouse ────────────────────────────────────────
             WindowEvent::CursorMoved { position, .. } => {
-                self.manager.on_cursor_moved(kozan_id, position.x, position.y);
+                self.manager
+                    .on_cursor_moved(kozan_id, position.x, position.y);
             }
 
             WindowEvent::CursorEntered { .. } => {
@@ -229,9 +235,7 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
             // ── Scroll ───────────────────────────────────────
             WindowEvent::MouseWheel { delta, .. } => {
                 let wheel_delta = match delta {
-                    winit::event::MouseScrollDelta::LineDelta(lx, ly) => {
-                        WheelDelta::Lines(lx, ly)
-                    }
+                    winit::event::MouseScrollDelta::LineDelta(lx, ly) => WheelDelta::Lines(lx, ly),
                     winit::event::MouseScrollDelta::PixelDelta(pos) => {
                         let scale = self.manager.scale_factor(kozan_id).unwrap_or(1.0);
                         WheelDelta::Pixels(pos.x / scale, pos.y / scale)
@@ -267,12 +271,15 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
             InternalRequest::CreateWindow { config } => {
                 self.create_window(event_loop, config, Box::new(|_| {}));
             }
-            InternalRequest::ResizeWindow { window_id, width, height } => {
+            InternalRequest::ResizeWindow {
+                window_id,
+                width,
+                height,
+            } => {
                 if let Some(&winit_id) = self.kozan_to_winit.get(&window_id) {
                     if let Some(window) = self.os_windows.get(&winit_id) {
-                        let _ = window.request_inner_size(
-                            winit::dpi::PhysicalSize::new(width, height),
-                        );
+                        let _ =
+                            window.request_inner_size(winit::dpi::PhysicalSize::new(width, height));
                     }
                 }
             }

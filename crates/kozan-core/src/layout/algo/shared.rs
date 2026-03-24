@@ -6,8 +6,8 @@ use taffy::prelude as tf;
 
 use crate::layout::fragment::ChildFragment;
 
-use style::properties::ComputedValues;
 use style::computed_values::direction::T as Direction;
+use style::properties::ComputedValues;
 
 use crate::styling::taffy_bridge::convert;
 
@@ -118,7 +118,8 @@ impl InlineDirection {
             tf::Display::Grid => {
                 // Grid: mirror ALL children within the content area.
                 let content_left = border_left + padding_left;
-                let content_w = (parent_width - content_left - border_right - padding_right).max(0.0);
+                let content_w =
+                    (parent_width - content_left - border_right - padding_right).max(0.0);
                 self.mirror_x(children, content_left, content_w);
             }
             _ => {
@@ -140,12 +141,7 @@ impl InlineDirection {
     /// Mirror x-positions within a reference box.
     ///
     /// Pure geometry: `new_x = box_left + box_w - (x - box_left) - child_w`.
-    fn mirror_x(
-        &self,
-        children: &mut [ChildFragment],
-        box_left: f32,
-        box_w: f32,
-    ) {
+    fn mirror_x(&self, children: &mut [ChildFragment], box_left: f32, box_w: f32) {
         for child in children.iter_mut() {
             let child_w = child.fragment.size.width;
             let x_in_box = child.offset.x - box_left;

@@ -71,14 +71,14 @@ impl TaskPriority {
 
     /// Convert to array index (0 = highest priority).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn as_index(self) -> usize {
         self as usize
     }
 
     /// Convert from array index. Returns `None` if out of range.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub const fn from_index(index: usize) -> Option<Self> {
         match index {
             0 => Some(Self::Input),
@@ -179,14 +179,14 @@ impl Task {
 
     /// The task's priority level.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn priority(&self) -> TaskPriority {
         self.priority
     }
 
     /// Whether this task is ready to execute (delay has elapsed).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_ready(&self) -> bool {
         match self.run_at {
             None => true,
@@ -197,7 +197,7 @@ impl Task {
     /// Time remaining until this task is ready.
     /// Returns `Duration::ZERO` if already ready.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn time_until_ready(&self) -> Duration {
         match self.run_at {
             None => Duration::ZERO,
@@ -207,7 +207,7 @@ impl Task {
 
     /// The scheduled run time, if delayed.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn run_at(&self) -> Option<Instant> {
         self.run_at
     }

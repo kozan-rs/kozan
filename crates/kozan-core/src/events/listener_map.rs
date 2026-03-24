@@ -26,7 +26,7 @@ pub struct EventListenerMap {
 }
 
 impl EventListenerMap {
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -81,7 +81,7 @@ impl EventListenerMap {
     /// Get listeners for a specific event type.
     ///
     /// Returns None if no listeners are registered for this type.
-    #[must_use] 
+    #[must_use]
     pub fn get(&self, type_id: TypeId) -> Option<&Vec<RegisteredListener>> {
         self.entries
             .iter()
@@ -123,13 +123,13 @@ impl EventListenerMap {
     }
 
     /// Does this node have any listeners at all?
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.entries.iter().all(|(_, l)| l.is_empty())
     }
 
     /// Does this node have listeners for a specific event type?
-    #[must_use] 
+    #[must_use]
     pub fn has_listeners(&self, type_id: TypeId) -> bool {
         self.entries
             .iter()
@@ -137,7 +137,7 @@ impl EventListenerMap {
     }
 
     /// Does this node have any capturing listeners for a specific event type?
-    #[must_use] 
+    #[must_use]
     pub fn has_capture_listeners(&self, type_id: TypeId) -> bool {
         self.entries
             .iter()
@@ -145,7 +145,7 @@ impl EventListenerMap {
     }
 
     /// Total number of registered listeners (across all types).
-    #[must_use] 
+    #[must_use]
     pub fn count(&self) -> usize {
         self.entries.iter().map(|(_, l)| l.len()).sum()
     }

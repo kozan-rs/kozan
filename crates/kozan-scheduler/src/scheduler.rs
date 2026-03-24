@@ -117,7 +117,7 @@ impl Scheduler {
     ///
     /// The `WakeSender` should be cloned and given to background threads.
     /// The `Scheduler` stays on the window thread.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> (Self, WakeSender) {
         let (sender, receiver) = crate::waker::cross_thread_channel();
         let scheduler = Self {
@@ -310,7 +310,7 @@ impl Scheduler {
     }
 
     /// Whether the scheduler has any pending work (immediate or delayed).
-    #[must_use] 
+    #[must_use]
     pub fn has_work(&self) -> bool {
         self.task_queue.has_ready()
             || self.task_queue.has_delayed()
@@ -322,7 +322,7 @@ impl Scheduler {
     // ---- Sub-system access ----
 
     /// Access the frame scheduler directly.
-    #[must_use] 
+    #[must_use]
     pub fn frame_scheduler(&self) -> &FrameScheduler {
         &self.frame_scheduler
     }
@@ -333,13 +333,13 @@ impl Scheduler {
     }
 
     /// Access the task queue manager.
-    #[must_use] 
+    #[must_use]
     pub fn task_queue(&self) -> &TaskQueueManager {
         &self.task_queue
     }
 
     /// Access the executor.
-    #[must_use] 
+    #[must_use]
     pub fn executor(&self) -> &LocalExecutor {
         &self.executor
     }
@@ -507,7 +507,10 @@ mod tests {
         let called = Rc::new(Cell::new(false));
 
         let c = called.clone();
-        sched.request_frame(move |_| { c.set(true); false });
+        sched.request_frame(move |_| {
+            c.set(true);
+            false
+        });
 
         let _ = sched.tick(&mut |_| {});
         assert!(called.get());

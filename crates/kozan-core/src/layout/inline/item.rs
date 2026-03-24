@@ -70,7 +70,7 @@ pub enum InlineItem {
 
 impl InlineItem {
     /// Get the inline size (width) of this item.
-    #[must_use] 
+    #[must_use]
     pub fn inline_size(&self) -> f32 {
         match self {
             InlineItem::Text { measured_width, .. } => *measured_width,
@@ -92,13 +92,13 @@ impl InlineItem {
     }
 
     /// Whether this item forces a line break.
-    #[must_use] 
+    #[must_use]
     pub fn is_forced_break(&self) -> bool {
         matches!(self, InlineItem::ForcedBreak)
     }
 
     /// Whether this item is breakable (text can be split across lines).
-    #[must_use] 
+    #[must_use]
     pub fn is_breakable(&self) -> bool {
         matches!(self, InlineItem::Text { .. })
     }

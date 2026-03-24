@@ -58,7 +58,7 @@ pub struct TaskQueue {
 impl TaskQueue {
     /// Create a new empty queue for the given priority.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn new(priority: TaskPriority) -> Self {
         Self {
             tasks: VecDeque::new(),
@@ -84,7 +84,7 @@ impl TaskQueue {
 
     /// Peek at the front task without removing it.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn front(&self) -> Option<&Task> {
         if !self.enabled {
             return None;
@@ -94,28 +94,28 @@ impl TaskQueue {
 
     /// Number of tasks in this queue (regardless of enabled state).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.tasks.len()
     }
 
     /// Whether this queue has no tasks.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.tasks.is_empty()
     }
 
     /// Whether this queue has tasks AND is enabled (actually pickable).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn has_ready(&self) -> bool {
         self.enabled && !self.tasks.is_empty()
     }
 
     /// Whether this queue is enabled.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }
@@ -131,7 +131,7 @@ impl TaskQueue {
 
     /// The priority level this queue serves.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn priority(&self) -> TaskPriority {
         self.priority
     }
@@ -212,7 +212,7 @@ pub struct TaskQueueManager {
 
 impl TaskQueueManager {
     /// Create a new set with one empty queue per priority level.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             queues: [
@@ -296,7 +296,7 @@ impl TaskQueueManager {
     ///
     /// Returns `None` if there are no delayed tasks.
     /// O(1) — just peeks at the heap top.
-    #[must_use] 
+    #[must_use]
     pub fn next_delayed_ready_in(&self) -> Option<std::time::Duration> {
         self.delayed
             .peek()
@@ -305,7 +305,7 @@ impl TaskQueueManager {
 
     /// Get a reference to a specific priority queue.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn queue(&self, priority: TaskPriority) -> &TaskQueue {
         &self.queues[priority.as_index()]
     }
@@ -323,7 +323,7 @@ impl TaskQueueManager {
 
     /// Total tasks across all queues that are actually pickable
     /// (in enabled queues).
-    #[must_use] 
+    #[must_use]
     pub fn ready_count(&self) -> usize {
         self.queues
             .iter()
@@ -334,26 +334,26 @@ impl TaskQueueManager {
 
     /// Number of delayed tasks waiting for their deadline.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn delayed_count(&self) -> usize {
         self.delayed.len()
     }
 
     /// Whether there are any pickable tasks in enabled queues.
-    #[must_use] 
+    #[must_use]
     pub fn has_ready(&self) -> bool {
         self.queues.iter().any(|q| q.has_ready())
     }
 
     /// Whether there are no tasks at all (ready or delayed).
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         !self.has_ready() && self.delayed.is_empty()
     }
 
     /// Whether there are delayed tasks pending (for park timeout calculation).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn has_delayed(&self) -> bool {
         !self.delayed.is_empty()
     }

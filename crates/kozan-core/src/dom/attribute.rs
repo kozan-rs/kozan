@@ -22,14 +22,14 @@ impl Attribute {
 
     /// The attribute name.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
     /// The attribute value.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn value(&self) -> &str {
         &self.value
     }
@@ -51,13 +51,13 @@ pub struct AttributeCollection {
 
 impl AttributeCollection {
     /// Create an empty collection.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self { attrs: Vec::new() }
     }
 
     /// Get an attribute value by name.
-    #[must_use] 
+    #[must_use]
     pub fn get(&self, name: &str) -> Option<&str> {
         self.attrs
             .iter()
@@ -84,21 +84,21 @@ impl AttributeCollection {
     }
 
     /// Check if an attribute exists.
-    #[must_use] 
+    #[must_use]
     pub fn has(&self, name: &str) -> bool {
         self.attrs.iter().any(|a| a.name == name)
     }
 
     /// Number of attributes.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.attrs.len()
     }
 
     /// Is the collection empty?
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.attrs.is_empty()
     }

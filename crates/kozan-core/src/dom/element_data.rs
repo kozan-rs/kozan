@@ -10,11 +10,11 @@ use std::collections::HashSet;
 
 use selectors::matching::ElementSelectorFlags;
 use servo_arc::Arc;
+use style::Atom;
 use style::data::ElementDataWrapper;
 use style::properties::declaration_block::PropertyDeclarationBlock;
 use style::properties::{Importance, PropertyDeclaration};
 use style::shared_lock::Locked;
-use style::Atom;
 use style_dom::ElementState;
 use web_atoms::{LocalName, Namespace};
 
@@ -26,7 +26,6 @@ static HTML_NS: &str = "http://www.w3.org/1999/xhtml";
 /// All data for one element node. Stored in `Storage<ElementData>`.
 pub struct ElementData {
     // ── Identity (interned at creation, updated on attribute change) ──
-
     /// Raw tag name (compile-time known, e.g. "div").
     pub(crate) tag_name: &'static str,
 
@@ -44,7 +43,6 @@ pub struct ElementData {
     pub(crate) classes: HashSet<Atom>,
 
     // ── State ──
-
     /// Element state flags (focus, hover, active, enabled, etc.)
     pub(crate) element_state: ElementState,
 
@@ -55,7 +53,6 @@ pub struct ElementData {
     pub(crate) tab_index: i32,
 
     // ── DOM attributes ──
-
     /// All attributes (id, class, data-*, custom).
     pub(crate) attributes: AttributeCollection,
 
@@ -67,7 +64,6 @@ pub struct ElementData {
     //
     // Property setters modify `inline_styles` only. No Arc/Lock touching.
     // Before traversal, `flush_inline_styles()` creates the locked cache.
-
     /// Plain PDB for inline styles. Mutated by property setters.
     pub(crate) inline_styles: PropertyDeclarationBlock,
 
@@ -78,7 +74,6 @@ pub struct ElementData {
     pub(crate) inline_dirty: Cell<bool>,
 
     // ── Stylo data (style traversal reads/writes these) ──
-
     /// Stylo's computed styles + restyle damage + hints.
     pub(crate) stylo_data: ElementDataWrapper,
 
@@ -137,9 +132,12 @@ impl ElementData {
     }
 
     /// Overwrite all inline styles from a CSS string.
-    pub(crate) fn set_inline_from_css(&mut self, value: &str, guard: &style::shared_lock::SharedRwLock) {
-        let url = url::Url::parse("kozan://inline")
-            .expect("hardcoded URL is always valid");
+    pub(crate) fn set_inline_from_css(
+        &mut self,
+        value: &str,
+        guard: &style::shared_lock::SharedRwLock,
+    ) {
+        let url = url::Url::parse("kozan://inline").expect("hardcoded URL is always valid");
         let url_data = style::stylesheets::UrlExtraData(Arc::new(url));
         self.inline_styles = style::properties::parse_style_attribute(
             value,
@@ -184,7 +182,12 @@ impl ElementData {
 
     // ── Attribute change hooks ──
 
-    pub(crate) fn on_attribute_set(&mut self, name: &str, value: &str, guard: &style::shared_lock::SharedRwLock) -> bool {
+    pub(crate) fn on_attribute_set(
+        &mut self,
+        name: &str,
+        value: &str,
+        guard: &style::shared_lock::SharedRwLock,
+    ) -> bool {
         match name {
             "id" => {
                 self.id = Some(Atom::from(value));
@@ -232,9 +235,18 @@ impl ElementData {
 
     pub(crate) fn on_attribute_removed(&mut self, name: &str) -> bool {
         match name {
-            "id" => { self.id = None; true }
-            "class" => { self.classes.clear(); true }
-            "style" => { self.clear_inline_styles(); true }
+            "id" => {
+                self.id = None;
+                true
+            }
+            "class" => {
+                self.classes.clear();
+                true
+            }
+            "style" => {
+                self.clear_inline_styles();
+                true
+            }
             _ => false,
         }
     }

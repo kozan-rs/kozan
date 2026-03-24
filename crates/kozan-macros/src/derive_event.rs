@@ -50,7 +50,9 @@ fn parse_attrs(input: &DeriveInput) -> Result<EventAttrs> {
             } else {
                 // Reject unknown attributes at compile time — catches typos
                 // like `#[event(canceleable)]` immediately.
-                return Err(meta.error("unknown event attribute (expected `bubbles` or `cancelable`)"));
+                return Err(
+                    meta.error("unknown event attribute (expected `bubbles` or `cancelable`)")
+                );
             }
             Ok(())
         })?;

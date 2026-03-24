@@ -4,7 +4,6 @@
 //! (dom, layout, paint, public API) uses re-exports from here.
 
 pub mod builder;
-pub mod units;
 pub(crate) mod data;
 pub(crate) mod engine;
 pub(crate) mod font_metrics;
@@ -12,6 +11,7 @@ pub(crate) mod node;
 pub mod taffy_bridge;
 pub(crate) mod traits;
 pub(crate) mod traversal;
+pub mod units;
 
 #[cfg(test)]
 mod tests;
@@ -65,9 +65,9 @@ pub use style::properties::style_structs;
 /// Computed value types that exist as standalone re-exports.
 pub mod values {
     // Box model
+    pub use style::values::computed::Clear;
     pub use style::values::computed::Display;
     pub use style::values::computed::Float;
-    pub use style::values::computed::Clear;
     pub use style::values::computed::Overflow;
 
     // Position
@@ -75,29 +75,29 @@ pub mod values {
 
     // Flex alignment
     pub use style::values::computed::ContentDistribution;
+    pub use style::values::computed::FlexBasis;
     pub use style::values::computed::JustifyItems;
     pub use style::values::computed::SelfAlignment;
-    pub use style::values::computed::FlexBasis;
 
     // Size + spacing
+    pub use style::values::computed::CSSPixelLength;
     pub use style::values::computed::Length;
     pub use style::values::computed::LengthPercentage;
     pub use style::values::computed::LengthPercentageOrAuto;
+    pub use style::values::computed::Margin;
+    pub use style::values::computed::MaxSize;
     pub use style::values::computed::NonNegativeLength;
     pub use style::values::computed::NonNegativeLengthPercentage;
-    pub use style::values::computed::CSSPixelLength;
     pub use style::values::computed::Size;
-    pub use style::values::computed::MaxSize;
-    pub use style::values::computed::Margin;
 
     // Text + font
     pub use style::values::computed::FontFamily;
-    pub use style::values::computed::FontWeight;
     pub use style::values::computed::FontStyle;
-    pub use style::values::computed::TextAlign;
-    pub use style::values::computed::TextDecorationLine;
+    pub use style::values::computed::FontWeight;
     pub use style::values::computed::LineHeight;
     pub use style::values::computed::Opacity;
+    pub use style::values::computed::TextAlign;
+    pub use style::values::computed::TextDecorationLine;
 
     // Border
     pub use style::values::computed::BorderStyle;

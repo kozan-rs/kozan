@@ -18,23 +18,23 @@ impl Color {
     pub const GREEN: Self = Self::rgb(0.0, 1.0, 0.0);
     pub const BLUE: Self = Self::rgb(0.0, 0.0, 1.0);
 
-    #[must_use] 
+    #[must_use]
     pub const fn rgb(r: f32, g: f32, b: f32) -> Self {
         Self { r, g, b, a: 1.0 }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn rgba(r: f32, g: f32, b: f32, a: f32) -> Self {
         Self { r, g, b, a }
     }
 
     /// Construct from 8-bit per channel values (0–255).
-    #[must_use] 
+    #[must_use]
     pub fn from_rgb8(r: u8, g: u8, b: u8) -> Self {
         Self::rgb(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self::rgba(
             r as f32 / 255.0,
@@ -45,7 +45,7 @@ impl Color {
     }
 
     /// Construct from a 32-bit hex value: `0xRRGGBB` or `0xRRGGBBAA`.
-    #[must_use] 
+    #[must_use]
     pub fn from_hex(hex: u32) -> Self {
         if hex > 0xFFFFFF {
             Self::from_rgba8(
@@ -63,23 +63,23 @@ impl Color {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn with_alpha(self, a: f32) -> Self {
         Self { a, ..self }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_opaque(self) -> bool {
         self.a >= 1.0
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_transparent(self) -> bool {
         self.a <= 0.0
     }
 
     /// Linear interpolation between two colors.
-    #[must_use] 
+    #[must_use]
     pub fn lerp(self, other: Self, t: f32) -> Self {
         Self {
             r: self.r + (other.r - self.r) * t,
@@ -90,7 +90,7 @@ impl Color {
     }
 
     /// Pack to 32-bit RGBA (8 bits per channel).
-    #[must_use] 
+    #[must_use]
     pub fn to_rgba8(self) -> [u8; 4] {
         [
             (self.r.clamp(0.0, 1.0) * 255.0 + 0.5) as u8,

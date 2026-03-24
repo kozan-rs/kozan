@@ -68,7 +68,7 @@ impl FrameInfo {
     /// Callbacks later in the frame see less remaining budget.
     /// Returns `Duration::ZERO` if the budget is exceeded.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn remaining_budget(&self) -> Duration {
         self.frame_budget.saturating_sub(self.frame_start.elapsed())
     }
@@ -140,7 +140,7 @@ pub use kozan_primitives::timing::FrameTiming;
 
 impl FrameScheduler {
     /// Create a new frame scheduler with the default 60 Hz budget.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self::with_budget(DEFAULT_FRAME_BUDGET)
     }
@@ -151,7 +151,7 @@ impl FrameScheduler {
     /// // 120 Hz display:
     /// FrameScheduler::with_budget(Duration::from_micros(8_333));
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn with_budget(frame_budget: Duration) -> Self {
         let now = Instant::now();
         Self {
@@ -201,7 +201,7 @@ impl FrameScheduler {
     /// True when:
     /// 1. Something needs rendering (dirty flag or pending callbacks), AND
     /// 2. Enough time has passed since the last frame (frame budget).
-    #[must_use] 
+    #[must_use]
     pub fn should_produce_frame(&self) -> bool {
         if !self.needs_frame && self.callbacks.is_empty() {
             return false;
@@ -217,7 +217,7 @@ impl FrameScheduler {
     /// Returns `Duration::ZERO` if a frame is due now.
     /// Returns `None` if no frame is needed.
     /// Used by the scheduler to set its park timeout.
-    #[must_use] 
+    #[must_use]
     pub fn time_until_next_frame(&self) -> Option<Duration> {
         if !self.needs_frame && self.callbacks.is_empty() {
             return None;
@@ -306,7 +306,7 @@ impl FrameScheduler {
     ///
     /// Returns `None` if no frame has completed yet.
     /// Use this for jank detection (`frame_time` > budget = dropped frame).
-    #[must_use] 
+    #[must_use]
     pub fn last_frame_time(&self) -> Option<Duration> {
         match (self.last_frame_start, self.last_frame_end) {
             (Some(start), Some(end)) => Some(end.duration_since(start)),
@@ -315,7 +315,7 @@ impl FrameScheduler {
     }
 
     /// Whether the last frame exceeded its budget (jank).
-    #[must_use] 
+    #[must_use]
     pub fn last_frame_janked(&self) -> bool {
         self.last_frame_time()
             .is_some_and(|t| t > self.frame_budget)
@@ -323,14 +323,14 @@ impl FrameScheduler {
 
     /// The current frame number.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn frame_number(&self) -> u64 {
         self.frame_number
     }
 
     /// The target frame budget.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn frame_budget(&self) -> Duration {
         self.frame_budget
     }
@@ -351,7 +351,7 @@ impl FrameScheduler {
     ///
     /// Returns `Duration::ZERO` if not in a frame or budget is exceeded.
     /// Useful for idle tasks: "how much time do I have left?"
-    #[must_use] 
+    #[must_use]
     pub fn remaining_budget(&self) -> Duration {
         match self.last_frame_start {
             Some(start) if self.in_frame => {
@@ -364,7 +364,7 @@ impl FrameScheduler {
 
     /// Number of pending frame callbacks.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn pending_callback_count(&self) -> usize {
         self.callbacks.len() + self.pending_callbacks.len()
     }
@@ -424,7 +424,10 @@ mod tests {
         let called = Rc::new(Cell::new(false));
 
         let c = called.clone();
-        scheduler.request_frame(move |_| { c.set(true); false });
+        scheduler.request_frame(move |_| {
+            c.set(true);
+            false
+        });
 
         let info = scheduler.begin_frame();
         let count = scheduler.run_callbacks(info);
@@ -440,14 +443,20 @@ mod tests {
         let log = Rc::new(std::cell::RefCell::new(Vec::new()));
 
         let l = log.clone();
-        scheduler.request_frame(move |_| { l.borrow_mut().push("frame1"); false });
+        scheduler.request_frame(move |_| {
+            l.borrow_mut().push("frame1");
+            false
+        });
 
         // Frame 1.
         let info = scheduler.begin_frame();
 
         // Register during frame → goes to next frame.
         let l = log.clone();
-        scheduler.request_frame(move |_| { l.borrow_mut().push("frame2"); false });
+        scheduler.request_frame(move |_| {
+            l.borrow_mut().push("frame2");
+            false
+        });
 
         scheduler.run_callbacks(info);
         scheduler.end_frame();

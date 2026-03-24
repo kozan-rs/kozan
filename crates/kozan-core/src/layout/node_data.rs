@@ -13,8 +13,8 @@
 //! - Cache cleared on style/content changes, propagated to ancestors.
 //! - Cleared in `Document::destroy_node()`.
 
-use taffy::tree::{Cache, Layout};
 use style::Atom;
+use taffy::tree::{Cache, Layout};
 
 /// Per-node layout data stored directly on the DOM node.
 ///
@@ -62,7 +62,7 @@ pub struct LayoutNodeData {
 
 impl LayoutNodeData {
     /// Create default layout data for a new node.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             style: taffy::Style::<Atom>::default(),
@@ -94,7 +94,7 @@ impl LayoutNodeData {
 
     /// Whether layout children have been constructed.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn has_layout_children(&self) -> bool {
         self.layout_children.is_some()
     }
@@ -133,7 +133,10 @@ mod tests {
         // After clear, cache should have no entries.
         data.clear_cache();
         let result = data.cache.get(
-            taffy::Size { width: None, height: None },
+            taffy::Size {
+                width: None,
+                height: None,
+            },
             taffy::Size {
                 width: taffy::AvailableSpace::MaxContent,
                 height: taffy::AvailableSpace::MaxContent,

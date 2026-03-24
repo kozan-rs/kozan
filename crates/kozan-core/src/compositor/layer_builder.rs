@@ -44,8 +44,8 @@ impl<'a> LayerTreeBuilder<'a> {
             return self.tree.push(layer);
         };
 
-        let is_scrollable = data.overflow_x.is_user_scrollable()
-            || data.overflow_y.is_user_scrollable();
+        let is_scrollable =
+            data.overflow_x.is_user_scrollable() || data.overflow_y.is_user_scrollable();
         layer.is_scrollable = is_scrollable;
 
         if is_scrollable {
@@ -127,9 +127,15 @@ mod tests {
     #[test]
     fn scrollable_child_gets_own_layer() {
         let child = make_scrollable(200.0, 300.0, 5, vec![]);
-        let root = make_box(800.0, 600.0, Some(0), vec![
-            ChildFragment { offset: Point::new(50.0, 50.0), fragment: child },
-        ]);
+        let root = make_box(
+            800.0,
+            600.0,
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::new(50.0, 50.0),
+                fragment: child,
+            }],
+        );
 
         let tree = LayerTreeBuilder::new(&ScrollOffsets::new()).build(&root);
         assert_eq!(tree.len(), 2);
@@ -145,9 +151,15 @@ mod tests {
     #[test]
     fn non_scrollable_child_stays_in_parent() {
         let child = make_box(200.0, 300.0, Some(5), vec![]);
-        let root = make_box(800.0, 600.0, Some(0), vec![
-            ChildFragment { offset: Point::new(50.0, 50.0), fragment: child },
-        ]);
+        let root = make_box(
+            800.0,
+            600.0,
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::new(50.0, 50.0),
+                fragment: child,
+            }],
+        );
 
         let tree = LayerTreeBuilder::new(&ScrollOffsets::new()).build(&root);
         assert_eq!(tree.len(), 1);
@@ -156,9 +168,15 @@ mod tests {
     #[test]
     fn scroll_offset_transferred_to_layer() {
         let child = make_scrollable(200.0, 300.0, 5, vec![]);
-        let root = make_box(800.0, 600.0, Some(0), vec![
-            ChildFragment { offset: Point::ZERO, fragment: child },
-        ]);
+        let root = make_box(
+            800.0,
+            600.0,
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::ZERO,
+                fragment: child,
+            }],
+        );
 
         let mut offsets = ScrollOffsets::new();
         offsets.set_offset(5, Offset::new(0.0, 150.0));
@@ -172,9 +190,15 @@ mod tests {
     #[test]
     fn child_layer_transform_has_offset() {
         let child = make_scrollable(200.0, 300.0, 5, vec![]);
-        let root = make_box(800.0, 600.0, Some(0), vec![
-            ChildFragment { offset: Point::new(30.0, 40.0), fragment: child },
-        ]);
+        let root = make_box(
+            800.0,
+            600.0,
+            Some(0),
+            vec![ChildFragment {
+                offset: Point::new(30.0, 40.0),
+                fragment: child,
+            }],
+        );
 
         let tree = LayerTreeBuilder::new(&ScrollOffsets::new()).build(&root);
         let root_layer = tree.layer(tree.root().expect("root"));

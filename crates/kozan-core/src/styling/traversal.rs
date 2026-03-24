@@ -2,7 +2,7 @@
 
 use style::context::{SharedStyleContext, StyleContext};
 use style::dom::{TElement, TNode};
-use style::traversal::{recalc_style_at, DomTraversal, PerLevelTraversalData};
+use style::traversal::{DomTraversal, PerLevelTraversalData, recalc_style_at};
 
 /// Drives Stylo's style recalculation over the DOM.
 pub(crate) struct RecalcStyle<'a> {

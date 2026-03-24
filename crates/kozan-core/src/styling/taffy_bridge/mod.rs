@@ -11,5 +11,5 @@
 pub mod convert;
 mod wrapper;
 
-pub use wrapper::TaffyStyloStyle;
 pub use convert::to_taffy_style;
+pub use wrapper::TaffyStyloStyle;

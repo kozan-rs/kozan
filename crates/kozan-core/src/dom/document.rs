@@ -8,21 +8,21 @@ use core::ptr::NonNull;
 
 use crate::data_storage::DataStorage;
 use crate::dom::document_cell::DocumentCell;
-use crate::dom::traits::HasHandle;
 use crate::dom::element_data::ElementData;
 use crate::dom::handle::Handle;
 use crate::dom::node::{NodeFlags, NodeMeta};
-use crate::events::store::EventStore;
-use crate::id::{IdAllocator, RawId, INVALID};
-use kozan_primitives::arena::Storage;
 use crate::dom::traits::Element;
+use crate::dom::traits::HasHandle;
+use crate::events::EventListenerMap;
+use crate::events::listener::RegisteredListener;
+use crate::events::store::EventStore;
+use crate::id::{INVALID, IdAllocator, RawId};
 use crate::layout::node_data::LayoutNodeData;
 use crate::styling::StyleEngine;
-use crate::tree::TreeData;
-use crate::events::listener::RegisteredListener;
-use crate::events::EventListenerMap;
 use crate::tree;
+use crate::tree::TreeData;
 use crate::{Text, TextData};
+use kozan_primitives::arena::Storage;
 
 /// A document — the top-level owner of a node tree.
 ///
@@ -73,7 +73,7 @@ pub struct Document {
 
 impl Document {
     /// Create a new empty document with a root node.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         let mut doc = Self {
             ids: IdAllocator::new(),
@@ -391,10 +391,7 @@ impl Document {
         }
         if parent != crate::id::INVALID {
             unsafe {
-                self.meta
-                    .get_unchecked_mut(parent)
-                    .flags
-                    .mark_tree_dirty();
+                self.meta.get_unchecked_mut(parent).flags.mark_tree_dirty();
             }
             self.needs_tree_rebuild = true;
         }
@@ -474,7 +471,10 @@ impl Document {
     /// Get the computed style for a node (from Stylo's `ElementData`).
     ///
     /// Returns `None` if styles haven't been computed yet or for non-element nodes.
-    pub fn computed_style(&self, index: u32) -> Option<servo_arc::Arc<style::properties::ComputedValues>> {
+    pub fn computed_style(
+        &self,
+        index: u32,
+    ) -> Option<servo_arc::Arc<style::properties::ComputedValues>> {
         let ed = self.element_data.get(index)?;
         let data = ed.stylo_data.borrow();
         if data.has_styles() {
@@ -546,17 +546,39 @@ impl Document {
 
     // ── Shorthand element creation ──
 
-    pub fn div(&self) -> crate::html::HtmlDivElement { self.create::<crate::html::HtmlDivElement>() }
-    pub fn span(&self) -> crate::html::HtmlSpanElement { self.create::<crate::html::HtmlSpanElement>() }
-    pub fn p(&self) -> crate::html::HtmlParagraphElement { self.create::<crate::html::HtmlParagraphElement>() }
-    pub fn button(&self) -> crate::html::HtmlButtonElement { self.create::<crate::html::HtmlButtonElement>() }
-    pub fn img(&self) -> crate::html::HtmlImageElement { self.create::<crate::html::HtmlImageElement>() }
-    pub fn input(&self) -> crate::html::HtmlInputElement { self.create::<crate::html::HtmlInputElement>() }
-    pub fn label(&self) -> crate::html::HtmlLabelElement { self.create::<crate::html::HtmlLabelElement>() }
-    pub fn h1(&self) -> crate::html::HtmlHeadingElement { self.create_heading(1) }
-    pub fn h2(&self) -> crate::html::HtmlHeadingElement { self.create_heading(2) }
-    pub fn h3(&self) -> crate::html::HtmlHeadingElement { self.create_heading(3) }
-    pub fn text_node(&self, content: &str) -> Text { self.create_text(content) }
+    pub fn div(&self) -> crate::html::HtmlDivElement {
+        self.create::<crate::html::HtmlDivElement>()
+    }
+    pub fn span(&self) -> crate::html::HtmlSpanElement {
+        self.create::<crate::html::HtmlSpanElement>()
+    }
+    pub fn p(&self) -> crate::html::HtmlParagraphElement {
+        self.create::<crate::html::HtmlParagraphElement>()
+    }
+    pub fn button(&self) -> crate::html::HtmlButtonElement {
+        self.create::<crate::html::HtmlButtonElement>()
+    }
+    pub fn img(&self) -> crate::html::HtmlImageElement {
+        self.create::<crate::html::HtmlImageElement>()
+    }
+    pub fn input(&self) -> crate::html::HtmlInputElement {
+        self.create::<crate::html::HtmlInputElement>()
+    }
+    pub fn label(&self) -> crate::html::HtmlLabelElement {
+        self.create::<crate::html::HtmlLabelElement>()
+    }
+    pub fn h1(&self) -> crate::html::HtmlHeadingElement {
+        self.create_heading(1)
+    }
+    pub fn h2(&self) -> crate::html::HtmlHeadingElement {
+        self.create_heading(2)
+    }
+    pub fn h3(&self) -> crate::html::HtmlHeadingElement {
+        self.create_heading(3)
+    }
+    pub fn text_node(&self, content: &str) -> Text {
+        self.create_text(content)
+    }
 
     pub fn div_in(&self, parent: impl Into<Handle>) -> crate::html::HtmlDivElement {
         let el = self.div();
@@ -672,9 +694,7 @@ impl Document {
     /// Chrome equivalent: `Document::NeedsStyleRecalc()` + layout dirty checks.
     /// Used by the scheduler to request a frame after spawned tasks mutate the DOM.
     pub fn needs_visual_update(&self) -> bool {
-        self.needs_style_recalc
-            || self.needs_tree_rebuild
-            || !self.dirty_layout_nodes.is_empty()
+        self.needs_style_recalc || self.needs_tree_rebuild || !self.dirty_layout_nodes.is_empty()
     }
 
     /// Atomically read and clear the layout-dirty state for the current frame.
@@ -811,7 +831,9 @@ impl Document {
         let mut current = index;
         while let Some(data) = self.layout.get_mut(current) {
             data.clear_cache();
-            let Some(parent) = data.layout_parent() else { break };
+            let Some(parent) = data.layout_parent() else {
+                break;
+            };
             current = parent;
         }
     }

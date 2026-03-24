@@ -31,7 +31,7 @@ pub struct Storage<T> {
 
 impl<T> Storage<T> {
     /// Create a new empty storage.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             slots: Vec::new(),
@@ -41,14 +41,14 @@ impl<T> Storage<T> {
 
     /// Number of slots (including uninitialized gaps).
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.slots.len()
     }
 
     /// Whether the storage has zero slots.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.slots.is_empty()
     }
@@ -83,7 +83,7 @@ impl<T> Storage<T> {
 
     /// Check if a slot has been initialized.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn is_initialized(&self, index: u32) -> bool {
         let i = index as usize;
         i < self.initialized.len() && self.initialized[i]
@@ -91,7 +91,7 @@ impl<T> Storage<T> {
 
     /// Safe read — returns `None` if not initialized or out of bounds.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn get(&self, index: u32) -> Option<&T> {
         if !self.is_initialized(index) {
             return None;
@@ -118,7 +118,7 @@ impl<T> Storage<T> {
     ///
     /// The slot at `index` must have been initialized via `set()`.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub unsafe fn get_unchecked(&self, index: u32) -> &T {
         debug_assert!(
             self.is_initialized(index),
@@ -160,7 +160,9 @@ impl<T> Storage<T> {
     pub fn clear(&mut self) {
         for i in 0..self.initialized.len() {
             if self.initialized[i] {
-                unsafe { self.slots[i].assume_init_drop(); }
+                unsafe {
+                    self.slots[i].assume_init_drop();
+                }
                 self.initialized[i] = false;
             }
         }
@@ -168,14 +170,17 @@ impl<T> Storage<T> {
 
     /// Iterate over all initialized `(index, &value)` pairs.
     pub fn iter(&self) -> impl Iterator<Item = (u32, &T)> + '_ {
-        self.initialized.iter().enumerate().filter_map(move |(i, &init)| {
-            if init {
-                // SAFETY: initialized[i] is true, so the slot was written via set().
-                Some((i as u32, unsafe { self.slots[i].assume_init_ref() }))
-            } else {
-                None
-            }
-        })
+        self.initialized
+            .iter()
+            .enumerate()
+            .filter_map(move |(i, &init)| {
+                if init {
+                    // SAFETY: initialized[i] is true, so the slot was written via set().
+                    Some((i as u32, unsafe { self.slots[i].assume_init_ref() }))
+                } else {
+                    None
+                }
+            })
     }
 
     /// Mark a slot as uninitialized and drop its value.

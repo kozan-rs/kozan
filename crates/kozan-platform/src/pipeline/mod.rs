@@ -21,7 +21,7 @@ use crate::id::WindowId;
 use crate::renderer::RenderSurface;
 use crate::view_thread::{SpawnError, ViewThreadHandle};
 
-use self::render_loop::{RenderEvent, RenderLoop, OnSurfaceLost};
+use self::render_loop::{OnSurfaceLost, RenderEvent, RenderLoop};
 
 #[derive(Clone, Copy)]
 pub struct ViewportInfo {
@@ -51,12 +51,16 @@ impl RenderThreadHandle {
 
     pub fn shutdown(&mut self) {
         let _ = self.sender.send(RenderEvent::Shutdown);
-        if let Some(h) = self.join_handle.take() { let _ = h.join(); }
+        if let Some(h) = self.join_handle.take() {
+            let _ = h.join();
+        }
     }
 }
 
 impl Drop for RenderThreadHandle {
-    fn drop(&mut self) { self.shutdown(); }
+    fn drop(&mut self) {
+        self.shutdown();
+    }
 }
 
 /// Per-window thread pair.
@@ -84,14 +88,17 @@ impl WindowPipeline {
             viewport: vp,
         })?;
 
-        let view_handle = spawn_view(ViewDeps {
-            rx: view_rx,
-            tx: view_tx,
-            render_tx: render_tx.clone(),
-            host: config.host,
-            window_id: config.window_id,
-            viewport: vp,
-        }, view_init)?;
+        let view_handle = spawn_view(
+            ViewDeps {
+                rx: view_rx,
+                tx: view_tx,
+                render_tx: render_tx.clone(),
+                host: config.host,
+                window_id: config.window_id,
+                viewport: vp,
+            },
+            view_init,
+        )?;
 
         Ok(Self {
             render_handle: RenderThreadHandle {
@@ -118,7 +125,9 @@ impl WindowPipeline {
 }
 
 impl Drop for WindowPipeline {
-    fn drop(&mut self) { self.shutdown(); }
+    fn drop(&mut self) {
+        self.shutdown();
+    }
 }
 
 // ── Render thread ────────────────────────────────────────────
@@ -131,13 +140,22 @@ struct RenderDeps<S> {
     viewport: ViewportInfo,
 }
 
-fn spawn_render<S: RenderSurface + 'static>(deps: RenderDeps<S>) -> Result<thread::JoinHandle<()>, SpawnError> {
+fn spawn_render<S: RenderSurface + 'static>(
+    deps: RenderDeps<S>,
+) -> Result<thread::JoinHandle<()>, SpawnError> {
     let vp = deps.viewport;
     thread::Builder::new()
         .name("kozan-render".into())
         .spawn(move || {
-            RenderLoop::new(deps.surface, deps.view_tx, deps.on_lost, vp.width, vp.height, vp.scale_factor)
-                .run(deps.rx);
+            RenderLoop::new(
+                deps.surface,
+                deps.view_tx,
+                deps.on_lost,
+                vp.width,
+                vp.height,
+                vp.scale_factor,
+            )
+            .run(deps.rx);
         })
         .map_err(SpawnError::ThreadSpawn)
 }
@@ -169,13 +187,21 @@ fn spawn_view<F: FnOnce(&ViewContext) + Send + 'static>(
     Ok(ViewThreadHandle::from_parts(tx_clone, wake, join))
 }
 
-fn view_main<F: FnOnce(&ViewContext)>(deps: ViewDeps, ws_tx: mpsc::SyncSender<WakeSender>, init: F) {
+fn view_main<F: FnOnce(&ViewContext)>(
+    deps: ViewDeps,
+    ws_tx: mpsc::SyncSender<WakeSender>,
+    init: F,
+) {
     let (mut scheduler, wake) = new_scheduler(&deps);
-    if ws_tx.send(wake.clone()).is_err() { return; }
+    if ws_tx.send(wake.clone()).is_err() {
+        return;
+    }
 
     let mut ctx = new_view_context(&deps, wake);
     init(&ctx);
-    for future in ctx.take_staged_futures() { scheduler.spawn(future); }
+    for future in ctx.take_staged_futures() {
+        scheduler.spawn(future);
+    }
 
     ctx.invalidate_style();
     scheduler.set_needs_frame();
@@ -204,5 +230,11 @@ fn new_view_context(deps: &ViewDeps, wake: WakeSender) -> ViewContext {
     let mut frame = FrameWidget::new();
     frame.resize(deps.viewport.width, deps.viewport.height);
     frame.set_scale_factor(deps.viewport.scale_factor);
-    ViewContext::new(frame, wake, deps.host.clone(), deps.window_id, deps.render_tx.clone())
+    ViewContext::new(
+        frame,
+        wake,
+        deps.host.clone(),
+        deps.window_id,
+        deps.render_tx.clone(),
+    )
 }

@@ -7,7 +7,7 @@ use std::sync::Arc;
 use vello::wgpu;
 use vello::{AaConfig, RenderParams as VelloRenderParams};
 
-use kozan_platform::{RendererError, RenderParams, RenderSurface};
+use kozan_platform::{RenderParams, RenderSurface, RendererError};
 
 use crate::renderer::GpuContext;
 use crate::scene::SceneBuilder;
@@ -53,16 +53,19 @@ impl VelloSurface {
         let w = width.max(1);
         let h = height.max(1);
 
-        surface.configure(&gpu.device, &wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface_format,
-            width: w,
-            height: h,
-            present_mode: wgpu::PresentMode::AutoVsync,
-            alpha_mode: surface_caps.alpha_modes[0],
-            view_formats: vec![],
-            desired_maximum_frame_latency: 2,
-        });
+        surface.configure(
+            &gpu.device,
+            &wgpu::SurfaceConfiguration {
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format: surface_format,
+                width: w,
+                height: h,
+                present_mode: wgpu::PresentMode::AutoVsync,
+                alpha_mode: surface_caps.alpha_modes[0],
+                view_formats: vec![],
+                desired_maximum_frame_latency: 2,
+            },
+        );
 
         let vello = vello::Renderer::new(
             &gpu.device,
@@ -91,10 +94,18 @@ impl VelloSurface {
         })
     }
 
-    fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
+    fn create_target_texture(
+        device: &wgpu::Device,
+        width: u32,
+        height: u32,
+    ) -> (wgpu::Texture, wgpu::TextureView) {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("kozan-vello-target"),
-            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+            size: wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
@@ -120,7 +131,8 @@ impl VelloSurface {
                 desired_maximum_frame_latency: 2,
             },
         );
-        let (texture, view) = Self::create_target_texture(&self.gpu.device, self.width, self.height);
+        let (texture, view) =
+            Self::create_target_texture(&self.gpu.device, self.width, self.height);
         self.target_texture = texture;
         self.target_view = view;
     }
@@ -174,14 +186,19 @@ impl RenderSurface for VelloSurface {
             }
         };
 
-        let mut encoder = self.gpu.device.create_command_encoder(
-            &wgpu::CommandEncoderDescriptor { label: Some("kozan-blit") },
-        );
+        let mut encoder = self
+            .gpu
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("kozan-blit"),
+            });
         self.blitter.copy(
             &self.gpu.device,
             &mut encoder,
             &self.target_view,
-            &surface_texture.texture.create_view(&wgpu::TextureViewDescriptor::default()),
+            &surface_texture
+                .texture
+                .create_view(&wgpu::TextureViewDescriptor::default()),
         );
         self.gpu.queue.submit([encoder.finish()]);
         surface_texture.present();

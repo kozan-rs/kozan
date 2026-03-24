@@ -12,19 +12,19 @@ pub struct Point {
 impl Point {
     pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(x: f32, y: f32) -> Self {
         Self { x, y }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn distance_to(self, other: Self) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         (dx * dx + dy * dy).sqrt()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn offset(self, dx: f32, dy: f32) -> Self {
         Self {
             x: self.x + dx,
@@ -77,12 +77,12 @@ pub struct Offset {
 impl Offset {
     pub const ZERO: Self = Self { dx: 0.0, dy: 0.0 };
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(dx: f32, dy: f32) -> Self {
         Self { dx, dy }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn length(self) -> f32 {
         (self.dx * self.dx + self.dy * self.dy).sqrt()
     }
@@ -121,22 +121,22 @@ impl Size {
         height: 0.0,
     };
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(width: f32, height: f32) -> Self {
         Self { width, height }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn area(self) -> f32 {
         self.width * self.height
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(self) -> bool {
         self.width <= 0.0 || self.height <= 0.0
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn contains(self, point: Point) -> bool {
         point.x >= 0.0 && point.x < self.width && point.y >= 0.0 && point.y < self.height
     }
@@ -158,7 +158,7 @@ impl Rect {
         size: Size::ZERO,
     };
 
-    #[must_use] 
+    #[must_use]
     pub const fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         Self {
             origin: Point::new(x, y),
@@ -166,13 +166,13 @@ impl Rect {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn from_origin_size(origin: Point, size: Size) -> Self {
         Self { origin, size }
     }
 
     /// Construct from left, top, right, bottom edges.
-    #[must_use] 
+    #[must_use]
     pub fn from_ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Self {
         Self {
             origin: Point::new(left, top),
@@ -180,41 +180,41 @@ impl Rect {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn x(&self) -> f32 {
         self.origin.x
     }
-    #[must_use] 
+    #[must_use]
     pub fn y(&self) -> f32 {
         self.origin.y
     }
-    #[must_use] 
+    #[must_use]
     pub fn width(&self) -> f32 {
         self.size.width
     }
-    #[must_use] 
+    #[must_use]
     pub fn height(&self) -> f32 {
         self.size.height
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn left(&self) -> f32 {
         self.origin.x
     }
-    #[must_use] 
+    #[must_use]
     pub fn top(&self) -> f32 {
         self.origin.y
     }
-    #[must_use] 
+    #[must_use]
     pub fn right(&self) -> f32 {
         self.origin.x + self.size.width
     }
-    #[must_use] 
+    #[must_use]
     pub fn bottom(&self) -> f32 {
         self.origin.y + self.size.height
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn center(&self) -> Point {
         Point::new(
             self.origin.x + self.size.width * 0.5,
@@ -222,17 +222,17 @@ impl Rect {
         )
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.size.is_empty()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn contains_point(&self, p: Point) -> bool {
         p.x >= self.left() && p.x < self.right() && p.y >= self.top() && p.y < self.bottom()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn contains_rect(&self, other: &Rect) -> bool {
         other.left() >= self.left()
             && other.top() >= self.top()
@@ -240,7 +240,7 @@ impl Rect {
             && other.bottom() <= self.bottom()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn intersects(&self, other: &Rect) -> bool {
         self.left() < other.right()
             && self.right() > other.left()
@@ -249,7 +249,7 @@ impl Rect {
     }
 
     /// Returns the intersection of two rects, or `None` if they don't overlap.
-    #[must_use] 
+    #[must_use]
     pub fn intersection(&self, other: &Rect) -> Option<Self> {
         if !self.intersects(other) {
             return None;
@@ -262,7 +262,7 @@ impl Rect {
     }
 
     /// Smallest rect that contains both.
-    #[must_use] 
+    #[must_use]
     pub fn union(&self, other: &Rect) -> Self {
         if self.is_empty() {
             return *other;
@@ -278,7 +278,7 @@ impl Rect {
     }
 
     /// Expand each edge outward.
-    #[must_use] 
+    #[must_use]
     pub fn inflate(&self, dx: f32, dy: f32) -> Self {
         Self::new(
             self.origin.x - dx,

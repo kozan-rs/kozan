@@ -8,7 +8,10 @@ mod tests {
     use crate::html::HtmlSpanElement;
 
     /// Helper: run recalc and get ComputedValues for a node.
-    fn get_computed(doc: &mut Document, index: u32) -> Option<servo_arc::Arc<style::properties::ComputedValues>> {
+    fn get_computed(
+        doc: &mut Document,
+        index: u32,
+    ) -> Option<servo_arc::Arc<style::properties::ComputedValues>> {
         doc.recalc_styles();
         doc.computed_style(index)
     }
@@ -224,7 +227,13 @@ mod tests {
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
         let color = cv.get_inherited_text().clone_color();
         let c = color.raw_components();
-        assert!(c[0] > 0.9 && c[1] < 0.1, "[data-active] selector should match, got ({}, {}, {})", c[0], c[1], c[2]);
+        assert!(
+            c[0] > 0.9 && c[1] < 0.1,
+            "[data-active] selector should match, got ({}, {}, {})",
+            c[0],
+            c[1],
+            c[2]
+        );
     }
 
     #[test]
@@ -241,7 +250,13 @@ mod tests {
         let cv = get_computed(&mut doc, inner.handle().raw().index()).unwrap();
         let color = cv.get_inherited_text().clone_color();
         let c = color.raw_components();
-        assert!(c[0] > 0.9 && c[1] < 0.1, "descendant combinator should match, got ({}, {}, {})", c[0], c[1], c[2]);
+        assert!(
+            c[0] > 0.9 && c[1] < 0.1,
+            "descendant combinator should match, got ({}, {}, {})",
+            c[0],
+            c[1],
+            c[2]
+        );
     }
 
     #[test]
@@ -258,14 +273,34 @@ mod tests {
         // Set class and recalc again
         div.set_attribute("class", "red");
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
-        let c = cv.get_inherited_text().clone_color().raw_components().clone();
-        assert!(c[0] > 0.9, "after adding .red class, should be red, got ({}, {}, {})", c[0], c[1], c[2]);
+        let c = cv
+            .get_inherited_text()
+            .clone_color()
+            .raw_components()
+            .clone();
+        assert!(
+            c[0] > 0.9,
+            "after adding .red class, should be red, got ({}, {}, {})",
+            c[0],
+            c[1],
+            c[2]
+        );
 
         // Change class and recalc
         div.set_attribute("class", "blue");
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
-        let c = cv.get_inherited_text().clone_color().raw_components().clone();
-        assert!(c[2] > 0.9 && c[0] < 0.1, "after changing to .blue, should be blue, got ({}, {}, {})", c[0], c[1], c[2]);
+        let c = cv
+            .get_inherited_text()
+            .clone_color()
+            .raw_components()
+            .clone();
+        assert!(
+            c[2] > 0.9 && c[0] < 0.1,
+            "after changing to .blue, should be blue, got ({}, {}, {})",
+            c[0],
+            c[1],
+            c[2]
+        );
     }
 
     #[test]
@@ -278,13 +313,27 @@ mod tests {
 
         div.set_attribute("id", "target");
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
-        let c = cv.get_inherited_text().clone_color().raw_components().clone();
+        let c = cv
+            .get_inherited_text()
+            .clone_color()
+            .raw_components()
+            .clone();
         assert!(c[0] > 0.9, "with id=target, should be red");
 
         div.remove_attribute("id");
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
-        let c = cv.get_inherited_text().clone_color().raw_components().clone();
-        assert!(c[0] < 0.5, "after removing id, should not be red anymore, got ({}, {}, {})", c[0], c[1], c[2]);
+        let c = cv
+            .get_inherited_text()
+            .clone_color()
+            .raw_components()
+            .clone();
+        assert!(
+            c[0] < 0.5,
+            "after removing id, should not be red anymore, got ({}, {}, {})",
+            c[0],
+            c[1],
+            c[2]
+        );
     }
 
     #[test]
@@ -357,7 +406,8 @@ mod tests {
         doc.root().append(div);
 
         // Set inline style via the typed API.
-        div.style().color(style::color::AbsoluteColor::srgb_legacy(255, 0, 0, 1.0));
+        div.style()
+            .color(style::color::AbsoluteColor::srgb_legacy(255, 0, 0, 1.0));
 
         // recalc_styles calls flush_inline_styles internally.
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
@@ -366,7 +416,9 @@ mod tests {
         assert!(
             c[0] > 0.9 && c[1] < 0.1 && c[2] < 0.1,
             "typed style API color should apply after recalc, got ({}, {}, {})",
-            c[0], c[1], c[2],
+            c[0],
+            c[1],
+            c[2],
         );
     }
 
@@ -379,14 +431,21 @@ mod tests {
         doc.add_stylesheet("div { color: blue; }");
 
         // Typed inline style should override author stylesheet.
-        div.style().color(style::color::AbsoluteColor::srgb_legacy(255, 0, 0, 1.0));
+        div.style()
+            .color(style::color::AbsoluteColor::srgb_legacy(255, 0, 0, 1.0));
 
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
-        let c = cv.get_inherited_text().clone_color().raw_components().clone();
+        let c = cv
+            .get_inherited_text()
+            .clone_color()
+            .raw_components()
+            .clone();
         assert!(
             c[0] > 0.9 && c[2] < 0.1,
             "typed inline style should beat author stylesheet, got ({}, {}, {})",
-            c[0], c[1], c[2],
+            c[0],
+            c[1],
+            c[2],
         );
     }
 
@@ -406,13 +465,23 @@ mod tests {
         let cv = get_computed(&mut doc, div.handle().raw().index()).unwrap();
 
         let display = cv.get_box().clone_display();
-        assert_eq!(display, style::values::computed::Display::Flex, "display should be flex");
+        assert_eq!(
+            display,
+            style::values::computed::Display::Flex,
+            "display should be flex"
+        );
 
-        let c = cv.get_inherited_text().clone_color().raw_components().clone();
+        let c = cv
+            .get_inherited_text()
+            .clone_color()
+            .raw_components()
+            .clone();
         assert!(
             c[2] > 0.9 && c[0] < 0.1,
             "color should be blue from batched inline styles, got ({}, {}, {})",
-            c[0], c[1], c[2],
+            c[0],
+            c[1],
+            c[2],
         );
     }
 }

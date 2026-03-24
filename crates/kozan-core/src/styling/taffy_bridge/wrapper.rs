@@ -9,7 +9,6 @@ use style::properties::ComputedValues;
 use style::values::CustomIdent;
 use style::{Atom, OwnedSlice};
 
-
 use style::values::{
     computed::{GridTemplateAreas, LengthPercentage},
     generics::grid::{TrackListValue, TrackRepeat, TrackSize},
@@ -241,7 +240,6 @@ impl<T: Deref<Target = ComputedValues>> taffy::FlexboxItemStyle for TaffyStyloSt
     }
 }
 
-
 pub struct GridAreaWrapper<'a>(pub &'a [NamedArea]);
 
 impl<'a> IntoIterator for GridAreaWrapper<'a> {
@@ -256,7 +254,6 @@ impl<'a> IntoIterator for GridAreaWrapper<'a> {
         self.0.iter().map(convert::grid_template_area)
     }
 }
-
 
 type SliceMapIter<'a, Input, Output> =
     core::iter::Map<core::slice::Iter<'a, Input>, for<'c> fn(&'c Input) -> Output>;
@@ -330,7 +327,6 @@ impl taffy::GenericRepetition for RepetitionWrapper<'_> {
         StyloLineNameIter::new(&self.0.line_names)
     }
 }
-
 
 impl<T: Deref<Target = ComputedValues>> taffy::GridContainerStyle for TaffyStyloStyle<T> {
     type Repetition<'a>
@@ -533,10 +529,10 @@ impl<T: Deref<Target = ComputedValues>> taffy::GridItemStyle for TaffyStyloStyle
 #[cfg(test)]
 mod tests {
     use super::*;
-    use taffy::CoreStyle;
     use crate::dom::document::Document;
     use crate::dom::traits::{Element, HasHandle};
     use crate::html::HtmlDivElement;
+    use taffy::CoreStyle;
 
     /// Get styled ComputedValues via the Document cascade.
     fn styled_cv(inline_style: &str) -> servo_arc::Arc<ComputedValues> {
@@ -575,14 +571,20 @@ mod tests {
     fn is_block_true_for_block_display() {
         let cv = styled_cv("display: block;");
         let wrapper = TaffyStyloStyle(cv);
-        assert!(wrapper.is_block(), "display:block must report is_block() = true");
+        assert!(
+            wrapper.is_block(),
+            "display:block must report is_block() = true"
+        );
     }
 
     #[test]
     fn is_block_false_for_flex_display() {
         let cv = styled_cv("display: flex;");
         let wrapper = TaffyStyloStyle(cv);
-        assert!(!wrapper.is_block(), "display:flex must report is_block() = false");
+        assert!(
+            !wrapper.is_block(),
+            "display:flex must report is_block() = false"
+        );
     }
 
     #[test]
@@ -590,6 +592,9 @@ mod tests {
         let cv = styled_cv("display: block;");
         let wrapper: TaffyStyloStyle<_> = TaffyStyloStyle::from(cv);
         // Box generation is Normal for a block element — validates the From impl.
-        assert_eq!(wrapper.box_generation_mode(), taffy::BoxGenerationMode::Normal);
+        assert_eq!(
+            wrapper.box_generation_mode(),
+            taffy::BoxGenerationMode::Normal
+        );
     }
 }

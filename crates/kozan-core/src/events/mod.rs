@@ -55,8 +55,8 @@ pub use path::EventPath;
 pub use focus_event::{BlurEvent, FocusEvent, FocusInEvent, FocusOutEvent};
 pub use keyboard_event::{KeyDownEvent, KeyUpEvent};
 pub use mouse_event::{
-    ClickEvent, ContextMenuEvent, DblClickEvent, MouseDownEvent, MouseEnterEvent,
-    MouseLeaveEvent, MouseMoveEvent, MouseOutEvent, MouseOverEvent, MouseUpEvent,
+    ClickEvent, ContextMenuEvent, DblClickEvent, MouseDownEvent, MouseEnterEvent, MouseLeaveEvent,
+    MouseMoveEvent, MouseOutEvent, MouseOverEvent, MouseUpEvent,
 };
 pub use ui_event::{ResizeEvent, ScrollEvent};
 pub use wheel_event::WheelEvent;

@@ -43,7 +43,7 @@ pub struct IntrinsicSizing {
 
 impl IntrinsicSizing {
     /// Create sizing with explicit width and height.
-    #[must_use] 
+    #[must_use]
     pub fn from_size(width: f32, height: f32) -> Self {
         Self {
             width: Some(width),
@@ -57,7 +57,7 @@ impl IntrinsicSizing {
     }
 
     /// Create sizing with only an aspect ratio (e.g., responsive video).
-    #[must_use] 
+    #[must_use]
     pub fn from_ratio(ratio: f32) -> Self {
         Self {
             width: None,

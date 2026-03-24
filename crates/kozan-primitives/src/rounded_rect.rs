@@ -15,13 +15,13 @@ pub struct RoundedRect {
 }
 
 impl RoundedRect {
-    #[must_use] 
+    #[must_use]
     pub fn new(rect: Rect, radii: Corners<Size>) -> Self {
         Self { rect, radii }
     }
 
     /// A rounded rect with no rounding — equivalent to a plain rect.
-    #[must_use] 
+    #[must_use]
     pub fn from_rect(rect: Rect) -> Self {
         Self {
             rect,
@@ -30,7 +30,7 @@ impl RoundedRect {
     }
 
     /// All four corners share the same circular radius.
-    #[must_use] 
+    #[must_use]
     pub fn uniform(rect: Rect, radius: f32) -> Self {
         Self {
             rect,
@@ -39,7 +39,7 @@ impl RoundedRect {
     }
 
     /// True when all corner radii are zero.
-    #[must_use] 
+    #[must_use]
     pub fn is_sharp(&self) -> bool {
         self.radii.top_left == Size::ZERO
             && self.radii.top_right == Size::ZERO
@@ -49,7 +49,7 @@ impl RoundedRect {
 
     /// True when the rounded rect forms a full ellipse/circle (each
     /// corner's radius is exactly half the rect's dimension).
-    #[must_use] 
+    #[must_use]
     pub fn is_ellipse(&self) -> bool {
         let hw = self.rect.width() * 0.5;
         let hh = self.rect.height() * 0.5;
@@ -63,7 +63,7 @@ impl RoundedRect {
     /// Scale radii down proportionally when the sum of adjacent radii
     /// exceeds the rect's dimension. This implements the CSS spec's
     /// corner-overlap rule.
-    #[must_use] 
+    #[must_use]
     pub fn normalized(mut self) -> Self {
         let w = self.rect.width();
         let h = self.rect.height();
@@ -115,7 +115,7 @@ impl RoundedRect {
     ///
     /// First checks the bounding rect, then tests against the elliptical
     /// corner arcs for points that fall within a corner region.
-    #[must_use] 
+    #[must_use]
     pub fn contains(&self, point: Point) -> bool {
         if !self.rect.contains_point(point) {
             return false;

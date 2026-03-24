@@ -24,7 +24,7 @@ pub struct Viewport {
 
 impl Viewport {
     /// Create a viewport with the given dimensions and scale factor.
-    #[must_use] 
+    #[must_use]
     pub fn new(width: u32, height: u32, scale_factor: f64) -> Self {
         Self {
             width,
@@ -35,21 +35,21 @@ impl Viewport {
 
     /// Width in physical pixels.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn width(&self) -> u32 {
         self.width
     }
 
     /// Height in physical pixels.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn height(&self) -> u32 {
         self.height
     }
 
     /// DPI scale factor.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn scale_factor(&self) -> f64 {
         self.scale_factor
     }
@@ -58,14 +58,14 @@ impl Viewport {
     ///
     /// This is what layout uses for viewport units.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn logical_width(&self) -> f64 {
         self.width as f64 / self.scale_factor
     }
 
     /// Height in logical (CSS-like) pixels.
     #[inline]
-    #[must_use] 
+    #[must_use]
     pub fn logical_height(&self) -> f64 {
         self.height as f64 / self.scale_factor
     }

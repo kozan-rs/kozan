@@ -10,20 +10,20 @@ use std::sync::Arc;
 
 use super::event_handler::{EventHandler, InputContext};
 use super::viewport::Viewport;
+use crate::compositor::layer_builder::LayerTreeBuilder;
+use crate::compositor::layer_tree::LayerTree;
 use crate::dirty_phases::DirtyPhases;
 use crate::dom::document::Document;
+use crate::events::ui_event::ScrollEvent;
 use crate::input::InputEvent;
+use crate::input::default_action::DefaultAction;
 use crate::layout::context::LayoutContext;
 use crate::layout::fragment::Fragment;
 use crate::layout::hit_test::HitTester;
 use crate::layout::inline::FontSystem;
 use crate::lifecycle::LifecycleState;
-use crate::compositor::layer_builder::LayerTreeBuilder;
-use crate::compositor::layer_tree::LayerTree;
 use crate::paint::DisplayList;
 use crate::paint::Painter;
-use crate::events::ui_event::ScrollEvent;
-use crate::input::default_action::DefaultAction;
 use crate::scroll::{ScrollController, ScrollOffsets, ScrollTree};
 
 /// The engine's entry point for a single rendering context.
@@ -315,7 +315,9 @@ impl FrameWidget {
             text_measurer: &self.font_system,
         };
         let root = self.doc.root_index();
-        let result = self.doc.resolve_layout_dirty(root, Some(vw), Some(vh), &ctx, layout_dirty);
+        let result = self
+            .doc
+            .resolve_layout_dirty(root, Some(vw), Some(vh), &ctx, layout_dirty);
         self.last_fragment = Some(result.fragment);
 
         // Rebuild scroll tree from the new fragment tree.
@@ -350,9 +352,7 @@ impl FrameWidget {
         self.painted_fragment = Some(Arc::clone(fragment));
 
         // Build layer tree for the compositor.
-        self.last_layer_tree = Some(
-            LayerTreeBuilder::new(&self.scroll_offsets).build(fragment),
-        );
+        self.last_layer_tree = Some(LayerTreeBuilder::new(&self.scroll_offsets).build(fragment));
     }
 
     /// The last paint result. The `Arc` is cloned cheaply — no copy of the list.
@@ -490,7 +490,10 @@ mod tests {
         let frag2 = widget.last_fragment().cloned();
 
         assert!(
-            Arc::ptr_eq(frag1.as_ref().expect("frag1"), frag2.as_ref().expect("frag2")),
+            Arc::ptr_eq(
+                frag1.as_ref().expect("frag1"),
+                frag2.as_ref().expect("frag2")
+            ),
             "clean lifecycle should not re-layout"
         );
     }
@@ -507,7 +510,10 @@ mod tests {
         let frag2 = widget.last_fragment().cloned();
 
         assert!(
-            !Arc::ptr_eq(frag1.as_ref().expect("frag1"), frag2.as_ref().expect("frag2")),
+            !Arc::ptr_eq(
+                frag1.as_ref().expect("frag1"),
+                frag2.as_ref().expect("frag2")
+            ),
             "resize should trigger relayout"
         );
     }
