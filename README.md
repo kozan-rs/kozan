@@ -75,7 +75,7 @@ div.style().flex().gap(px(16.0)).pad(px(20.0)).bg(rgb8(44, 62, 80));
 Load a stylesheet and toggle classes:
 
 ```rust
-doc.load_css_string(include_str!("../assets/dashboard.css"));
+doc.add_stylesheet(include_str!("../assets/dashboard.css"));
 
 card.class_add("card");
 card.class_add("card-blue");
@@ -108,13 +108,6 @@ ctx.spawn(async move {
     card.class_add("visible");
     progress_bar.style().w(pct(75.0));
 });
-```
-
-### HTML from strings
-
-```rust
-doc.load_html_string(include_str!("../assets/dashboard.html"));
-doc.load_css_string(include_str!("../assets/dashboard.css"));
 ```
 
 ### DOM manipulation
