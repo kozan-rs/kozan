@@ -142,6 +142,7 @@ impl IdAllocator {
     /// # Safety
     /// The index must be within bounds.
     #[inline]
+    #[must_use]
     pub unsafe fn generation_unchecked(&self, index: u32) -> u32 {
         unsafe { *self.generations.get_unchecked(index as usize) }
     }
