@@ -44,6 +44,11 @@ pub struct FrameOutput {
     pub display_list: Arc<DisplayList>,
     pub layer_tree: LayerTree,
     pub scroll_tree: ScrollTree,
+    /// Viewport size (physical pixels) this frame was laid out at.
+    /// The render thread uses this to discard stale commits that were
+    /// in-flight when a resize arrived — never present wrong-size content.
+    pub viewport_width: u32,
+    pub viewport_height: u32,
 }
 
 /// The user-facing API inside a view.
@@ -302,6 +307,8 @@ impl ViewContext {
                 display_list: dl,
                 layer_tree: tree,
                 scroll_tree,
+                viewport_width: self.frame.viewport().width(),
+                viewport_height: self.frame.viewport().height(),
             }));
         }
     }

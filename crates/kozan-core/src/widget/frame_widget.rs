@@ -88,8 +88,11 @@ pub struct FrameWidget {
     /// Fragment that was last painted — paint caching via Arc pointer equality.
     painted_fragment: Option<Arc<Fragment>>,
 
-    /// Viewport changed — re-sync all styles, re-run Taffy.
-    needs_full_layout: bool,
+    /// Viewport dimensions or scale factor changed — forces full Taffy
+    /// cache clear on next layout because every percentage / viewport-unit
+    /// may resolve differently.
+    /// Chrome: `LayoutView::SetNeedsLayout()` on viewport resize.
+    viewport_changed: bool,
 
     /// Previous frame's pipeline timing.
     last_timing: kozan_primitives::timing::FrameTiming,
@@ -123,7 +126,7 @@ impl FrameWidget {
             font_system: FontSystem::new(),
             last_display_list: None,
             painted_fragment: None,
-            needs_full_layout: false,
+            viewport_changed: false,
             last_timing: kozan_primitives::timing::FrameTiming::default(),
             last_layer_tree: None,
             scroll_tree: ScrollTree::new(),
@@ -249,8 +252,16 @@ impl FrameWidget {
     /// `DirtyPhases` controls which phases actually run — scroll only
     /// invalidates paint, so style+layout are skipped at 60fps during scroll.
     pub fn update_lifecycle(&mut self) {
-        if self.doc.needs_visual_update() || self.needs_full_layout {
-            self.dirty.invalidate_all();
+        // If async tasks mutated the DOM since the last tick, ensure the
+        // relevant phases are scheduled. This does NOT force a full Taffy
+        // cache clear — flush_styles_to_layout's per-node comparison
+        // (Chrome's StyleDifference equivalent) determines which nodes
+        // actually need relayout.
+        if self.doc.needs_visual_update() {
+            self.dirty.invalidate_style();
+        }
+        if self.viewport_changed {
+            self.dirty.invalidate_layout();
         }
 
         if !self.dirty.needs_update() && self.last_fragment.is_some() {
@@ -308,8 +319,18 @@ impl FrameWidget {
         let vw = self.viewport.logical_width() as f32;
         let vh = self.viewport.logical_height() as f32;
 
-        let layout_dirty = self.doc.take_layout_dirty() || self.needs_full_layout;
-        self.needs_full_layout = false;
+        // Full Taffy cache clear when tree structure changed (nodes
+        // added/removed → layout_children stale) OR viewport dimensions
+        // changed (every % / vw / vh may resolve differently).
+        //
+        // Style recalc (hover, class toggle) does NOT force a full clear.
+        // Instead, flush_styles_to_layout compares old vs new Taffy style
+        // per node — Chrome's StyleDifference equivalent. A hover that
+        // changes only background-color produces identical Taffy styles,
+        // so zero caches are cleared and layout cost is ~0ms.
+        let tree_changed = self.doc.take_needs_full_layout_clear();
+        let force_clear = tree_changed || self.viewport_changed;
+        self.viewport_changed = false;
 
         let ctx = LayoutContext {
             text_measurer: &self.font_system,
@@ -317,7 +338,7 @@ impl FrameWidget {
         let root = self.doc.root_index();
         let result = self
             .doc
-            .resolve_layout_dirty(root, Some(vw), Some(vh), &ctx, layout_dirty);
+            .resolve_layout_dirty(root, Some(vw), Some(vh), &ctx, force_clear);
         self.last_fragment = Some(result.fragment);
 
         // Rebuild scroll tree from the new fragment tree.
@@ -373,22 +394,29 @@ impl FrameWidget {
     }
 
     /// Update the viewport dimensions (physical pixels).
+    ///
+    /// Chrome: `LocalFrameView::ViewportSizeChanged()` →
+    /// `LayoutView::SetNeedsLayout()`. Styles haven't changed, but every
+    /// percentage and viewport-unit may resolve to a new value, so we
+    /// force a full Taffy cache clear on the next layout pass.
     pub fn resize(&mut self, width: u32, height: u32) {
         self.viewport.resize(width, height);
         let lw = self.viewport.logical_width() as f32;
         let lh = self.viewport.logical_height() as f32;
         self.doc.set_viewport(lw, lh);
-        // Styles haven't changed — only the available space did.
-        // Taffy's cache handles this: nodes whose output depends on the
-        // available space will miss the cache automatically. No need to
-        // nuke all caches with needs_full_layout.
+        self.viewport_changed = true;
         self.dirty.invalidate_layout();
     }
 
+    /// Update the DPI scale factor.
+    ///
+    /// Changes both the viewport's logical dimensions and how CSS units
+    /// resolve, so this is the most aggressive invalidation: full style
+    /// recalc + full layout cache clear.
     pub fn set_scale_factor(&mut self, factor: f64) {
         self.viewport.set_scale_factor(factor);
+        self.viewport_changed = true;
         self.dirty.invalidate_all();
-        self.needs_full_layout = true;
     }
 
     /// Force the lifecycle to re-run on the next `update_lifecycle()` call.

@@ -37,6 +37,10 @@ pub struct PipelineConfig<S> {
     pub host: Arc<dyn PlatformHost>,
     pub window_id: WindowId,
     pub viewport: ViewportInfo,
+    /// Called before every `present()`. On X11 this increments the
+    /// `_NET_WM_SYNC_REQUEST` counter so the WM shows new geometry
+    /// only after the matching frame is ready.
+    pub pre_present_hook: Option<Box<dyn Fn() + Send>>,
 }
 
 pub struct RenderThreadHandle {
@@ -80,8 +84,13 @@ impl WindowPipeline {
         let (render_tx, render_rx) = mpsc::channel();
         let (view_tx, view_rx) = mpsc::channel();
 
+        let mut surface = config.surface;
+        if let Some(hook) = config.pre_present_hook {
+            surface.set_pre_present_hook(hook);
+        }
+
         let render_join = spawn_render(RenderDeps {
-            surface: config.surface,
+            surface,
             on_lost: config.on_surface_lost,
             rx: render_rx,
             view_tx: view_tx.clone(),

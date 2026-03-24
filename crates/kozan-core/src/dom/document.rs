@@ -697,17 +697,24 @@ impl Document {
         self.needs_style_recalc || self.needs_tree_rebuild || !self.dirty_layout_nodes.is_empty()
     }
 
-    /// Atomically read and clear the layout-dirty state for the current frame.
+    /// Returns `true` if the DOM tree structure changed (append / insert /
+    /// detach) since the last layout pass.
     ///
-    /// Returns `true` if any structural or style change requires a full cache
-    /// clear (tree rebuild, style recalc). Text-only changes (incremental node
-    /// dirtying) are also cleared here but do not set the return flag.
-    pub(crate) fn take_layout_dirty(&mut self) -> bool {
-        let dirty = self.needs_style_recalc || self.needs_tree_rebuild;
-        self.needs_style_recalc = false;
+    /// Chrome: `LayoutTreeRebuildRoot` — structural changes require a full
+    /// Taffy cache clear because `layout_children` lists are stale.
+    ///
+    /// Style recalc (`needs_style_recalc`) intentionally does NOT trigger a
+    /// full cache clear. Instead, `flush_styles_to_layout` compares old vs
+    /// new Taffy styles per node and only clears nodes that actually changed.
+    /// This is the Kozan equivalent of Chrome's `StyleDifference` — a hover
+    /// that changes only `background-color` will match the old Taffy style
+    /// exactly, clearing zero caches and making layout essentially free.
+    pub(crate) fn take_needs_full_layout_clear(&mut self) -> bool {
+        let tree_changed = self.needs_tree_rebuild;
         self.needs_tree_rebuild = false;
+        self.needs_style_recalc = false;
         self.dirty_layout_nodes.clear();
-        dirty
+        tree_changed
     }
 
     /// Get a Handle for a node by its arena index.

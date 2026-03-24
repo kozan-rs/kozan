@@ -27,6 +27,10 @@ pub struct VelloSurface {
     target_view: wgpu::TextureView,
     width: u32,
     height: u32,
+    /// Called just before `surface_texture.present()`.
+    /// On X11: increments the `_NET_WM_SYNC_REQUEST` counter so the WM
+    /// doesn't show the new window size until this frame is ready.
+    pre_present_hook: Option<Box<dyn Fn() + Send>>,
 }
 
 impl VelloSurface {
@@ -63,7 +67,7 @@ impl VelloSurface {
                 present_mode: wgpu::PresentMode::AutoVsync,
                 alpha_mode: surface_caps.alpha_modes[0],
                 view_formats: vec![],
-                desired_maximum_frame_latency: 2,
+                desired_maximum_frame_latency: 1,
             },
         );
 
@@ -91,6 +95,7 @@ impl VelloSurface {
             target_view,
             width: w,
             height: h,
+            pre_present_hook: None,
         })
     }
 
@@ -128,7 +133,9 @@ impl VelloSurface {
                 present_mode: wgpu::PresentMode::AutoVsync,
                 alpha_mode: wgpu::CompositeAlphaMode::Auto,
                 view_formats: vec![],
-                desired_maximum_frame_latency: 2,
+                // Single frame in flight — minimises the window where the
+                // Wayland compositor shows a stale buffer during resize.
+                desired_maximum_frame_latency: 1,
             },
         );
         let (texture, view) =
@@ -201,6 +208,9 @@ impl RenderSurface for VelloSurface {
                 .create_view(&wgpu::TextureViewDescriptor::default()),
         );
         self.gpu.queue.submit([encoder.finish()]);
+        if let Some(hook) = &self.pre_present_hook {
+            hook();
+        }
         surface_texture.present();
 
         Ok(())
@@ -210,5 +220,9 @@ impl RenderSurface for VelloSurface {
         self.width = width.max(1);
         self.height = height.max(1);
         self.reconfigure();
+    }
+
+    fn set_pre_present_hook(&mut self, hook: Box<dyn Fn() + Send>) {
+        self.pre_present_hook = Some(hook);
     }
 }

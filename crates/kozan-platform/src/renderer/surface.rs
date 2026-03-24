@@ -30,6 +30,14 @@ pub trait RenderSurface: Send {
 
     /// Notify the surface that the window was resized.
     fn resize(&mut self, width: u32, height: u32);
+
+    /// Set a hook that is called just before presenting a frame.
+    ///
+    /// On X11 this must call `Window::pre_present_notify()` to increment
+    /// the `_NET_WM_SYNC_REQUEST` counter so the window manager shows the
+    /// new geometry only after the matching frame is ready — preventing
+    /// the WM from stretching the old buffer to the new window size.
+    fn set_pre_present_hook(&mut self, _hook: Box<dyn Fn() + Send>) {}
 }
 
 #[cfg(test)]

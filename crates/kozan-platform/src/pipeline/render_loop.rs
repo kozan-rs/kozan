@@ -47,6 +47,10 @@ pub(crate) struct RenderLoop<S> {
     height: u32,
     scale_factor: f64,
     queued_scrolls: Vec<(Offset, Point)>,
+    /// When `true`, the surface was reconfigured for a new size and we must
+    /// wait for the view thread to commit a matching frame before presenting.
+    /// Chrome: `SynchronizeVisualProperties` — never show stale-size content.
+    awaiting_resize_commit: bool,
 }
 
 impl<S: RenderSurface> RenderLoop<S> {
@@ -67,6 +71,7 @@ impl<S: RenderSurface> RenderLoop<S> {
             height,
             scale_factor,
             queued_scrolls: Vec::new(),
+            awaiting_resize_commit: false,
         }
     }
 
@@ -78,6 +83,17 @@ impl<S: RenderSurface> RenderLoop<S> {
         loop {
             if !self.drain_events(&rx) {
                 return;
+            }
+            // Sync resize: surface was reconfigured — block until the view
+            // thread commits a frame at the new size so we never present
+            // stale content stretched to the wrong dimensions.
+            if self.awaiting_resize_commit {
+                if !self.wait_for_resize_commit(&rx) {
+                    return;
+                }
+                // Frame was already rendered + presented inside
+                // wait_for_resize_commit.
+                continue;
             }
             if !self.render_frame() {
                 return;
@@ -136,6 +152,40 @@ impl<S: RenderSurface> RenderLoop<S> {
         true
     }
 
+    /// Block until a `Commit` arrives whose viewport matches the current
+    /// surface size.
+    ///
+    /// Chrome: the display compositor waits for a `CompositorFrame` whose
+    /// `LocalSurfaceId` matches the new size before presenting. We do the
+    /// same — block here so the user never sees the old frame stretched
+    /// onto the new surface. Stale commits (wrong size) are silently
+    /// dropped. Intermediate `Resize` events are coalesced.
+    fn wait_for_resize_commit(&mut self, rx: &mpsc::Receiver<RenderEvent>) -> bool {
+        loop {
+            match rx.recv() {
+                Ok(RenderEvent::Commit(output)) => {
+                    if output.viewport_width == self.width
+                        && output.viewport_height == self.height
+                    {
+                        // Matching size — commit, render, present.
+                        self.commit(output);
+                        self.awaiting_resize_commit = false;
+                        return self.render_frame();
+                    }
+                    // Stale commit from before the resize — drop it.
+                }
+                Ok(RenderEvent::Resize { width, height }) => {
+                    // Coalesce: update to latest size without rendering in between.
+                    self.width = width;
+                    self.height = height;
+                    self.surface.resize(width, height);
+                }
+                Ok(RenderEvent::Shutdown) | Err(_) => return false,
+                Ok(other) => self.handle_non_resize(other),
+            }
+        }
+    }
+
     fn handle_event(&mut self, event: RenderEvent) {
         match event {
             RenderEvent::Commit(output) => self.commit(output),
@@ -143,10 +193,20 @@ impl<S: RenderSurface> RenderLoop<S> {
                 self.width = width;
                 self.height = height;
                 self.surface.resize(width, height);
+                self.awaiting_resize_commit = true;
             }
             RenderEvent::ScaleFactorChanged(sf) => self.scale_factor = sf,
             RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
             RenderEvent::Shutdown => {}
+        }
+    }
+
+    /// Handle a non-resize, non-commit event during the resize wait.
+    fn handle_non_resize(&mut self, event: RenderEvent) {
+        match event {
+            RenderEvent::ScaleFactorChanged(sf) => self.scale_factor = sf,
+            RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
+            _ => {}
         }
     }
 

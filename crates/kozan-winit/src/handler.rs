@@ -38,7 +38,7 @@ pub(crate) struct PendingWindow {
 /// - Reference to host (for SurfaceLost callbacks)
 pub(crate) struct AppHandler<R: Renderer> {
     manager: WindowManager<R>,
-    os_windows: HashMap<WinitWindowId, Window>,
+    os_windows: HashMap<WinitWindowId, Arc<Window>>,
     winit_to_kozan: HashMap<WinitWindowId, WindowId>,
     kozan_to_winit: HashMap<WindowId, WinitWindowId>,
     pending: Vec<PendingWindow>,
@@ -66,7 +66,7 @@ impl<R: Renderer> AppHandler<R> {
         view_init: Box<dyn FnOnce(&ViewContext) + Send>,
     ) {
         let window = match self.create_os_window(event_loop, &config) {
-            Some(w) => w,
+            Some(w) => Arc::new(w),
             None => return,
         };
 
@@ -84,6 +84,14 @@ impl<R: Renderer> AppHandler<R> {
             let _ = proxy.send_event(InternalRequest::SurfaceLost(lost_id));
         });
 
+        // X11: increments the _NET_WM_SYNC_REQUEST counter so the WM
+        // waits for the new frame before showing the new window geometry.
+        // Wayland: ack_configure equivalent. Other platforms: no-op.
+        let pre_present_window = Arc::clone(&window);
+        let pre_present_hook: Box<dyn Fn() + Send> = Box::new(move || {
+            pre_present_window.pre_present_notify();
+        });
+
         let create_config = WindowCreateConfig {
             window_id: kozan_id,
             host: self.host.clone() as Arc<dyn PlatformHost>,
@@ -94,6 +102,7 @@ impl<R: Renderer> AppHandler<R> {
                 scale_factor,
                 refresh_rate_millihertz: refresh_rate,
             },
+            pre_present_hook: Some(pre_present_hook),
         };
 
         if let Err(e) = self

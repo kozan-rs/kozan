@@ -36,6 +36,9 @@ pub struct WindowCreateConfig {
     pub host: Arc<dyn PlatformHost>,
     pub on_surface_lost: OnSurfaceLost,
     pub viewport: ViewportInfo,
+    /// Called before every `present()` on the render thread.
+    /// On X11: increments the `_NET_WM_SYNC_REQUEST` counter.
+    pub pre_present_hook: Option<Box<dyn Fn() + Send>>,
 }
 
 /// Error when window creation fails.
@@ -102,6 +105,7 @@ impl<R: Renderer> WindowManager<R> {
             host: config.host,
             window_id: config.window_id,
             viewport: vp,
+            pre_present_hook: config.pre_present_hook,
         };
 
         let pipeline =
