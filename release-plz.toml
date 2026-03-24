@@ -1,0 +1,18 @@
+[workspace]
+changelog_path = "CHANGELOG.md"
+git_tag_enable = true
+git_release_enable = true
+
+[[package]]
+name = "dashboard"
+publish = false
+changelog_update = false
+git_tag_enable = false
+git_release_enable = false
+
+[[package]]
+name = "hello-world"
+publish = false
+changelog_update = false
+git_tag_enable = false
+git_release_enable = false
