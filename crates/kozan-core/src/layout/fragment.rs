@@ -131,12 +131,14 @@ pub enum OverflowClip {
 
 impl OverflowClip {
     /// Whether this mode clips content (for paint + hit-test).
+    #[must_use] 
     pub fn clips(self) -> bool {
         matches!(self, Self::Hidden | Self::Scroll | Self::Auto)
     }
 
     /// Whether the user can scroll this axis (wheel/touch).
     /// `Hidden` clips but does NOT respond to user input.
+    #[must_use] 
     pub fn is_user_scrollable(self) -> bool {
         matches!(self, Self::Scroll | Self::Auto)
     }

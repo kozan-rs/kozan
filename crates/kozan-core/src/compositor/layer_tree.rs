@@ -19,7 +19,14 @@ pub struct LayerTree {
     root: Option<LayerId>,
 }
 
+impl Default for LayerTree {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LayerTree {
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             layers: Storage::new(),
@@ -35,6 +42,7 @@ impl LayerTree {
         id
     }
 
+    #[must_use] 
     pub fn root(&self) -> Option<LayerId> {
         self.root
     }
@@ -43,6 +51,7 @@ impl LayerTree {
         self.root = Some(id);
     }
 
+    #[must_use] 
     pub fn layer(&self, id: LayerId) -> &Layer {
         self.layers
             .get(id.0)
@@ -55,10 +64,17 @@ impl LayerTree {
             .expect("LayerId points to valid layer")
     }
 
+    #[must_use]
     pub fn len(&self) -> u32 {
         self.next_id
     }
 
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.next_id == 0
+    }
+
+    #[must_use] 
     pub fn layer_for_dom_node(&self, dom_id: u32) -> Option<LayerId> {
         self.layers
             .iter()

@@ -45,7 +45,14 @@ pub struct Compositor {
     scroll_offsets: ScrollOffsets,
 }
 
+impl Default for Compositor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Compositor {
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             display_list: None,
@@ -86,6 +93,7 @@ impl Compositor {
     ///
     /// The scroll offsets are passed directly — the renderer uses them
     /// to override tagged scroll transforms. Zero allocation, O(1) lookup.
+    #[must_use] 
     pub fn produce_frame(&self) -> Option<CompositorFrame> {
         let display_list = self.display_list.as_ref()?;
         Some(CompositorFrame {
@@ -95,14 +103,17 @@ impl Compositor {
     }
 
     /// Current scroll offsets — for syncing back to the view thread.
+    #[must_use] 
     pub fn scroll_offsets(&self) -> &ScrollOffsets {
         &self.scroll_offsets
     }
 
+    #[must_use] 
     pub fn scroll_tree(&self) -> &ScrollTree {
         &self.scroll_tree
     }
 
+    #[must_use] 
     pub fn has_content(&self) -> bool {
         self.display_list.is_some()
     }
@@ -116,6 +127,7 @@ impl Compositor {
     /// Walks the layer tree depth-first, checking bounds. Returns the deepest
     /// scrollable layer whose bounds contain the point. Falls back to
     /// `root_scroller()` if no scrollable layer is hit.
+    #[must_use] 
     pub fn hit_test_scroll_target(&self, point: Point) -> Option<u32> {
         let tree = self.layer_tree.as_ref()?;
         let root = tree.root()?;

@@ -37,11 +37,13 @@ pub struct HitTester<'a> {
 }
 
 impl<'a> HitTester<'a> {
+    #[must_use] 
     pub fn new(scroll_offsets: &'a ScrollOffsets) -> Self {
         Self { scroll_offsets }
     }
 
     /// Find the deepest DOM node at `point` (CSS px, root-relative).
+    #[must_use] 
     pub fn test(&self, fragment: &Fragment, point: Point) -> HitTestResult {
         self.test_fragment(fragment, point, Point::ZERO)
     }

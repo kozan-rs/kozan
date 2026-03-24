@@ -103,6 +103,7 @@ struct WindowSpec {
 
 impl App {
     /// Create a new application.
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             windows: Vec::new(),

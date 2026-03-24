@@ -235,7 +235,7 @@ impl EventHandler {
             }
             ButtonState::Released => {
                 if let Some(old_id) = self.mousedown_node {
-                    if let Some(_) = ctx.surface.resolve(old_id) {
+                    if ctx.surface.resolve(old_id).is_some() {
                         ctx.surface.set_active_chain(old_id.index(), false);
                     }
                 }

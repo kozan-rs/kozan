@@ -35,6 +35,7 @@ pub struct ViewThreadHandle {
 }
 
 impl ViewThreadHandle {
+    #[must_use] 
     pub fn from_parts(
         sender: mpsc::Sender<ViewEvent>,
         wake_sender: WakeSender,
@@ -47,10 +48,12 @@ impl ViewThreadHandle {
         }
     }
 
+    #[must_use] 
     pub fn send(&self, event: ViewEvent) -> bool {
         self.sender.send(event).is_ok()
     }
 
+    #[must_use] 
     pub fn wake_sender(&self) -> WakeSender {
         self.wake_sender.clone()
     }

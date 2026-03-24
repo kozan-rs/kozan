@@ -20,7 +20,14 @@ pub struct ScrollTree {
     root: Option<u32>,
 }
 
+impl Default for ScrollTree {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScrollTree {
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             nodes: Storage::new(),
@@ -35,6 +42,7 @@ impl ScrollTree {
         self.nodes.set(dom_id, node);
     }
 
+    #[must_use] 
     pub fn get(&self, dom_id: u32) -> Option<&ScrollNode> {
         self.nodes.get(dom_id)
     }
@@ -45,16 +53,19 @@ impl ScrollTree {
         self.root = None;
     }
 
+    #[must_use] 
     pub fn contains(&self, dom_id: u32) -> bool {
         self.nodes.get(dom_id).is_some()
     }
 
     /// The root scroller — cached during `set()` / `sync()`. O(1).
+    #[must_use] 
     pub fn root_scroller(&self) -> Option<u32> {
         self.root
     }
 
     /// Iterate the scroll chain from `start` toward the root scroller.
+    #[must_use] 
     pub fn chain(&self, start: u32) -> ScrollChain<'_> {
         ScrollChain {
             nodes: &self.nodes,

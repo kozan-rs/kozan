@@ -49,6 +49,7 @@ pub struct RenderThreadHandle {
 }
 
 impl RenderThreadHandle {
+    #[must_use] 
     pub fn send(&self, event: RenderEvent) -> bool {
         self.sender.send(event).is_ok()
     }
@@ -119,10 +120,12 @@ impl WindowPipeline {
         })
     }
 
+    #[must_use] 
     pub fn send_to_view(&self, event: ViewEvent) -> bool {
         self.view_handle.send(event)
     }
 
+    #[must_use] 
     pub fn send_to_render(&self, event: RenderEvent) -> bool {
         self.render_tx.send(event).is_ok()
     }

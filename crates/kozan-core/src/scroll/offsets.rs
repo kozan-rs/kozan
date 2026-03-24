@@ -16,7 +16,14 @@ pub struct ScrollOffsets {
     offsets: Storage<Offset>,
 }
 
+impl Default for ScrollOffsets {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScrollOffsets {
+    #[must_use] 
     pub fn new() -> Self {
         Self {
             offsets: Storage::new(),
@@ -24,6 +31,7 @@ impl ScrollOffsets {
     }
 
     /// Returns `Offset::ZERO` for nodes that have never been scrolled.
+    #[must_use] 
     pub fn offset(&self, dom_id: u32) -> Offset {
         self.offsets.get(dom_id).copied().unwrap_or(Offset::ZERO)
     }

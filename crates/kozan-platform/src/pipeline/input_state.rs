@@ -17,6 +17,7 @@ pub struct InputState {
 }
 
 impl InputState {
+    #[must_use] 
     pub fn new(scale_factor: f64) -> Self {
         Self {
             cursor_x: 0.0,
@@ -31,6 +32,7 @@ impl InputState {
         self.cursor_y = py / self.scale_factor;
     }
 
+    #[must_use] 
     pub fn cursor(&self) -> (f64, f64) {
         (self.cursor_x, self.cursor_y)
     }
@@ -39,14 +41,17 @@ impl InputState {
         self.scale_factor = factor;
     }
 
+    #[must_use] 
     pub fn scale_factor(&self) -> f64 {
         self.scale_factor
     }
 
+    #[must_use] 
     pub fn modifiers(&self) -> Modifiers {
         self.modifiers
     }
 
+    #[allow(clippy::fn_params_excessive_bools)]
     pub fn set_modifiers_from_keyboard(&mut self, shift: bool, ctrl: bool, alt: bool, meta: bool) {
         let mut m = Modifiers::EMPTY;
         if shift {

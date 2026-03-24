@@ -299,6 +299,7 @@ impl<R: Renderer> WindowManager<R> {
         )));
     }
 
+    #[allow(clippy::fn_params_excessive_bools)]
     pub fn on_modifiers_changed(
         &mut self,
         id: WindowId,
