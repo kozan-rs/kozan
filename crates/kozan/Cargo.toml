@@ -9,15 +9,15 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-kozan-core       = { path = "../kozan-core" }
-kozan-platform   = { path = "../kozan-platform" }
-kozan-primitives = { path = "../kozan-primitives" }
-kozan-scheduler  = { path = "../kozan-scheduler" }
+kozan-core.workspace = true
+kozan-platform.workspace = true
+kozan-primitives.workspace = true
+kozan-scheduler.workspace = true
 
 # Optional backends — enabled by feature flag.
 # Default: winit + vello (the standard app stack).
-kozan-winit = { path = "../kozan-winit", optional = true }
-kozan-vello = { path = "../kozan-vello", optional = true }
+kozan-winit = { workspace = true, optional = true }
+kozan-vello = { workspace = true, optional = true }
 
 [features]
 default = ["winit", "vello"]

@@ -9,9 +9,9 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-kozan-core = { path = "../kozan-core" }
-kozan-primitives = { path = "../kozan-primitives" }
-kozan-scheduler = { path = "../kozan-scheduler" }
+kozan-core.workspace = true
+kozan-primitives.workspace = true
+kozan-scheduler.workspace = true
 raw-window-handle = "0.6"
 
 [lints]

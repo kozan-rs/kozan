@@ -9,8 +9,8 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-kozan-core = { path = "../kozan-core" }
-kozan-platform = { path = "../kozan-platform" }
+kozan-core.workspace = true
+kozan-platform.workspace = true
 winit = "0.30"
 
 [lints]

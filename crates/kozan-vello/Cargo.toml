@@ -9,9 +9,9 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-kozan-core = { path = "../kozan-core" }
-kozan-platform = { path = "../kozan-platform" }
-kozan-primitives = { path = "../kozan-primitives" }
+kozan-core.workspace = true
+kozan-platform.workspace = true
+kozan-primitives.workspace = true
 
 raw-window-handle = "0.6"
 vello = "0.8"

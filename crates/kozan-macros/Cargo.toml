@@ -19,7 +19,7 @@ proc-macro-crate = "3"
 
 [dev-dependencies]
 trybuild = { version = "1", features = ["diff"] }
-kozan-core = { path = "../kozan-core" }
+kozan-core.workspace = true
 
 [lints]
 workspace = true

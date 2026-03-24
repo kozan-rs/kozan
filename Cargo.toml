@@ -63,5 +63,11 @@ elidable_lifetime_names = "allow"
 # DocumentCell is the one exception to unsafe
 unsafe_code = { level = "allow", priority = 1 }
 
-# parley 0.7 + vello 0.4.1 have incompatible peniko/skrifa versions (5 duplicate builds). Fix needs vello 0.8.0 (MSRV bump 1.85 → 1.92).
 [workspace.dependencies]
+kozan-core = { version = "0.1", path = "crates/kozan-core" }
+kozan-macros = { version = "0.1", path = "crates/kozan-macros" }
+kozan-platform = { version = "0.1", path = "crates/kozan-platform" }
+kozan-primitives = { version = "0.1", path = "crates/kozan-primitives" }
+kozan-scheduler = { version = "0.1", path = "crates/kozan-scheduler" }
+kozan-vello = { version = "0.1", path = "crates/kozan-vello" }
+kozan-winit = { version = "0.1", path = "crates/kozan-winit" }

@@ -9,8 +9,8 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-kozan-primitives = { path = "../kozan-primitives" }
-kozan-macros = { path = "../kozan-macros" }
+kozan-primitives.workspace = true
+kozan-macros.workspace = true
 taffy = { version = "0.9", features = ["flexbox", "grid", "block_layout", "content_size", "calc", "detailed_layout_info"] }
 smallvec = "1.13"
 parley = "0.7"
