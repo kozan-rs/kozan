@@ -482,7 +482,7 @@ dependencies = [
 
 [[package]]
 name = "dashboard"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan",
 ]
@@ -947,7 +947,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hello-world"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan",
 ]
@@ -1204,7 +1204,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "kozan"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan-core",
  "kozan-platform",
@@ -1216,7 +1216,7 @@ dependencies = [
 
 [[package]]
 name = "kozan-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "app_units",
  "euclid",
@@ -1240,7 +1240,7 @@ dependencies = [
 
 [[package]]
 name = "kozan-macros"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan-core",
  "proc-macro-crate",
@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "kozan-platform"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan-core",
  "kozan-primitives",
@@ -1262,21 +1262,21 @@ dependencies = [
 
 [[package]]
 name = "kozan-primitives"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "glam",
 ]
 
 [[package]]
 name = "kozan-scheduler"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan-primitives",
 ]
 
 [[package]]
 name = "kozan-vello"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan-core",
  "kozan-platform",
@@ -1288,7 +1288,7 @@ dependencies = [
 
 [[package]]
 name = "kozan-winit"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kozan-core",
  "kozan-platform",
