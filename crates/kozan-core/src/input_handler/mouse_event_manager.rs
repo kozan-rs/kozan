@@ -10,7 +10,6 @@ use crate::events::mouse_event::{
 use crate::id::RawId;
 use crate::input::{ButtonState, MouseButton};
 use crate::layout::hit_test::{HitTestCache, HitTestResult};
-use crate::page::FocusController;
 use kozan_primitives::geometry::Point;
 
 use super::InputContext;
@@ -87,7 +86,7 @@ impl MouseEventManager {
                 if me.button == MouseButton::Left {
                     let target = hit
                         .node_index
-                        .and_then(|idx| FocusController::find_focusable_ancestor(ctx.doc, idx));
+                        .and_then(|idx| ctx.doc.find_focusable_ancestor(idx));
                     ctx.doc.set_focused_element(target, false);
                 }
             }

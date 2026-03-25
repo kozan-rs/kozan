@@ -11,6 +11,14 @@
 
 use core::any::TypeId;
 
+use crate::dom::handle::Handle;
+
+/// Chrome: `HTMLElement::DefaultEventHandler()` — per-element default behavior.
+///
+/// Called after the bubble phase when `!preventDefault`. Returns `true`
+/// if the event was handled.
+pub(crate) type DefaultEventHandlerFn = fn(&Handle, &dyn std::any::Any) -> bool;
+
 // ============================================================
 // NodeFlags — 32-bit packed bitfield
 // ============================================================
@@ -295,18 +303,26 @@ impl NodeFlags {
 
 /// Per-node metadata stored in `Storage<NodeMeta>`.
 ///
-/// Combines `NodeFlags` (4 bytes) + data `TypeId` (16 bytes on 64-bit).
-/// The `TypeId` identifies which column in `DataStorage` holds this node's
-/// element-specific data (e.g., `TypeId::of::<ButtonData>()`).
+/// Combines `NodeFlags` (4 bytes) + data `TypeId` (16 bytes on 64-bit)
+/// + optional default event handler function pointer (8 bytes, niche-optimized).
 #[derive(Copy, Clone)]
 pub struct NodeMeta {
     flags: NodeFlags,
     data_type_id: TypeId,
+    default_handler: Option<DefaultEventHandlerFn>,
 }
 
 impl NodeMeta {
-    pub(crate) fn new(flags: NodeFlags, data_type_id: TypeId) -> Self {
-        Self { flags, data_type_id }
+    pub(crate) fn new(
+        flags: NodeFlags,
+        data_type_id: TypeId,
+        default_handler: Option<DefaultEventHandlerFn>,
+    ) -> Self {
+        Self {
+            flags,
+            data_type_id,
+            default_handler,
+        }
     }
 
     #[inline]
@@ -324,6 +340,12 @@ impl NodeMeta {
     #[must_use]
     pub fn data_type_id(&self) -> TypeId {
         self.data_type_id
+    }
+
+    #[inline]
+    #[must_use]
+    pub(crate) fn default_event_handler(&self) -> Option<DefaultEventHandlerFn> {
+        self.default_handler
     }
 }
 

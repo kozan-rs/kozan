@@ -3,6 +3,8 @@
 //! Single owner of all DOM state. `DocumentCell` wraps a raw pointer for
 //! internal subsystems that need unchecked access.
 
+mod layout;
+
 use core::any::TypeId;
 use core::ptr::NonNull;
 
@@ -32,57 +34,32 @@ use kozan_primitives::arena::Storage;
 /// The owner must keep Document at a stable address. Handles store
 /// raw pointers back to this Document through `DocumentCell`.
 pub struct Document {
-    // ---- Allocation ----
-    pub(crate) ids: IdAllocator,
-
-    // ---- Parallel storages ----
-    pub(crate) meta: Storage<NodeMeta>,
-    pub(crate) tree: Storage<TreeData>,
-    pub(crate) element_data: Storage<ElementData>,
-    pub(crate) data: DataStorage,
-
-    // ---- Layout data (per-node Taffy style, cache, layout results) ----
-    // DOM IS the layout tree — no separate LayoutTree needed.
-    pub(crate) layout: Storage<LayoutNodeData>,
-
-    // ---- Style engine (owns computed/inline styles + Stylo state) ----
-    pub(crate) style_engine: StyleEngine,
-
-    // ---- Event listeners ----
-    pub(crate) event_store: EventStore,
-
-    // ---- Root + Body ----
-    pub(crate) root: u32,
-    pub(crate) body: u32,
-
+    ids: IdAllocator,
+    meta: Storage<NodeMeta>,
+    tree: Storage<TreeData>,
+    element_data: Storage<ElementData>,
+    data: DataStorage,
+    layout: Storage<LayoutNodeData>,
+    style_engine: StyleEngine,
+    event_store: EventStore,
+    root: u32,
+    body: u32,
     /// Chrome: `Document::focused_element_`. Authoritative focus state.
-    /// EventHandler syncs from this on each input dispatch.
-    pub(crate) focused_element: Option<RawId>,
-
+    focused_element: Option<RawId>,
     /// Chrome: `Document::hover_element_`. LCA diff drives state toggling.
-    pub(crate) hover_element: Option<u32>,
-
+    hover_element: Option<u32>,
     /// Chrome: `Document::active_element_`. LCA diff drives state toggling.
-    pub(crate) active_element: Option<u32>,
-
-    /// Chrome: `DocumentLifecycle` on `Document`.
-    /// Enforces phase ordering — tree mutations are forbidden during paint.
-    pub(crate) lifecycle: crate::lifecycle::LifecycleState,
-
-    // ---- Dirty flags (read and cleared by FrameView) ----
+    active_element: Option<u32>,
+    /// Chrome: `DocumentLifecycle` — enforces phase ordering.
+    lifecycle: crate::lifecycle::LifecycleState,
     /// DOM structure changed (append, remove, detach) — requires full tree rebuild.
-    pub(crate) needs_tree_rebuild: bool,
-
+    needs_tree_rebuild: bool,
     /// DOM node indices whose content changed (text update) — incremental relayout.
-    pub(crate) dirty_layout_nodes: Vec<u32>,
-
-    /// Style changed via inline styles or state change — needs restyle + relayout.
-    /// Set by `mark_for_restyle()`, cleared by `update_lifecycle()`.
-    pub(crate) needs_style_recalc: bool,
-
-    // ---- Debug ----
+    dirty_layout_nodes: Vec<u32>,
+    /// Style changed — needs restyle + relayout.
+    needs_style_recalc: bool,
     #[cfg(debug_assertions)]
-    pub(crate) alive: bool,
+    alive: bool,
 }
 
 impl Document {
@@ -112,7 +89,7 @@ impl Document {
         };
 
         // Root (document node — like <html>)
-        let (root_index, _gen) = doc.alloc_node(NodeFlags::document(), TypeId::of::<()>());
+        let (root_index, _gen) = doc.alloc_node(NodeFlags::document(), TypeId::of::<()>(), None);
         doc.root = root_index;
 
         doc
@@ -140,10 +117,16 @@ impl Document {
     }
 
     /// Allocate a new node with all parallel storages initialized.
-    pub(crate) fn alloc_node(&mut self, flags: NodeFlags, data_type_id: TypeId) -> (u32, u32) {
+    pub(crate) fn alloc_node(
+        &mut self,
+        flags: NodeFlags,
+        data_type_id: TypeId,
+        default_handler: Option<crate::dom::node::DefaultEventHandlerFn>,
+    ) -> (u32, u32) {
         let raw = self.ids.alloc();
         let (index, generation) = (raw.index(), raw.generation());
-        self.meta.set(index, NodeMeta::new(flags, data_type_id));
+        self.meta
+            .set(index, NodeMeta::new(flags, data_type_id, default_handler));
         self.tree.set(index, TreeData::detached());
         self.layout.set(index, LayoutNodeData::new());
         self.event_store.ensure_slot(index);
@@ -309,21 +292,21 @@ impl Document {
     /// Walk up the tree setting `dirty_descendants` on each ancestor's `ElementData`.
     /// Stops when an ancestor already has the flag set (already propagated).
     pub(crate) fn propagate_dirty_ancestors(&mut self, index: u32) {
-        let mut current = self
-            .tree
-            .get(index)
-            .map_or(crate::id::INVALID, |t| t.parent);
-        while current != crate::id::INVALID {
-            if let Some(ed) = self.element_data.get(current) {
-                if ed.dirty_descendants.get() {
-                    break; // Already propagated.
+        let mut current = index;
+        loop {
+            match self.tree.get(current) {
+                Some(td) if td.parent != INVALID => {
+                    let parent = td.parent;
+                    if let Some(ed) = self.element_data.get(parent) {
+                        if ed.dirty_descendants.get() {
+                            break;
+                        }
+                        ed.dirty_descendants.set(true);
+                    }
+                    current = parent;
                 }
-                ed.dirty_descendants.set(true);
+                _ => break,
             }
-            current = self
-                .tree
-                .get(current)
-                .map_or(crate::id::INVALID, |t| t.parent);
         }
     }
 
@@ -632,7 +615,7 @@ impl Document {
         let cell = self.cell();
         let (index, generation) = cell.write(|doc| {
             let (index, generation) =
-                doc.alloc_node(NodeFlags::element(T::IS_FOCUSABLE), TypeId::of::<T::Data>());
+                doc.alloc_node(NodeFlags::element(T::IS_FOCUSABLE), TypeId::of::<T::Data>(), T::DEFAULT_EVENT_HANDLER);
             doc.set_element_data_new(index, ElementData::new(tag, T::IS_FOCUSABLE));
             if TypeId::of::<T::Data>() != TypeId::of::<()>() {
                 doc.init_typed_data::<T::Data>(index);
@@ -666,7 +649,7 @@ impl Document {
         let cell = self.cell();
         let content_owned = content.to_string();
         let (index, generation) = cell.write(|doc| {
-            let (index, generation) = doc.alloc_node(NodeFlags::text(), TypeId::of::<TextData>());
+            let (index, generation) = doc.alloc_node(NodeFlags::text(), TypeId::of::<TextData>(), None);
             doc.init_typed_data::<TextData>(index);
             doc.set_text_content_new(index, &content_owned);
             (index, generation)
@@ -859,47 +842,168 @@ impl Document {
         }
     }
 
-    /// Collect ancestor indices from `index` up to root (inclusive).
-    fn ancestor_chain(&self, index: u32) -> Vec<u32> {
-        let mut chain = Vec::new();
-        let mut current = index;
+    /// Find the Least Common Ancestor of two nodes.
+    ///
+    /// Collects ancestors of `a` into a set, then walks `b` upward until a
+    /// hit — O(depth) instead of O(depth^2) from zipping two full chains.
+    /// Called on every mouse move (hover LCA), so this matters.
+    fn lca(&self, a: u32, b: u32) -> Option<u32> {
+        use std::collections::HashSet;
+
+        let mut ancestors_a = HashSet::new();
+        let mut current = a;
         loop {
-            chain.push(current);
+            ancestors_a.insert(current);
             match self.tree.get(current) {
                 Some(td) if td.parent != INVALID => current = td.parent,
                 _ => break,
             }
         }
-        chain
-    }
 
-    /// Find the Least Common Ancestor of two nodes.
-    fn lca(&self, a: u32, b: u32) -> Option<u32> {
-        let chain_a = self.ancestor_chain(a);
-        let chain_b = self.ancestor_chain(b);
-        let mut lca = None;
-        for (ia, ib) in chain_a.iter().rev().zip(chain_b.iter().rev()) {
-            if ia == ib {
-                lca = Some(*ia);
-            } else {
-                break;
+        let mut current = b;
+        loop {
+            if ancestors_a.contains(&current) {
+                return Some(current);
+            }
+            match self.tree.get(current) {
+                Some(td) if td.parent != INVALID => current = td.parent,
+                _ => break,
             }
         }
-        lca
+        None
     }
 
     pub(crate) fn focused_element(&self) -> Option<RawId> {
         self.focused_element
     }
 
-    /// Chrome: `document.activeElement` — returns focused element or body.
-    pub fn active_element_api(&self) -> Handle {
-        if let Some(id) = self.focused_element {
-            if let Some(h) = self.resolve(id) {
-                return h;
+    /// HTML §6.6.3 — focusable when natively interactive, has tabindex,
+    /// or is a scrollable overflow region.
+    pub(crate) fn is_focusable(&self, index: u32) -> bool {
+        if let Some(style) = self.computed_style(index) {
+            if style.get_box().display.is_none() {
+                return false;
             }
         }
-        self.body()
+
+        let native = self
+            .meta
+            .get(index)
+            .is_some_and(|m| m.flags().is_focusable());
+        if native {
+            return self
+                .element_data
+                .get(index)
+                .is_some_and(|ed| {
+                    ed.element_state.contains(style_dom::ElementState::ENABLED)
+                });
+        }
+
+        if self
+            .element_data
+            .get(index)
+            .is_some_and(|ed| ed.attributes.get("tabindex").is_some())
+        {
+            return true;
+        }
+
+        self.has_scrollable_overflow(index)
+    }
+
+    /// Explicit tabindex wins; natively focusable and scrollable default to 0.
+    pub(crate) fn effective_tab_index(&self, index: u32) -> i32 {
+        if let Some(ed) = self.element_data.get(index) {
+            if let Some(val) = ed.attributes.get("tabindex") {
+                return val.parse().unwrap_or(0);
+            }
+        }
+        let native = self
+            .meta
+            .get(index)
+            .is_some_and(|m| m.flags().is_focusable());
+        if native || self.has_scrollable_overflow(index) {
+            0
+        } else {
+            -1
+        }
+    }
+
+    /// Walk from `index` up ancestors, return first focusable node.
+    pub(crate) fn find_focusable_ancestor(&self, index: u32) -> Option<u32> {
+        let mut current = index;
+        loop {
+            if self.is_focusable(current) {
+                return Some(current);
+            }
+            match self.tree.get(current) {
+                Some(td) if td.parent != INVALID => current = td.parent,
+                _ => return None,
+            }
+        }
+    }
+
+    /// W3C sequential focus navigation order.
+    pub(crate) fn tab_order(&self) -> Vec<u32> {
+        let mut positive: Vec<(i32, usize, u32)> = Vec::new();
+        let mut zero: Vec<u32> = Vec::new();
+        let mut order = 0usize;
+
+        let mut stack = vec![self.root];
+        while let Some(index) = stack.pop() {
+            if self.is_focusable(index) {
+                let ti = self.effective_tab_index(index);
+                if ti > 0 {
+                    positive.push((ti, order, index));
+                } else if ti == 0 {
+                    zero.push(index);
+                }
+                order += 1;
+            }
+
+            if let Some(td) = self.tree.get(index) {
+                let mut child = td.last_child;
+                while child != INVALID {
+                    stack.push(child);
+                    child = self.tree.get(child).map_or(INVALID, |t| t.prev_sibling);
+                }
+            }
+        }
+
+        positive.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
+        let mut result: Vec<u32> = positive.into_iter().map(|(_, _, idx)| idx).collect();
+        result.extend(zero);
+        result
+    }
+
+    /// Keyboard scroll target: walk from focused element up to find scrollable ancestor.
+    pub(crate) fn scroll_target(&self, scroll_tree: &crate::scroll::ScrollTree) -> Option<u32> {
+        let focused_idx = self.focused_element()?.index();
+        let mut current = focused_idx;
+        loop {
+            if scroll_tree.contains(current) {
+                return Some(current);
+            }
+            match self.tree.get(current) {
+                Some(td) if td.parent != INVALID => current = td.parent,
+                _ => return None,
+            }
+        }
+    }
+
+    fn has_scrollable_overflow(&self, index: u32) -> bool {
+        use style::computed_values::overflow_x::T;
+        let Some(style) = self.computed_style(index) else {
+            return false;
+        };
+        matches!(style.clone_overflow_x(), T::Scroll | T::Auto)
+            || matches!(style.clone_overflow_y(), T::Scroll | T::Auto)
+    }
+
+    /// W3C: `document.activeElement` — returns focused element, or body if none.
+    pub fn active_element_api(&self) -> Handle {
+        self.focused_element
+            .and_then(|id| self.resolve(id))
+            .unwrap_or_else(|| self.body())
     }
 
     pub fn has_focus(&self) -> bool {
@@ -915,15 +1019,16 @@ impl Document {
             return;
         }
 
-        self.dispatch_focus_events(old, new_id);
-
+        // State mutation before events so handlers see consistent focus.
         self.cell().write(|doc| {
             doc.apply_focus_state(old, new_id, focus_visible);
         });
+
+        self.dispatch_focus_events(old, new_id);
     }
 
     /// UI Events §5.2.2: focusout(A) → focusin(B) → blur(A) → focus(B).
-    fn dispatch_focus_events(&self, old: Option<RawId>, new: Option<RawId>) {
+    pub(crate) fn dispatch_focus_events(&self, old: Option<RawId>, new: Option<RawId>) {
         use crate::events::focus_event::*;
 
         let old_handle = old.and_then(|id| self.resolve(id));
@@ -944,7 +1049,7 @@ impl Document {
     }
 
     /// All focus state mutations in one pass — called inside `cell().write()`.
-    fn apply_focus_state(
+    pub(crate) fn apply_focus_state(
         &mut self,
         old: Option<RawId>,
         new: Option<RawId>,
@@ -1014,6 +1119,21 @@ impl Document {
 
     // ── Layout data access ──
 
+    /// Text content (or similar child-local data) changed — mark for relayout
+    /// without triggering restyle.
+    ///
+    /// Chrome: `CharacterData::DidModifyData()` → `ContainerNode::ChildrenChanged()`.
+    pub(crate) fn mark_child_content_changed(&mut self, index: u32) {
+        let has_parent = self
+            .tree
+            .get(index)
+            .is_some_and(|td| td.parent != crate::id::INVALID);
+        if has_parent {
+            self.dirty_layout_nodes.push(index);
+            self.mark_layout_dirty(index);
+        }
+    }
+
     /// Clear layout cache on a node and propagate up the layout ancestor chain.
     ///
     /// When a child's content or style changes, parent caches are stale
@@ -1062,6 +1182,37 @@ impl Document {
 
     pub(crate) fn set_viewport(&mut self, width: f32, height: f32) {
         self.style_engine.set_viewport(width, height);
+    }
+
+    pub(crate) fn flush_all_inline_styles(&mut self, guard: &style::shared_lock::SharedRwLock) {
+        let capacity = self.ids.capacity() as u32;
+        for i in 0..capacity {
+            if let Some(ed) = self.element_data.get_mut(i) {
+                ed.flush_inline_styles(guard);
+            }
+        }
+    }
+
+    pub(crate) fn shared_lock(&self) -> &style::shared_lock::SharedRwLock {
+        self.style_engine.shared_lock()
+    }
+
+    pub(crate) fn lifecycle(&self) -> crate::lifecycle::LifecycleState {
+        self.lifecycle
+    }
+
+    #[cfg(debug_assertions)]
+    pub(crate) fn is_alive_debug(&self) -> bool {
+        self.alive
+    }
+
+    pub(crate) fn element_data_by_index(&self, index: u32) -> Option<&ElementData> {
+        self.element_data.get(index)
+    }
+
+    /// Raw mutable element data access for the Stylo integration boundary.
+    pub(crate) fn element_data_by_index_mut(&mut self, index: u32) -> Option<&mut ElementData> {
+        self.element_data.get_mut(index)
     }
 }
 

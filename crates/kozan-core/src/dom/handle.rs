@@ -90,20 +90,8 @@ impl Handle {
     /// (text sizing). Chrome: `CharacterData::DidModifyData()` →
     /// `ContainerNode::ChildrenChanged()` → `SetNeedsStyleRecalc()`.
     pub(crate) fn mark_parent_needs_layout(&self) {
-        let index = self.id.index();
         self.cell.write(|doc| {
-            let parent_idx = doc
-                .tree
-                .get(index)
-                .map(|td| td.parent)
-                .filter(|&p| p != crate::id::INVALID);
-            if let Some(_parent) = parent_idx {
-                // Text content changed — needs relayout, NOT restyle.
-                // DON'T set needs_style_recalc (would force-clear ALL caches).
-                // Just clear this node's cache + ancestors (via layout_parent chain).
-                doc.dirty_layout_nodes.push(index);
-                doc.mark_layout_dirty(index);
-            }
+            doc.mark_child_content_changed(self.id.index());
         });
     }
 
@@ -153,7 +141,7 @@ impl Handle {
         let value = value.into();
         let index = self.id.index();
         self.cell.write(|doc| {
-            let guard = doc.style_engine.shared_lock().clone();
+            let guard = doc.shared_lock().clone();
             doc.write_element_data(self.id, |ed| {
                 ed.on_attribute_set(name, &value, &guard);
                 ed.attributes.set(name, value);
@@ -371,6 +359,35 @@ impl Handle {
             .collect()
     }
 
+    /// All children that are Elements, collected in a single cell read.
+    ///
+    /// Prefer this over iterating with `first_element_child()`/`next_element_sibling()`
+    /// which each do a separate cell read per sibling.
+    #[must_use]
+    pub fn element_children(&self) -> Vec<Handle> {
+        self.cell.read(|doc| {
+            let Some(td) = doc.tree_data(self.id) else {
+                return Vec::new();
+            };
+            let mut result = Vec::new();
+            let mut idx = td.first_child;
+            while idx != INVALID {
+                let Some(child_td) = doc.tree_data_by_index(idx) else {
+                    break;
+                };
+                if let Some(meta) = doc.node_meta_by_index(idx) {
+                    if meta.flags().is_element() {
+                        if let Some(raw) = doc.raw_id(idx) {
+                            result.push(Handle::new(raw, self.cell));
+                        }
+                    }
+                }
+                idx = child_td.next_sibling;
+            }
+            result
+        })
+    }
+
     /// First child that is an Element (skip Text, Comment, etc.).
     #[must_use]
     pub fn first_element_child(&self) -> Option<Handle> {
@@ -479,35 +496,14 @@ impl Handle {
     /// Called after the bubble phase when `!preventDefault`. Each element type
     /// can handle events before they fall through to browser-level defaults.
     pub(crate) fn default_event_handler(&self, event: &dyn std::any::Any) -> bool {
-        self.cell.read(|doc| {
-            let Some(meta) = doc.node_meta(self.id) else {
-                return false;
-            };
-            if meta.data_type_id() == std::any::TypeId::of::<crate::html::ButtonData>() {
-                return self.default_event_handler_button(event);
-            }
-            false
-        })
-    }
-
-    /// Button: Enter/Space → synthetic click (W3C activation behavior).
-    fn default_event_handler_button(&self, event: &dyn std::any::Any) -> bool {
-        use crate::events::keyboard_event::KeyDownEvent;
-        use crate::input::KeyCode;
-
-        let Some(ke) = event.downcast_ref::<KeyDownEvent>() else {
-            return false;
-        };
-        if !matches!(ke.key, KeyCode::Enter | KeyCode::Space) {
-            return false;
-        }
-        self.dispatch_event(&crate::events::mouse_event::ClickEvent {
-            x: 0.0,
-            y: 0.0,
-            button: crate::input::MouseButton::Left,
-            modifiers: ke.modifiers,
+        let handler = self.cell.read(|doc| {
+            doc.node_meta(self.id)
+                .and_then(|meta| meta.default_event_handler())
         });
-        true
+        match handler {
+            Some(f) => f(self, event),
+            None => false,
+        }
     }
 
     /// Programmatic focus (W3C `HTMLElement.focus()`).
@@ -515,18 +511,63 @@ impl Handle {
         if !self.is_alive() {
             return;
         }
-        self.cell.read(|doc| {
-            doc.set_focused_element(Some(self.id.index()), false);
+        // Mutate state under cell.write(), then resolve handles and dispatch
+        // events with no cell borrow held — event handlers do their own
+        // cell access so nesting would alias &Document and &mut Document.
+        let (old, new_id) = self.cell.write(|doc| {
+            let old = doc.focused_element();
+            let new_id = doc.raw_id(self.id.index());
+            if old == new_id {
+                return (None, None);
+            }
+            doc.apply_focus_state(old, new_id, false);
+            (old, new_id)
         });
+        if old.is_some() || new_id.is_some() {
+            Self::fire_focus_events(self.cell, old, new_id);
+        }
     }
 
     /// Programmatic blur (W3C `HTMLElement.blur()`).
     pub fn blur(&self) {
-        let is_focused = self.cell.read(|doc| doc.focused_element() == Some(self.id));
-        if is_focused {
-            self.cell.read(|doc| {
-                doc.set_focused_element(None, false);
-            });
+        let old = self.cell.write(|doc| {
+            if doc.focused_element() != Some(self.id) {
+                return None;
+            }
+            let old = doc.focused_element();
+            doc.apply_focus_state(old, None, false);
+            old
+        });
+        if let Some(old) = old {
+            Self::fire_focus_events(self.cell, Some(old), None);
+        }
+    }
+
+    /// UI Events §5.2.2: focusout(A) → focusin(B) → blur(A) → focus(B).
+    ///
+    /// Resolves handles under a cell read, then dispatches events with no
+    /// cell borrow held so handlers can safely access the document.
+    fn fire_focus_events(cell: DocumentCell, old: Option<RawId>, new: Option<RawId>) {
+        use crate::events::focus_event::*;
+
+        let (old_handle, new_handle) = cell.read(|doc| {
+            (
+                old.and_then(|id| doc.resolve(id)),
+                new.and_then(|id| doc.resolve(id)),
+            )
+        });
+
+        if let Some(h) = &old_handle {
+            h.dispatch_event(&FocusOutEvent { related_target: new });
+        }
+        if let Some(h) = &new_handle {
+            h.dispatch_event(&FocusInEvent { related_target: old });
+        }
+        if let Some(h) = &old_handle {
+            h.dispatch_event(&BlurEvent { related_target: new });
+        }
+        if let Some(h) = &new_handle {
+            h.dispatch_event(&FocusEvent { related_target: old });
         }
     }
 }

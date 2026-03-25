@@ -33,7 +33,7 @@ impl DocumentCell {
         #[cfg(debug_assertions)]
         unsafe {
             debug_assert!(
-                (*self.0.as_ptr()).alive,
+                (*self.0.as_ptr()).is_alive_debug(),
                 "Handle used after Document was dropped"
             );
         }

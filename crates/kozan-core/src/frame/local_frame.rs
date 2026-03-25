@@ -170,7 +170,7 @@ impl LocalFrame {
 
     #[inline]
     pub fn lifecycle(&self) -> LifecycleState {
-        self.doc.lifecycle
+        self.doc.lifecycle()
     }
 
 }

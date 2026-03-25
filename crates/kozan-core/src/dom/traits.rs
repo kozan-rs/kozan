@@ -210,6 +210,11 @@ pub trait Element: ContainerNode {
     /// Whether this element is focusable by default.
     const IS_FOCUSABLE: bool = false;
 
+    /// Per-element default event handler (Chrome: `HTMLElement::DefaultEventHandler`).
+    ///
+    /// Override to add activation behavior (e.g., Enter/Space → click on buttons).
+    const DEFAULT_EVENT_HANDLER: Option<crate::dom::node::DefaultEventHandlerFn> = None;
+
     /// Wrap a raw Handle into this element's typed handle.
     ///
     /// Called by [`Document::create()`](crate::Document::create).

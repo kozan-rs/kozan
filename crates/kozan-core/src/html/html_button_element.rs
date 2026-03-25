@@ -11,11 +11,31 @@ use kozan_macros::{Element, Props};
 use super::form_control::FormControlElement;
 use crate::Handle;
 
+/// W3C activation behavior: Enter/Space on a focused button fires a synthetic click.
+fn button_default_event_handler(handle: &Handle, event: &dyn std::any::Any) -> bool {
+    use crate::events::keyboard_event::KeyDownEvent;
+    use crate::input::KeyCode;
+
+    let Some(ke) = event.downcast_ref::<KeyDownEvent>() else {
+        return false;
+    };
+    if !matches!(ke.key, KeyCode::Enter | KeyCode::Space) {
+        return false;
+    }
+    handle.dispatch_event(&crate::events::mouse_event::ClickEvent {
+        x: 0.0,
+        y: 0.0,
+        button: crate::input::MouseButton::Left,
+        modifiers: ke.modifiers,
+    });
+    true
+}
+
 /// A clickable button element (`<button>`).
 ///
 /// Chrome hierarchy: `HTMLElement → HTMLFormControlElement → HTMLButtonElement`.
 #[derive(Copy, Clone, Element)]
-#[element(tag = "button", focusable, data = ButtonData)]
+#[element(tag = "button", focusable, data = ButtonData, default_handler = button_default_event_handler)]
 pub struct HtmlButtonElement(Handle);
 
 /// Element-specific data for `<button>`.

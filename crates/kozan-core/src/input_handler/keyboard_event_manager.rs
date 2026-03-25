@@ -6,7 +6,6 @@ use crate::dom::handle::Handle;
 use crate::events::keyboard_event::{KeyDownEvent, KeyUpEvent};
 use crate::input::default_action::DefaultAction;
 use crate::input::{ButtonState, KeyCode};
-use crate::page::FocusController;
 use kozan_primitives::geometry::Offset;
 
 use super::{InputContext, InputResult};
@@ -117,7 +116,7 @@ impl KeyboardEventManager {
             _ => return DefaultAction::None,
         };
 
-        let target = FocusController::scroll_target(ctx.doc, ctx.scroll_tree)
+        let target = ctx.doc.scroll_target(ctx.scroll_tree)
             .or_else(|| ctx.scroll_tree.root_scroller())
             .unwrap_or(0);
         DefaultAction::Scroll { target, delta }
