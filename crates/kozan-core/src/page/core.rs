@@ -18,6 +18,7 @@ use crate::scroll::{ScrollOffsets, ScrollTree};
 
 use super::FocusController;
 use super::Viewport;
+use super::VisualViewport;
 
 /// The engine's top-level entry point for a rendering context.
 ///
@@ -30,6 +31,7 @@ pub struct Page {
     frame: LocalFrame,
     focus: FocusController,
     viewport: Viewport,
+    visual_viewport: VisualViewport,
 }
 
 impl Page {
@@ -39,6 +41,7 @@ impl Page {
             frame: LocalFrame::new(),
             focus: FocusController::new(),
             viewport: Viewport::default(),
+            visual_viewport: VisualViewport::new(),
         }
     }
 
@@ -79,6 +82,38 @@ impl Page {
         self.viewport.set_scale_factor(factor);
         self.frame.view_mut().set_viewport_changed();
         self.frame.view_mut().invalidate_all();
+    }
+
+    /// Chrome: Ctrl+/- zoom. Shrinks the layout viewport → content reflows.
+    pub fn set_page_zoom(&mut self, factor: f64) {
+        self.viewport.set_page_zoom_factor(factor);
+        let lw = self.viewport.logical_width() as f32;
+        let lh = self.viewport.logical_height() as f32;
+        self.frame.document_mut().set_viewport(lw, lh);
+        self.frame.view_mut().set_viewport_changed();
+        self.frame.view_mut().invalidate_all();
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn page_zoom(&self) -> f64 {
+        self.viewport.page_zoom_factor()
+    }
+
+    #[inline]
+    #[allow(dead_code)] // Platform reads this for pinch-zoom compositor transform.
+    pub(crate) fn visual_viewport(&self) -> &VisualViewport {
+        &self.visual_viewport
+    }
+
+    /// Pinch zoom — compositor-only magnification, no layout reflow.
+    pub fn set_pinch_zoom(&mut self, scale: f64) {
+        self.visual_viewport.set_scale(scale);
+        self.frame.view_mut().invalidate_paint();
+    }
+
+    pub fn set_visual_viewport_offset(&mut self, x: f64, y: f64) {
+        self.visual_viewport.set_offset(x, y);
     }
 
     /// Handle an input event. Returns `true` if visual state changed.
@@ -263,5 +298,30 @@ mod tests {
             page.last_fragment().is_none(),
             "should not layout with zero viewport"
         );
+    }
+
+    #[test]
+    fn page_zoom_changes_logical_dimensions() {
+        let mut page = Page::new();
+        page.resize(1920, 1080);
+        page.set_page_zoom(2.0);
+
+        assert_eq!(page.page_zoom(), 2.0);
+        assert_eq!(page.viewport().logical_width(), 960.0);
+        assert_eq!(page.viewport().logical_height(), 540.0);
+    }
+
+    #[test]
+    fn pinch_zoom_does_not_change_logical_dimensions() {
+        let mut page = Page::new();
+        page.resize(1920, 1080);
+        let w_before = page.viewport().logical_width();
+        let h_before = page.viewport().logical_height();
+
+        page.set_pinch_zoom(3.0);
+
+        assert_eq!(page.visual_viewport().scale(), 3.0);
+        assert_eq!(page.viewport().logical_width(), w_before);
+        assert_eq!(page.viewport().logical_height(), h_before);
     }
 }

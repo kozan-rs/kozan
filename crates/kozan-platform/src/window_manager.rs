@@ -276,26 +276,17 @@ impl<R: Renderer> WindowManager<R> {
     pub fn on_keyboard_input(
         &mut self,
         id: WindowId,
-        key: KeyCode,
-        key_state: ButtonState,
-        text: Option<String>,
-        repeat: bool,
+        mut event: keyboard::KeyboardEvent,
     ) {
         let Some(state) = self.windows.get(&id) else {
             return;
         };
         let mut modifiers = state.input().modifiers();
-        if repeat {
+        if event.repeat {
             modifiers = modifiers.with_auto_repeat();
         }
-        state.send_to_view(ViewEvent::Input(InputEvent::Keyboard(
-            keyboard::KeyboardEvent {
-                key,
-                state: key_state,
-                modifiers,
-                text,
-                timestamp: Instant::now(),
-            },
+        event.modifiers = modifiers;
+        state.send_to_view(ViewEvent::Input(InputEvent::Keyboard(event
         )));
     }
 

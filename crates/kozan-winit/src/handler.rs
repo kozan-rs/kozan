@@ -214,11 +214,17 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
             }
 
             WindowEvent::KeyboardInput { event, .. } => {
-                let key = convert_key_code(&event.physical_key);
-                let state = convert_button_state(event.state);
-                let text = event.text.map(|s| s.to_string());
-                self.manager
-                    .on_keyboard_input(kozan_id, key, state, text, event.repeat);
+                let ke = kozan_core::input::keyboard::KeyboardEvent {
+                    physical_key: convert_key_code(&event.physical_key),
+                    logical_key: convert_key(&event.logical_key),
+                    state: convert_button_state(event.state),
+                    modifiers: kozan_core::Modifiers::EMPTY,
+                    location: convert_key_location(event.location),
+                    text: event.text.map(|s| s.to_string()),
+                    repeat: event.repeat,
+                    timestamp: std::time::Instant::now(),
+                };
+                self.manager.on_keyboard_input(kozan_id, ke);
             }
 
             // ── Mouse ────────────────────────────────────────

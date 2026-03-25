@@ -29,7 +29,7 @@ pub mod mouse;
 pub mod wheel;
 
 // Re-export all types at the `input` level.
-pub use keyboard::{KeyCode, KeyboardEvent};
+pub use keyboard::{Key, KeyCode, KeyLocation, KeyboardEvent, NamedKey};
 pub use modifiers::Modifiers;
 pub use mouse::{
     ButtonState, MouseButton, MouseButtonEvent, MouseEnterEvent, MouseLeaveEvent, MouseMoveEvent,
@@ -77,10 +77,13 @@ mod tests {
         assert!(matches!(evt, InputEvent::MouseMove(_)));
 
         let evt = InputEvent::Keyboard(KeyboardEvent {
-            key: KeyCode::Enter,
+            physical_key: KeyCode::Enter,
+            logical_key: Key::Named(NamedKey::Enter),
             state: ButtonState::Pressed,
             modifiers: Modifiers::EMPTY,
+            location: KeyLocation::Standard,
             text: None,
+            repeat: false,
             timestamp: std::time::Instant::now(),
         });
         assert!(matches!(evt, InputEvent::Keyboard(_)));

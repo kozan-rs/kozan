@@ -89,7 +89,7 @@ pub use events::mouse_event::{MouseEnterEvent, MouseLeaveEvent, MouseMoveEvent};
 pub use events::wheel_event::WheelEvent;
 
 // Re-exports: input types (engine's public input API).
-pub use input::{ButtonState, InputEvent, KeyCode, Modifiers, MouseButton};
+pub use input::{ButtonState, InputEvent, Key, KeyCode, KeyLocation, Modifiers, MouseButton, NamedKey};
 
 // Re-export derive macros.
 pub use kozan_macros::{Element as DeriveElement, Event as DeriveEvent, Node as DeriveNode, Props};

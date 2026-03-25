@@ -139,21 +139,6 @@ impl StyleEngine {
         DocumentStyleSheet(Arc::new(data))
     }
 
-    #[allow(dead_code)]
-    pub fn clear_stylesheets(&mut self) {
-        let viewport = self.stylist.device().viewport_size();
-        let device = style::device::Device::new(
-            MediaType::screen(),
-            QuirksMode::NoQuirks,
-            viewport,
-            Scale::new(1.0),
-            Box::new(KozanFontMetricsProvider::new()),
-            ComputedValues::initial_values_with_font_override(Font::initial_values()),
-            style::queries::values::PrefersColorScheme::Light,
-        );
-        self.stylist = Stylist::new(device, QuirksMode::NoQuirks);
-    }
-
     pub fn set_viewport(&mut self, width: f32, height: f32) {
         self.stylist
             .device_mut()

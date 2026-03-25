@@ -51,7 +51,7 @@ pub use kozan_core::styling::units::{hex, rgb, rgb8, rgba};
 pub use kozan_primitives::color::Color;
 
 // Input.
-pub use kozan_core::{ButtonState, InputEvent, KeyCode, Modifiers, MouseButton};
+pub use kozan_core::{ButtonState, InputEvent, Key, KeyCode, KeyLocation, Modifiers, MouseButton, NamedKey};
 
 // Events.
 pub use kozan_core::{Event, EventContext, ListenerId, ListenerOptions};

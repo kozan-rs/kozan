@@ -494,36 +494,6 @@ impl Document {
         self.tree.get(index).copied()
     }
 
-    /// Attribute value by raw index.
-    #[allow(dead_code)]
-    pub(crate) fn attribute(&self, index: u32, name: &str) -> Option<String> {
-        self.element_data
-            .get(index)?
-            .attributes
-            .get(name)
-            .map(|v| v.to_string())
-    }
-
-    /// Get child indices as raw u32.
-    #[allow(dead_code)]
-    pub(crate) fn children_indices_raw(&self, index: u32) -> Vec<u32> {
-        if !self.tree.is_initialized(index) {
-            return Vec::new();
-        }
-        unsafe { tree::ops::children(&self.tree, index) }
-    }
-
-    /// Text content by raw index.
-    #[allow(dead_code)]
-    pub(crate) fn text_content(&self, index: u32) -> Option<String> {
-        let meta = self.meta.get(index)?;
-        if meta.data_type_id() != TypeId::of::<TextData>() {
-            return None;
-        }
-        let data = unsafe { self.data.get::<TextData>(index) };
-        Some(data.content.clone())
-    }
-
     /// Get the computed style for a node (from Stylo's `ElementData`).
     ///
     /// Returns `None` if styles haven't been computed yet or for non-element nodes.
@@ -538,12 +508,6 @@ impl Document {
         } else {
             None
         }
-    }
-
-    /// Intrinsic sizing information for a replaced element.
-    #[allow(dead_code)] // Used when replaced element rendering is enabled
-    pub(crate) fn intrinsic_sizing(&self, _index: u32) -> Option<crate::layout::IntrinsicSizes> {
-        None
     }
 
     // ── Event listener access ──
@@ -942,16 +906,6 @@ impl Document {
         self.focused_element.is_some()
     }
 
-    #[allow(dead_code)] // Used by upcoming DefaultEventHandler
-    pub(crate) fn hover_element(&self) -> Option<u32> {
-        self.hover_element
-    }
-
-    #[allow(dead_code)] // Used by upcoming DefaultEventHandler
-    pub(crate) fn active_element_raw(&self) -> Option<u32> {
-        self.active_element
-    }
-
     /// UI Events §5.2.2 — focus transition: fires events, updates state flags,
     /// sets `self.focused_element`.
     pub(crate) fn set_focused_element(&self, new: Option<u32>, focus_visible: bool) {
@@ -1060,18 +1014,6 @@ impl Document {
 
     // ── Layout data access ──
 
-    /// Get layout data for a node by raw index.
-    #[allow(dead_code)] // API for upcoming renderer/platform integration
-    pub(crate) fn layout_data(&self, index: u32) -> Option<&LayoutNodeData> {
-        self.layout.get(index)
-    }
-
-    /// Get mutable layout data for a node by raw index.
-    #[allow(dead_code)] // API for upcoming renderer/platform integration
-    pub(crate) fn layout_data_mut(&mut self, index: u32) -> Option<&mut LayoutNodeData> {
-        self.layout.get_mut(index)
-    }
-
     /// Clear layout cache on a node and propagate up the layout ancestor chain.
     ///
     /// When a child's content or style changes, parent caches are stale
@@ -1088,11 +1030,6 @@ impl Document {
             };
             current = parent;
         }
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn cell_for_layout(&self) -> DocumentCell {
-        self.cell()
     }
 
     // ── Style engine (delegates to concrete StyleEngine) ──

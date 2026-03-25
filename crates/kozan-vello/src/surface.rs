@@ -164,7 +164,7 @@ impl RenderSurface for VelloSurface {
 
         let scene = SceneBuilder::build(
             &params.frame.display_list,
-            params.scale_factor,
+            params.content_scale,
             &params.frame.scroll_offsets,
         );
 

@@ -45,10 +45,11 @@ pub struct FrameOutput {
     pub layer_tree: LayerTree,
     pub scroll_tree: ScrollTree,
     /// Viewport size (physical pixels) this frame was laid out at.
-    /// The render thread uses this to discard stale commits that were
-    /// in-flight when a resize arrived — never present wrong-size content.
     pub viewport_width: u32,
     pub viewport_height: u32,
+    /// Page zoom factor at commit time. The render thread combines this
+    /// with device_scale_factor to get the total content scale.
+    pub page_zoom_factor: f64,
 }
 
 /// The user-facing API inside a view.
@@ -309,6 +310,7 @@ impl ViewContext {
                 scroll_tree,
                 viewport_width: self.page.viewport().width(),
                 viewport_height: self.page.viewport().height(),
+                page_zoom_factor: self.page.page_zoom(),
             }));
         }
     }
@@ -317,8 +319,56 @@ impl ViewContext {
     ///
     /// Returns `true` if DOM state changed (hover/focus/active changed,
     /// or event listeners were dispatched that may have mutated the DOM).
+    ///
+    /// Chrome: browser-level shortcuts (Ctrl+/-, Ctrl+0) are intercepted
+    /// before reaching Blink. Same here — zoom never hits DOM dispatch.
     pub(crate) fn on_input(&mut self, input: kozan_core::InputEvent) -> bool {
+        if let Some(handled) = self.try_browser_shortcut(&input) {
+            return handled;
+        }
         self.page.handle_input(input)
+    }
+
+    /// Browser-level keyboard shortcuts intercepted before DOM dispatch.
+    fn try_browser_shortcut(&mut self, input: &kozan_core::InputEvent) -> Option<bool> {
+        use kozan_core::input::keyboard::KeyboardEvent;
+        use kozan_core::{ButtonState, KeyCode};
+
+        let kozan_core::InputEvent::Keyboard(KeyboardEvent {
+            physical_key,
+            state: ButtonState::Pressed,
+            modifiers,
+            ..
+        }) = input
+        else {
+            return None;
+        };
+
+        if !modifiers.ctrl() {
+            return None;
+        }
+
+        const ZOOM_STEP: f64 = 0.1;
+        const MIN_ZOOM: f64 = 0.25;
+        const MAX_ZOOM: f64 = 5.0;
+
+        match physical_key {
+            KeyCode::Equal => {
+                let new = (self.page.page_zoom() + ZOOM_STEP).min(MAX_ZOOM);
+                self.page.set_page_zoom(new);
+                Some(true)
+            }
+            KeyCode::Minus => {
+                let new = (self.page.page_zoom() - ZOOM_STEP).max(MIN_ZOOM);
+                self.page.set_page_zoom(new);
+                Some(true)
+            }
+            KeyCode::Digit0 => {
+                self.page.set_page_zoom(1.0);
+                Some(true)
+            }
+            _ => None,
+        }
     }
 
     /// Mark that styles need recalculation.

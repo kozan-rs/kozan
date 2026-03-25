@@ -33,12 +33,6 @@ impl TreeData {
     }
 
     #[inline]
-    #[allow(dead_code)]
-    pub fn has_children(&self) -> bool {
-        self.first_child != INVALID
-    }
-
-    #[inline]
     pub fn has_parent(&self) -> bool {
         self.parent != INVALID
     }

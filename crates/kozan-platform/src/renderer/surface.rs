@@ -11,14 +11,15 @@ use super::error::RendererError;
 
 /// Everything the renderer needs to produce one frame of pixels.
 pub struct RenderParams<'a> {
-    /// Compositor output: display list + scroll adjustments.
     pub frame: &'a CompositorFrame,
-    /// Viewport width in physical pixels.
+    /// Surface width in physical pixels.
     pub width: u32,
-    /// Viewport height in physical pixels.
+    /// Surface height in physical pixels.
     pub height: u32,
-    /// DPI scale — logical pixels × scale_factor = physical pixels.
-    pub scale_factor: f64,
+    /// Content scale: CSS pixels × content_scale = physical pixels.
+    /// Combines device DPI and page zoom: `device_scale_factor × page_zoom_factor`.
+    /// Pinch zoom is a separate compositor transform (future).
+    pub content_scale: f64,
 }
 
 /// A per-window GPU rendering target.

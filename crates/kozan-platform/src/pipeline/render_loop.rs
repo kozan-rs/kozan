@@ -13,31 +13,16 @@ use crate::context::FrameOutput;
 use crate::event::ViewEvent;
 use crate::renderer::{RenderParams, RenderSurface, RendererError};
 
-/// Events received by the render loop.
-///
-/// Chrome: tasks posted to the compositor thread's task queue.
-/// Each variant transfers ownership — no shared state.
 pub enum RenderEvent {
-    /// View thread finished painting — commit to compositor.
     Commit(FrameOutput),
-    /// Surface resized (physical pixels).
     Resize { width: u32, height: u32 },
-    /// DPI scale factor changed.
     ScaleFactorChanged(f64),
-    /// Wheel/touch scroll — compositor handles directly.
-    /// Carries cursor position for hit testing which scroller to target.
     Scroll { delta: Offset, point: Point },
-    /// Clean shutdown.
     Shutdown,
 }
 
-/// Error callback — called when the GPU surface is lost.
-/// The platform-specific adapter provides this.
 pub type OnSurfaceLost = Box<dyn FnOnce() + Send>;
 
-/// The per-window render loop. Generic over the GPU surface.
-///
-/// Chrome: `LayerTreeHostImpl` + `OutputSurface` + `SchedulerStateMachine`.
 pub(crate) struct RenderLoop<S> {
     surface: S,
     compositor: Compositor,
@@ -45,11 +30,11 @@ pub(crate) struct RenderLoop<S> {
     on_surface_lost: Option<OnSurfaceLost>,
     width: u32,
     height: u32,
-    scale_factor: f64,
+    /// DPI scale from the OS display. Updated by ScaleFactorChanged.
+    device_scale_factor: f64,
+    /// Page zoom from Ctrl+/-. Updated on each commit from FrameOutput.
+    page_zoom_factor: f64,
     queued_scrolls: Vec<(Offset, Point)>,
-    /// When `true`, the surface was reconfigured for a new size and we must
-    /// wait for the view thread to commit a matching frame before presenting.
-    /// Chrome: `SynchronizeVisualProperties` — never show stale-size content.
     awaiting_resize_commit: bool,
 }
 
@@ -60,7 +45,7 @@ impl<S: RenderSurface> RenderLoop<S> {
         on_surface_lost: OnSurfaceLost,
         width: u32,
         height: u32,
-        scale_factor: f64,
+        device_scale_factor: f64,
     ) -> Self {
         Self {
             surface,
@@ -69,13 +54,20 @@ impl<S: RenderSurface> RenderLoop<S> {
             on_surface_lost: Some(on_surface_lost),
             width,
             height,
-            scale_factor,
+            device_scale_factor,
+            page_zoom_factor: 1.0,
             queued_scrolls: Vec::new(),
             awaiting_resize_commit: false,
         }
     }
 
-    /// The main entry point — runs until Shutdown or channel disconnect.
+    /// CSS pixels × content_scale = physical GPU pixels.
+    /// Combines device DPI and page zoom. Pinch zoom is a separate
+    /// compositor transform (future).
+    fn content_scale(&self) -> f64 {
+        self.device_scale_factor * self.page_zoom_factor
+    }
+
     pub fn run(&mut self, rx: mpsc::Receiver<RenderEvent>) {
         if !self.wait_for_first_commit(&rx) {
             return;
@@ -84,15 +76,10 @@ impl<S: RenderSurface> RenderLoop<S> {
             if !self.drain_events(&rx) {
                 return;
             }
-            // Sync resize: surface was reconfigured — block until the view
-            // thread commits a frame at the new size so we never present
-            // stale content stretched to the wrong dimensions.
             if self.awaiting_resize_commit {
                 if !self.wait_for_resize_commit(&rx) {
                     return;
                 }
-                // Frame was already rendered + presented inside
-                // wait_for_resize_commit.
                 continue;
             }
             if !self.render_frame() {
@@ -132,7 +119,7 @@ impl<S: RenderSurface> RenderLoop<S> {
                 frame: &frame,
                 width: self.width,
                 height: self.height,
-                scale_factor: self.scale_factor,
+                content_scale: self.content_scale(),
             };
             match self.surface.render(&params) {
                 Ok(()) => return true,
@@ -148,18 +135,9 @@ impl<S: RenderSurface> RenderLoop<S> {
                 }
             }
         }
-        // No content — wait for next event.
         true
     }
 
-    /// Block until a `Commit` arrives whose viewport matches the current
-    /// surface size.
-    ///
-    /// Chrome: the display compositor waits for a `CompositorFrame` whose
-    /// `LocalSurfaceId` matches the new size before presenting. We do the
-    /// same — block here so the user never sees the old frame stretched
-    /// onto the new surface. Stale commits (wrong size) are silently
-    /// dropped. Intermediate `Resize` events are coalesced.
     fn wait_for_resize_commit(&mut self, rx: &mpsc::Receiver<RenderEvent>) -> bool {
         loop {
             match rx.recv() {
@@ -167,15 +145,12 @@ impl<S: RenderSurface> RenderLoop<S> {
                     if output.viewport_width == self.width
                         && output.viewport_height == self.height
                     {
-                        // Matching size — commit, render, present.
                         self.commit(output);
                         self.awaiting_resize_commit = false;
                         return self.render_frame();
                     }
-                    // Stale commit from before the resize — drop it.
                 }
                 Ok(RenderEvent::Resize { width, height }) => {
-                    // Coalesce: update to latest size without rendering in between.
                     self.width = width;
                     self.height = height;
                     self.surface.resize(width, height);
@@ -195,22 +170,22 @@ impl<S: RenderSurface> RenderLoop<S> {
                 self.surface.resize(width, height);
                 self.awaiting_resize_commit = true;
             }
-            RenderEvent::ScaleFactorChanged(sf) => self.scale_factor = sf,
+            RenderEvent::ScaleFactorChanged(sf) => self.device_scale_factor = sf,
             RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
             RenderEvent::Shutdown => {}
         }
     }
 
-    /// Handle a non-resize, non-commit event during the resize wait.
     fn handle_non_resize(&mut self, event: RenderEvent) {
         match event {
-            RenderEvent::ScaleFactorChanged(sf) => self.scale_factor = sf,
+            RenderEvent::ScaleFactorChanged(sf) => self.device_scale_factor = sf,
             RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
             _ => {}
         }
     }
 
     fn commit(&mut self, output: FrameOutput) {
+        self.page_zoom_factor = output.page_zoom_factor;
         self.compositor
             .commit(output.display_list, output.layer_tree, output.scroll_tree);
     }
@@ -221,8 +196,6 @@ impl<S: RenderSurface> RenderLoop<S> {
             return;
         }
 
-        // Hit test: find the scrollable container under the cursor.
-        // Chrome: InputHandler::HitTestScrollNode() on compositor thread.
         let target = self.compositor.hit_test_scroll_target(point);
 
         if let Some(target) = target {

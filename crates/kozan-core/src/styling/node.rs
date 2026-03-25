@@ -126,10 +126,6 @@ impl KozanNode {
         doc().read(|d| d.tag_name(self.idx()))
     }
 
-    #[allow(dead_code)]
-    pub fn attr(&self, name: &str) -> Option<String> {
-        doc().read(|d| d.attribute(self.idx(), name))
-    }
 }
 
 // ── Stylo-required trait impls ──

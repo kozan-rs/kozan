@@ -24,29 +24,30 @@ impl KeyboardEventManager {
             return InputResult::state(false);
         };
 
-        let key = ke.key;
+        let physical_key = ke.physical_key;
         let modifiers = ke.modifiers;
 
         let allow_default = match ke.state {
             ButtonState::Pressed => handle.dispatch_event(&KeyDownEvent {
-                key,
+                key: physical_key,
                 modifiers,
                 text: ke.text,
             }),
             ButtonState::Released => {
-                handle.dispatch_event(&KeyUpEvent { key, modifiers });
+                handle.dispatch_event(&KeyUpEvent {
+                    key: physical_key,
+                    modifiers,
+                });
                 return InputResult::state(true);
             }
         };
 
         let action = if allow_default {
-            // Chrome: walk DefaultEventHandler chain from target up before
-            // falling back to browser-level defaults (scroll, focus navigation).
-            let handled = Self::run_default_event_handlers(&handle, key, modifiers);
+            let handled = Self::run_default_event_handlers(&handle, physical_key, modifiers);
             if handled {
                 DefaultAction::None
             } else {
-                self.default_keyboard_action(ctx, key, modifiers)
+                self.default_keyboard_action(ctx, physical_key, modifiers)
             }
         } else {
             DefaultAction::None
