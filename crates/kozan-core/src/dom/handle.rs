@@ -421,6 +421,30 @@ impl Handle {
         let mut store = crate::events::dispatcher::EventStoreAccess::new(self.cell);
         crate::events::dispatch(self.cell, self.id, event, &mut store)
     }
+
+    /// Programmatic focus (W3C `HTMLElement.focus()`).
+    /// Reads focused_element, dispatches events, then writes state.
+    pub fn focus(&self) {
+        if !self.is_alive() {
+            return;
+        }
+        let old = self.cell.read(|doc| doc.focused_element);
+        // move_focus is on &self Document — it dispatches events first,
+        // then does a single cell().write() for state changes.
+        self.cell.read(|doc| {
+            doc.move_focus(old, Some(self.id.index()), false);
+        });
+    }
+
+    /// Programmatic blur (W3C `HTMLElement.blur()`).
+    pub fn blur(&self) {
+        let is_focused = self.cell.read(|doc| doc.focused_element == Some(self.id));
+        if is_focused {
+            self.cell.read(|doc| {
+                doc.move_focus(Some(self.id), None, false);
+            });
+        }
+    }
 }
 
 /// Any type with `HasHandle` can convert to `Handle`.

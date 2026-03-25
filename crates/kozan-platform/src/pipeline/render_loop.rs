@@ -223,10 +223,7 @@ impl<S: RenderSurface> RenderLoop<S> {
 
         // Hit test: find the scrollable container under the cursor.
         // Chrome: InputHandler::HitTestScrollNode() on compositor thread.
-        let target = self
-            .compositor
-            .hit_test_scroll_target(point)
-            .or_else(|| self.compositor.scroll_tree().root_scroller());
+        let target = self.compositor.hit_test_scroll_target(point);
 
         if let Some(target) = target {
             if self.compositor.try_scroll(target, delta) {

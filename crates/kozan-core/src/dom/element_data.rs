@@ -46,10 +46,9 @@ pub struct ElementData {
     /// Element state flags (focus, hover, active, enabled, etc.)
     pub(crate) element_state: ElementState,
 
-    // Focus management not yet implemented.
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Read via NodeFlags::is_focusable() instead
     pub(crate) is_focusable: bool,
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Read via Document::effective_tab_index() instead
     pub(crate) tab_index: i32,
 
     // ── DOM attributes ──

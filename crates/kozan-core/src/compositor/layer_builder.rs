@@ -66,21 +66,44 @@ impl<'a> LayerTreeBuilder<'a> {
             layer.opacity = style.get_effects().clone_opacity();
         }
 
-        for child in &data.children {
-            let child_needs_layer = matches!(
+        let layer_id = self.tree.push(layer);
+        self.collect_scrollable_children(
+            &data.children,
+            layer_id,
+            kozan_primitives::geometry::Point::ZERO,
+        );
+
+        layer_id
+    }
+
+    /// Promote scrollable descendants to child layers, skipping through
+    /// non-scrollable boxes with accumulated offset.
+    fn collect_scrollable_children(
+        &mut self,
+        children: &[crate::layout::fragment::ChildFragment],
+        parent_layer: super::layer::LayerId,
+        parent_offset: kozan_primitives::geometry::Point,
+    ) {
+        for child in children {
+            let child_pos = kozan_primitives::geometry::Point::new(
+                parent_offset.x + child.offset.x,
+                parent_offset.y + child.offset.y,
+            );
+
+            let is_scrollable = matches!(
                 child.fragment.kind,
                 FragmentKind::Box(ref d) if d.overflow_x.is_user_scrollable() || d.overflow_y.is_user_scrollable()
             );
 
-            if child_needs_layer {
+            if is_scrollable {
                 let child_id = self.build_layer(&child.fragment);
                 self.tree.layer_mut(child_id).transform =
-                    Transform3D::translate(child.offset.x, child.offset.y, 0.0);
-                layer.children.push(child_id);
+                    Transform3D::translate(child_pos.x, child_pos.y, 0.0);
+                self.tree.layer_mut(parent_layer).children.push(child_id);
+            } else if let FragmentKind::Box(ref data) = child.fragment.kind {
+                self.collect_scrollable_children(&data.children, parent_layer, child_pos);
             }
         }
-
-        self.tree.push(layer)
     }
 }
 

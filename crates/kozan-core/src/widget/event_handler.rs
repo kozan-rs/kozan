@@ -94,9 +94,20 @@ pub(crate) trait DispatchSurface {
     /// `.card:hover` stays active when cursor is on `.card-icon` (child).
     fn set_hover_chain(&self, index: u32, hovered: bool);
 
-    /// Set or clear ACTIVE on a node AND all its ancestors.
-    /// Chrome: `:active` propagates up — clicking a child activates parents.
     fn set_active_chain(&self, index: u32, active: bool);
+
+    fn find_focusable_ancestor(&self, index: u32) -> Option<u32>;
+
+    /// UI Events §5.2.2 focus transition with event dispatch.
+    fn move_focus(
+        &self,
+        old: Option<RawId>,
+        new: Option<u32>,
+        focus_visible: bool,
+    ) -> Option<RawId>;
+
+    /// Current focused element (authoritative — Document owns this).
+    fn focused_element(&self) -> Option<RawId>;
 }
 
 impl DispatchSurface for Document {
@@ -126,6 +137,23 @@ impl DispatchSurface for Document {
     fn set_active_chain(&self, index: u32, active: bool) {
         Document::set_active_chain(self, index, active);
     }
+
+    fn find_focusable_ancestor(&self, index: u32) -> Option<u32> {
+        Document::find_focusable_ancestor(self, index)
+    }
+
+    fn move_focus(
+        &self,
+        old: Option<RawId>,
+        new: Option<u32>,
+        focus_visible: bool,
+    ) -> Option<RawId> {
+        Document::move_focus(self, old, new, focus_visible)
+    }
+
+    fn focused_element(&self) -> Option<RawId> {
+        self.focused_element
+    }
 }
 
 /// Handles input-to-DOM-event conversion and dispatch.
@@ -134,21 +162,12 @@ impl DispatchSurface for Document {
 /// on DOM nodes so Stylo's `:hover`/`:active`/`:focus` CSS selectors
 /// work automatically — zero manual class toggling.
 pub(crate) struct EventHandler {
-    /// Currently hovered DOM node — for enter/leave tracking.
     hovered_node: Option<RawId>,
-    /// Currently focused DOM node — for keyboard routing.
-    focused_node: Option<RawId>,
-    /// Node where mousedown occurred — for click detection.
     mousedown_node: Option<RawId>,
-    /// Which button was pressed during mousedown.
     mousedown_button: Option<MouseButton>,
-    /// Last known cursor position (CSS pixels).
     last_cursor: Point,
-    /// Cached hit test — avoids re-walking fragment tree.
     hit_cache: HitTestCache,
-    /// Chrome: during scroll, hover updates are suppressed to avoid
-    /// triggering :hover transitions on elements scrolling under the cursor.
-    /// Cleared on the next mouse move after scrolling stops.
+    /// Suppresses :hover during scroll to avoid flashing.
     suppress_hover: bool,
 }
 
@@ -156,7 +175,6 @@ impl EventHandler {
     pub fn new() -> Self {
         Self {
             hovered_node: None,
-            focused_node: None,
             mousedown_node: None,
             mousedown_button: None,
             last_cursor: Point::ZERO,
@@ -232,6 +250,13 @@ impl EventHandler {
                     button: me.button,
                     modifiers: me.modifiers,
                 });
+                // HTML §6.6.4: focus moves on mousedown, not click.
+                if me.button == MouseButton::Left {
+                    let target = hit
+                        .node_index
+                        .and_then(|idx| ctx.surface.find_focusable_ancestor(idx));
+                    ctx.surface.move_focus(ctx.surface.focused_element(), target, false);
+                }
             }
             ButtonState::Released => {
                 if let Some(old_id) = self.mousedown_node {
@@ -288,8 +313,9 @@ impl EventHandler {
 
     /// Chrome: `EventHandler::KeyEvent()` → dispatch → `DefaultKeyboardEventHandler()`.
     fn on_keyboard(&mut self, ctx: &InputContext, ke: crate::input::KeyboardEvent) -> InputResult {
-        let handle = self
-            .focused_node
+        let handle = ctx
+            .surface
+            .focused_element()
             .and_then(|id| ctx.surface.resolve(id))
             .or_else(|| ctx.surface.root_handle());
         let Some(handle) = handle else {
@@ -323,8 +349,6 @@ impl EventHandler {
         }
     }
 
-    /// Chrome: `ScrollManager::BubblingScroll()` — maps keys to scroll deltas.
-    /// Separated from event dispatch so the compositor can eventually own this.
     fn default_keyboard_action(
         &self,
         ctx: &InputContext,
@@ -332,6 +356,7 @@ impl EventHandler {
         modifiers: crate::input::Modifiers,
     ) -> DefaultAction {
         const LINE_PX: f32 = 40.0;
+        let focused = ctx.surface.focused_element();
 
         let delta = match key {
             KeyCode::ArrowUp => Offset::new(0.0, -LINE_PX),
@@ -345,19 +370,35 @@ impl EventHandler {
             KeyCode::Space if modifiers.shift() => {
                 Offset::new(0.0, -(ctx.viewport_height - LINE_PX))
             }
-            KeyCode::Space if self.focused_node.is_none() => {
+            // Space scrolls only when nothing is focused (no activation target).
+            KeyCode::Space if focused.is_none() => {
                 Offset::new(0.0, ctx.viewport_height - LINE_PX)
             }
             KeyCode::Tab if modifiers.shift() => return DefaultAction::FocusPrev,
             KeyCode::Tab => return DefaultAction::FocusNext,
-            KeyCode::Enter | KeyCode::Space if self.focused_node.is_some() => {
+            KeyCode::Enter | KeyCode::Space if focused.is_some() => {
                 return DefaultAction::Activate;
             }
             _ => return DefaultAction::None,
         };
 
-        let target = ctx.scroll_tree.root_scroller().unwrap_or(0);
+        // Chrome: keyboard scroll targets focused element's scrollable ancestor.
+        let target = Self::focused_scroll_target(ctx)
+            .or_else(|| ctx.scroll_tree.root_scroller())
+            .unwrap_or(0);
         DefaultAction::Scroll { target, delta }
+    }
+
+    fn focused_scroll_target(ctx: &InputContext) -> Option<u32> {
+        let focused_idx = ctx.surface.focused_element()?.index();
+        let mut current = focused_idx;
+        loop {
+            if ctx.scroll_tree.contains(current) {
+                return Some(current);
+            }
+            let handle = ctx.surface.handle_for_index(current)?;
+            current = handle.parent()?.raw().index();
+        }
     }
 
     /// Dispatch DOM WheelEvent only — scroll state is owned by the compositor.
@@ -494,19 +535,40 @@ impl EventHandler {
         self.suppress_hover = true;
     }
 
-    #[allow(dead_code)]
-    pub fn focused_node(&self) -> Option<RawId> {
-        self.focused_node
-    }
-
-    #[allow(dead_code)]
-    pub fn set_focused_node(&mut self, node: Option<RawId>) {
-        self.focused_node = node;
-    }
-
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub fn hovered_node(&self) -> Option<RawId> {
         self.hovered_node
+    }
+
+    /// Move focus via Tab/Shift+Tab through the tab order.
+    pub fn navigate_focus(
+        &self,
+        surface: &dyn DispatchSurface,
+        tab_order: &[u32],
+        forward: bool,
+    ) {
+        if tab_order.is_empty() {
+            return;
+        }
+
+        let focused = surface.focused_element();
+        let current_pos =
+            focused.and_then(|id| tab_order.iter().position(|&idx| idx == id.index()));
+
+        let next_idx = match current_pos {
+            Some(pos) => {
+                if forward {
+                    (pos + 1) % tab_order.len()
+                } else {
+                    (pos + tab_order.len() - 1) % tab_order.len()
+                }
+            }
+            None => {
+                if forward { 0 } else { tab_order.len() - 1 }
+            }
+        };
+
+        surface.move_focus(focused, Some(tab_order[next_idx]), true);
     }
 }
 
@@ -537,17 +599,12 @@ mod tests {
     fn initial_state() {
         let handler = EventHandler::new();
         assert_eq!(handler.hovered_node(), None);
-        assert_eq!(handler.focused_node(), None);
     }
 
     #[test]
-    fn set_focused_node() {
-        let mut handler = EventHandler::new();
-        let id = RawId::new(42, 0);
-        handler.set_focused_node(Some(id));
-        assert_eq!(handler.focused_node(), Some(id));
-        handler.set_focused_node(None);
-        assert_eq!(handler.focused_node(), None);
+    fn focus_owned_by_document() {
+        let doc = Document::new();
+        assert_eq!(doc.focused_element, None);
     }
 
     #[test]

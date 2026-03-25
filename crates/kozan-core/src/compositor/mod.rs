@@ -135,7 +135,7 @@ impl Compositor {
         let mut best: Option<u32> = None;
         self.hit_test_layer(tree, root, point, &mut best);
 
-        best.or_else(|| self.scroll_tree.root_scroller())
+        best
     }
 
     fn hit_test_layer(
@@ -151,7 +151,6 @@ impl Compositor {
             return;
         }
 
-        // If this layer is scrollable and has a scroll node, it's a candidate.
         if layer.is_scrollable {
             if let Some(dom_id) = layer.dom_node {
                 if self.scroll_tree.contains(dom_id) {
@@ -160,9 +159,15 @@ impl Compositor {
             }
         }
 
-        // Check children — deeper layers override (last match wins).
         for &child_id in &layer.children {
-            self.hit_test_layer(tree, child_id, point, best);
+            let child = tree.layer(child_id);
+            // Map screen-space point to child-local coordinates.
+            let local_point = child
+                .transform
+                .inverse()
+                .map(|inv| inv.transform_point(point))
+                .unwrap_or(point);
+            self.hit_test_layer(tree, child_id, local_point, best);
         }
     }
 }

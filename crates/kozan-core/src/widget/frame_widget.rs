@@ -197,9 +197,16 @@ impl FrameWidget {
             DefaultAction::Scroll { target, delta } => {
                 self.apply_scroll(target, delta) || result.state_changed
             }
-            DefaultAction::FocusNext | DefaultAction::FocusPrev | DefaultAction::Activate => {
-                // Stubs — wired when focus management lands.
-                result.state_changed
+            DefaultAction::FocusNext | DefaultAction::FocusPrev => {
+                let tab_order = self.doc.tab_order();
+                let forward = matches!(result.default_action, DefaultAction::FocusNext);
+                self.event_handler
+                    .navigate_focus(&self.doc, &tab_order, forward);
+                true
+            }
+            DefaultAction::Activate => {
+                self.activate_focused();
+                true
             }
             DefaultAction::ScrollPrevented | DefaultAction::None => result.state_changed,
         }
@@ -433,8 +440,30 @@ impl FrameWidget {
         self.last_timing
     }
 
-    pub fn set_focus(&mut self, _focused: bool) {
-        // Future: dispatch focus/blur DOM events.
+    /// W3C activation behavior — Enter/Space on a focused element.
+    /// Chrome dispatches a synthetic click with isTrusted=true.
+    fn activate_focused(&self) {
+        let Some(id) = self.doc.focused_element else {
+            return;
+        };
+        let Some(handle) = self.doc.resolve(id) else {
+            return;
+        };
+        handle.dispatch_event(&crate::events::mouse_event::ClickEvent {
+            x: 0.0,
+            y: 0.0,
+            button: crate::input::MouseButton::Left,
+            modifiers: crate::input::Modifiers::EMPTY,
+        });
+    }
+
+    /// Window focus/blur — clears element focus when the window loses focus.
+    pub fn set_focus(&mut self, focused: bool) {
+        if !focused {
+            let old = self.doc.focused_element;
+            self.doc.move_focus(old, None, false);
+            self.dirty.invalidate_style();
+        }
     }
 }
 

@@ -126,18 +126,20 @@ pub trait HtmlElement: Element {
 
     // ---- Actions ----
 
-    /// Programmatically click this element.
     fn click(&self) {
-        // Future: dispatch ClickEvent through the event system.
+        self.handle().dispatch_event(&crate::events::mouse_event::ClickEvent {
+            x: 0.0,
+            y: 0.0,
+            button: crate::input::MouseButton::Left,
+            modifiers: crate::input::Modifiers::EMPTY,
+        });
     }
 
-    /// Focus this element.
     fn focus(&self) {
-        // Future: focus management through the document.
+        self.handle().focus();
     }
 
-    /// Blur (unfocus) this element.
     fn blur(&self) {
-        // Future: focus management through the document.
+        self.handle().blur();
     }
 }

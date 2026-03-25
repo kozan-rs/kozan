@@ -55,6 +55,10 @@ pub struct Document {
     pub(crate) root: u32,
     pub(crate) body: u32,
 
+    /// Chrome: `Document::focused_element_`. Authoritative focus state.
+    /// EventHandler syncs from this on each input dispatch.
+    pub(crate) focused_element: Option<RawId>,
+
     // ---- Dirty flags (read and cleared by FrameWidget) ----
     /// DOM structure changed (append, remove, detach) — requires full tree rebuild.
     pub(crate) needs_tree_rebuild: bool,
@@ -86,6 +90,7 @@ impl Document {
             event_store: EventStore::new(),
             root: 0,
             body: 0,
+            focused_element: None,
             needs_tree_rebuild: true,
             dirty_layout_nodes: Vec::new(),
             needs_style_recalc: false,
@@ -792,6 +797,212 @@ impl Document {
                 }
             }
         });
+    }
+
+    /// HTML Living Standard §6.6.3 — focusable when natively interactive,
+    /// has tabindex, OR is a scrollable overflow region.
+    pub(crate) fn is_focusable(&self, index: u32) -> bool {
+        let has_tabindex = self
+            .element_data
+            .get(index)
+            .is_some_and(|ed| ed.attributes.get("tabindex").is_some());
+        let native = self
+            .meta
+            .get(index)
+            .is_some_and(|m| m.flags.is_focusable());
+        let scrollable = self.is_scrollable_region(index);
+
+        if !native && !has_tabindex && !scrollable {
+            return false;
+        }
+
+        // Disabled form controls are not focusable.
+        if native {
+            if let Some(ed) = self.element_data.get(index) {
+                if !ed.element_state.contains(style_dom::ElementState::ENABLED) {
+                    return false;
+                }
+            }
+        }
+
+        // No box → not focusable.
+        if let Some(style) = self.computed_style(index) {
+            if style.get_box().display.is_none() {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// HTML §6.6.3: "A scrollable region created by CSS overflow is a
+    /// focusable area." Checks computed overflow-x/y for scroll or auto.
+    fn is_scrollable_region(&self, index: u32) -> bool {
+        use style::computed_values::overflow_x::T;
+        let Some(style) = self.computed_style(index) else {
+            return false;
+        };
+        matches!(style.clone_overflow_x(), T::Scroll | T::Auto)
+            || matches!(style.clone_overflow_y(), T::Scroll | T::Auto)
+    }
+
+    /// Explicit `tabindex` wins; natively focusable and scrollable regions
+    /// default to 0, others -1.
+    pub(crate) fn effective_tab_index(&self, index: u32) -> i32 {
+        if let Some(ed) = self.element_data.get(index) {
+            if let Some(val) = ed.attributes.get("tabindex") {
+                return val.parse().unwrap_or(0);
+            }
+        }
+        let native = self
+            .meta
+            .get(index)
+            .is_some_and(|m| m.flags.is_focusable());
+        if native || self.is_scrollable_region(index) { 0 } else { -1 }
+    }
+
+    /// Walk from `index` up ancestors, return first focusable node.
+    pub(crate) fn find_focusable_ancestor(&self, index: u32) -> Option<u32> {
+        let mut current = index;
+        loop {
+            if self.is_focusable(current) {
+                return Some(current);
+            }
+            match self.tree.get(current) {
+                Some(td) if td.parent != INVALID => current = td.parent,
+                _ => return None,
+            }
+        }
+    }
+
+    /// UI Events §5.2.2 — focus transition: events then state flags.
+    pub(crate) fn move_focus(
+        &self,
+        old: Option<RawId>,
+        new: Option<u32>,
+        focus_visible: bool,
+    ) -> Option<RawId> {
+        let new_id = new.and_then(|idx| self.raw_id(idx));
+        if old == new_id {
+            return old;
+        }
+
+        // Phase 1: W3C event dispatch (reads tree for event path, no mutation).
+        self.dispatch_focus_events(old, new_id);
+
+        // Phase 2: state flags + restyle marking (single write scope).
+        self.cell().write(|doc| {
+            doc.apply_focus_state(old, new_id, focus_visible);
+        });
+
+        new_id
+    }
+
+    /// UI Events §5.2.2: focusout(A) → focusin(B) → blur(A) → focus(B).
+    fn dispatch_focus_events(&self, old: Option<RawId>, new: Option<RawId>) {
+        use crate::events::focus_event::*;
+
+        let old_handle = old.and_then(|id| self.resolve(id));
+        let new_handle = new.and_then(|id| self.resolve(id));
+
+        if let Some(h) = &old_handle {
+            h.dispatch_event(&FocusOutEvent { related_target: new });
+        }
+        if let Some(h) = &new_handle {
+            h.dispatch_event(&FocusInEvent { related_target: old });
+        }
+        if let Some(h) = &old_handle {
+            h.dispatch_event(&BlurEvent { related_target: new });
+        }
+        if let Some(h) = &new_handle {
+            h.dispatch_event(&FocusEvent { related_target: old });
+        }
+    }
+
+    /// All focus state mutations in one pass — called inside `cell().write()`.
+    fn apply_focus_state(
+        &mut self,
+        old: Option<RawId>,
+        new: Option<RawId>,
+        focus_visible: bool,
+    ) {
+        if let Some(oid) = old {
+            self.set_focus_chain(oid.index(), false, false);
+        }
+        if let Some(nid) = new {
+            self.set_focus_chain(nid.index(), true, focus_visible);
+        }
+        self.focused_element = new;
+    }
+
+    fn set_focus_chain(&mut self, index: u32, focused: bool, focus_visible: bool) {
+        if let Some(ed) = self.element_data.get_mut(index) {
+            if focused {
+                ed.element_state.insert(style_dom::ElementState::FOCUS);
+                if focus_visible {
+                    ed.element_state
+                        .insert(style_dom::ElementState::FOCUSRING);
+                }
+            } else {
+                ed.element_state.remove(
+                    style_dom::ElementState::FOCUS | style_dom::ElementState::FOCUSRING,
+                );
+            }
+        }
+
+        let mut current = index;
+        loop {
+            if let Some(ed) = self.element_data.get_mut(current) {
+                if focused {
+                    ed.element_state
+                        .insert(style_dom::ElementState::FOCUS_WITHIN);
+                } else {
+                    ed.element_state
+                        .remove(style_dom::ElementState::FOCUS_WITHIN);
+                }
+            }
+            self.mark_for_restyle(current);
+            match self.tree.get(current) {
+                Some(td) if td.parent != INVALID => current = td.parent,
+                _ => break,
+            }
+        }
+    }
+
+    /// W3C sequential focus navigation order: positive tabindex ascending,
+    /// then tabindex=0 in document order. Negative tabindex excluded.
+    pub(crate) fn tab_order(&self) -> Vec<u32> {
+        let mut positive: Vec<(i32, usize, u32)> = Vec::new();
+        let mut zero: Vec<u32> = Vec::new();
+        let mut order = 0usize;
+
+        // Iterative pre-order traversal (avoids stack overflow on deep DOMs).
+        let mut stack = vec![self.root];
+        while let Some(index) = stack.pop() {
+            if self.is_focusable(index) {
+                let ti = self.effective_tab_index(index);
+                if ti > 0 {
+                    positive.push((ti, order, index));
+                } else if ti == 0 {
+                    zero.push(index);
+                }
+                order += 1;
+            }
+
+            // Walk last→first via prev_sibling so stack pops in document order.
+            if let Some(td) = self.tree.get(index) {
+                let mut child = td.last_child;
+                while child != INVALID {
+                    stack.push(child);
+                    child = self.tree.get(child).map_or(INVALID, |t| t.prev_sibling);
+                }
+            }
+        }
+
+        positive.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
+        let mut result: Vec<u32> = positive.into_iter().map(|(_, _, idx)| idx).collect();
+        result.extend(zero);
+        result
     }
 
     /// Mark an element as needing restyle and propagate dirty flags up.

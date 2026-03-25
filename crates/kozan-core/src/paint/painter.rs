@@ -360,27 +360,14 @@ impl<'a> Painter<'a> {
         let os = resolve_outline_style(s);
         if ow > 0.0 && border_side_is_visible(ow, os) {
             let oc = stylo_color_to_color(&s.get_outline().clone_outline_color());
-            let outline_box = border_box.outset(ow, ow, ow, ow);
-            self.emit(DisplayItem::Draw(DrawCommand::Border {
-                rect: outline_box,
-                widths: BorderWidths {
-                    top: ow,
-                    right: ow,
-                    bottom: ow,
-                    left: ow,
-                },
-                colors: BorderColors {
-                    top: oc,
-                    right: oc,
-                    bottom: oc,
-                    left: oc,
-                },
-                styles: super::display_item::BorderStyles {
-                    top: os,
-                    right: os,
-                    bottom: os,
-                    left: os,
-                },
+            let offset = s.get_outline().outline_offset.to_f32_px();
+            let radii = extract_outer_radii(s);
+            self.emit(DisplayItem::Draw(DrawCommand::Outline {
+                rect: border_box,
+                radii,
+                width: ow,
+                offset,
+                color: oc,
             }));
         }
     }
