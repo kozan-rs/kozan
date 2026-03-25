@@ -15,20 +15,24 @@ use crate::dom::document_cell::DocumentCell;
 use crate::dom::node::NodeType;
 use crate::id::INVALID;
 
-// ── Traversal-scoped DocumentCell ──
-
 thread_local! {
     static DOC: Cell<Option<DocumentCell>> = const { Cell::new(None) };
 }
 
-/// Call before traversal to make `DocumentCell` available to all `KozanNodes`.
-pub(crate) fn enter(cell: DocumentCell) {
-    DOC.with(|c| c.set(Some(cell)));
+/// RAII guard that clears the thread-local `DocumentCell` on scope exit.
+/// Prevents stale state if traversal panics.
+pub(crate) struct TraversalGuard;
+
+impl Drop for TraversalGuard {
+    fn drop(&mut self) {
+        DOC.with(|c| c.set(None));
+    }
 }
 
-/// Call after traversal to clean up.
-pub(crate) fn exit() {
-    DOC.with(|c| c.set(None));
+/// Set the traversal-scoped `DocumentCell`. Returns a guard that clears it on drop.
+pub(crate) fn enter(cell: DocumentCell) -> TraversalGuard {
+    DOC.with(|c| c.set(Some(cell)));
+    TraversalGuard
 }
 
 /// Get the current `DocumentCell`.

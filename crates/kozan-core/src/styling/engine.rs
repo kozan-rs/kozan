@@ -44,7 +44,7 @@ impl RegisteredSpeculativePainters for RegisteredPaintersImpl {
 /// Per-element data lives on `ElementData` in `Storage<ElementData>`.
 pub(crate) struct StyleEngine {
     /// Stylo's shared lock (one per document).
-    pub(crate) guard: SharedRwLock,
+    guard: SharedRwLock,
 
     /// The Stylist — Stylo's main style computation engine.
     stylist: Stylist,
@@ -149,15 +149,7 @@ impl StyleEngine {
     /// Called once before traversal. Only touches elements with `inline_dirty=true`.
     fn flush_inline_styles(&self, cell: DocumentCell) {
         cell.write(|doc| {
-            let guard = &self.guard;
-            // Walk ALL slots (capacity) — count() returns alive entries
-            // which may be less than max index if nodes were freed.
-            let capacity = doc.ids.capacity() as u32;
-            for i in 0..capacity {
-                if let Some(ed) = doc.element_data.get_mut(i) {
-                    ed.flush_inline_styles(guard);
-                }
-            }
+            doc.flush_all_inline_styles(&self.guard);
         });
     }
 
@@ -165,7 +157,7 @@ impl StyleEngine {
 
     pub fn recalc_styles(&mut self, cell: DocumentCell, root: u32) {
         style::thread_state::enter(ThreadState::LAYOUT);
-        super::node::enter(cell);
+        let _guard = super::node::enter(cell);
 
         // Find root element (first element child of document node).
         let root_node = KozanNode::new(root);
@@ -181,7 +173,6 @@ impl StyleEngine {
         };
 
         let Some(root_element) = root_element else {
-            super::node::exit();
             style::thread_state::exit(ThreadState::LAYOUT);
             return;
         };
@@ -221,7 +212,6 @@ impl StyleEngine {
 
         self.snapshots.clear();
         self.stylist.rule_tree().maybe_gc();
-        super::node::exit();
         style::thread_state::exit(ThreadState::LAYOUT);
     }
 }

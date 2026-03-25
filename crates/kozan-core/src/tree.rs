@@ -83,11 +83,14 @@ pub(crate) mod ops {
 
     /// Append `child` as the last child of `parent`.
     /// If `child` is already attached somewhere, it is detached first.
+    /// No-op if `child == parent` or `child` is an ancestor of `parent`.
     ///
     /// # Safety
     /// All indices must refer to initialized slots in the storage.
     pub unsafe fn append(tree: &mut Storage<TreeData>, parent: u32, child: u32) {
-        debug_assert_ne!(parent, child, "Cannot append a node to itself");
+        if parent == child || unsafe { is_ancestor(tree, child, parent) } {
+            return;
+        }
 
         // Detach child from its current position.
         unsafe { detach(tree, child) };
@@ -114,14 +117,24 @@ pub(crate) mod ops {
 
     /// Insert `child` before `reference` in the child list.
     /// If `child` is already attached somewhere, it is detached first.
+    /// No-op if `child == reference`, reference has no parent, or
+    /// `child` is an ancestor of the reference's parent.
     ///
     /// # Safety
     /// All indices must refer to initialized slots in the storage.
     pub unsafe fn insert_before(tree: &mut Storage<TreeData>, reference: u32, child: u32) {
-        debug_assert_ne!(reference, child, "Cannot insert a node before itself");
+        if reference == child {
+            return;
+        }
 
         let parent = unsafe { tree.get_unchecked(reference) }.parent;
-        debug_assert_ne!(parent, INVALID, "Reference node has no parent");
+        if parent == INVALID {
+            return;
+        }
+
+        if unsafe { is_ancestor(tree, child, parent) } {
+            return;
+        }
 
         // Detach child from its current position.
         unsafe { detach(tree, child) };
@@ -375,6 +388,59 @@ mod tests {
             assert_eq!(ops::children(&tree, 0), vec![1, 2]);
             assert_eq!(ops::children(&tree, 1), vec![3]);
             assert_eq!(tree.get_unchecked(3).parent, 1);
+        }
+    }
+
+    #[test]
+    fn append_self_is_noop() {
+        let mut tree = make_tree(2);
+        unsafe {
+            ops::append(&mut tree, 0, 1);
+            ops::append(&mut tree, 1, 1);
+            assert_eq!(tree.get_unchecked(1).parent, 0);
+            assert_eq!(ops::children(&tree, 0), vec![1]);
+        }
+    }
+
+    #[test]
+    fn append_ancestor_cycle_is_noop() {
+        let mut tree = make_tree(3);
+        unsafe {
+            ops::append(&mut tree, 0, 1);
+            ops::append(&mut tree, 1, 2);
+
+            // Appending 0 (ancestor) under 2 (descendant) would create a cycle.
+            ops::append(&mut tree, 2, 0);
+
+            assert_eq!(tree.get_unchecked(0).parent, INVALID);
+            assert_eq!(ops::children(&tree, 2), Vec::<u32>::new());
+            assert_eq!(ops::children(&tree, 0), vec![1]);
+        }
+    }
+
+    #[test]
+    fn insert_before_self_is_noop() {
+        let mut tree = make_tree(3);
+        unsafe {
+            ops::append(&mut tree, 0, 1);
+            ops::append(&mut tree, 0, 2);
+            ops::insert_before(&mut tree, 1, 1);
+            assert_eq!(ops::children(&tree, 0), vec![1, 2]);
+        }
+    }
+
+    #[test]
+    fn insert_before_ancestor_cycle_is_noop() {
+        let mut tree = make_tree(3);
+        unsafe {
+            ops::append(&mut tree, 0, 1);
+            ops::append(&mut tree, 1, 2);
+
+            // Inserting 0 (ancestor) before 2 (descendant) would create a cycle.
+            ops::insert_before(&mut tree, 2, 0);
+
+            assert_eq!(tree.get_unchecked(0).parent, INVALID);
+            assert_eq!(ops::children(&tree, 1), vec![2]);
         }
     }
 }

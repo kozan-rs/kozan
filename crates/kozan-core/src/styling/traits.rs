@@ -52,14 +52,14 @@ impl KozanNode {
     /// Safe during traversal: single-threaded, document stable.
     #[inline]
     fn ed(&self) -> Option<&ElementData> {
-        unsafe { (*doc().as_ptr()).element_data.get(self.idx()) }
+        unsafe { (*doc().as_ptr()).element_data_by_index(self.idx()) }
     }
 
     /// Mutable access to `ElementData`.
     #[inline]
     #[allow(clippy::mut_from_ref)] // Intentional: interior-mutable doc accessed through shared ref during style traversal
     fn ed_mut(&self) -> Option<&mut ElementData> {
-        unsafe { (*doc().as_ptr()).element_data.get_mut(self.idx()) }
+        unsafe { (*doc().as_ptr()).element_data_by_index_mut(self.idx()) }
     }
 }
 
@@ -93,7 +93,7 @@ impl TDocument for KozanNode {
     }
 
     fn shared_lock(&self) -> &SharedRwLock {
-        unsafe { &(*doc().as_ptr()).style_engine.guard }
+        unsafe { (*doc().as_ptr()).shared_lock() }
     }
 }
 
