@@ -5,6 +5,8 @@
 //! - [`dom`] — DOM types: Node, `EventTarget`, Element, Handle, Document, Text
 //! - [`events`] — Event system: Event, dispatch, listeners, path
 //! - [`html`] — HTML elements: `HtmlElement`, `HtmlDivElement`, `HtmlButtonElement`
+//! - [`page`] — Top-level entry point: `Page`, `Viewport`
+//! - [`frame`] — Frame lifecycle: `LocalFrame`, `FrameView`
 
 // Allow derive macros to reference `::kozan_core` from within this crate.
 extern crate self as kozan_core;
@@ -23,11 +25,13 @@ pub mod styling;
 
 pub mod compositor;
 pub(crate) mod dirty_phases;
+pub(crate) mod frame;
+pub(crate) mod input_handler;
 pub mod layout;
 pub mod lifecycle;
+pub mod page;
 pub mod paint;
 pub mod scroll;
-pub mod widget;
 
 // Re-exports: styling (Stylo-backed CSS engine).
 pub use styling::style_structs;

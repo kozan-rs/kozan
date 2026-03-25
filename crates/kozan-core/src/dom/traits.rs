@@ -286,4 +286,9 @@ pub trait Element: ContainerNode {
     fn remove_attribute(&self, name: &str) -> Option<String> {
         self.handle().remove_attribute(name)
     }
+
+    /// Check if an attribute is present.
+    fn has_attribute(&self, name: &str) -> bool {
+        self.handle().attribute(name).is_some()
+    }
 }

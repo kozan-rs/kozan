@@ -63,13 +63,13 @@ impl Document {
     pub(crate) fn is_text_node(&self, index: u32) -> bool {
         self.meta
             .get(index)
-            .is_some_and(|m| m.flags.node_type() == NodeType::Text)
+            .is_some_and(|m| m.flags().node_type() == NodeType::Text)
     }
 
     /// Get text content by reference (no clone).
     pub(crate) fn text_content_ref(&self, index: u32) -> Option<&str> {
         let meta = self.meta.get(index)?;
-        if meta.data_type_id != TypeId::of::<TextData>() {
+        if meta.data_type_id() != TypeId::of::<TextData>() {
             return None;
         }
         let data = unsafe { self.data.get::<TextData>(index) };
@@ -327,12 +327,12 @@ impl<'a> DocumentLayoutView<'a> {
     fn is_text_node(&self, index: u32) -> bool {
         self.meta
             .get(index)
-            .is_some_and(|m| m.flags.node_type() == NodeType::Text)
+            .is_some_and(|m| m.flags().node_type() == NodeType::Text)
     }
 
     fn text_content_ref(&self, index: u32) -> Option<&str> {
         let meta = self.meta.get(index)?;
-        if meta.data_type_id != std::any::TypeId::of::<TextData>() {
+        if meta.data_type_id() != std::any::TypeId::of::<TextData>() {
             return None;
         }
         let data = unsafe { self.data.get::<TextData>(index) };

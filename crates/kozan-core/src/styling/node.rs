@@ -105,7 +105,7 @@ impl KozanNode {
         Some(
             doc()
                 .read(|d| d.node_meta_by_index(self.idx()))?
-                .flags
+                .flags()
                 .node_type(),
         )
     }

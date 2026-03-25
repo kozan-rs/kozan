@@ -46,11 +46,6 @@ pub struct ElementData {
     /// Element state flags (focus, hover, active, enabled, etc.)
     pub(crate) element_state: ElementState,
 
-    #[allow(dead_code)] // Read via NodeFlags::is_focusable() instead
-    pub(crate) is_focusable: bool,
-    #[allow(dead_code)] // Read via Document::effective_tab_index() instead
-    pub(crate) tab_index: i32,
-
     // ── DOM attributes ──
     /// All attributes (id, class, data-*, custom).
     pub(crate) attributes: AttributeCollection,
@@ -106,8 +101,6 @@ impl ElementData {
             id: None,
             classes: HashSet::new(),
             element_state: state,
-            is_focusable,
-            tab_index: if is_focusable { 0 } else { -1 },
             attributes: AttributeCollection::new(),
             inline_styles: PropertyDeclarationBlock::new(),
             style_attribute: None,

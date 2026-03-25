@@ -13,6 +13,9 @@ use kozan_primitives::geometry::Offset;
 /// The EventHandler returns this; the coordinator (FrameWidget) executes it.
 /// Designed for compositor handoff — scroll actions carry only primitive
 /// data (target ID + pixel delta), no DOM references.
+///
+/// Activation (Enter/Space) is handled per-element via `Handle::default_event_handler`
+/// rather than as a centralized action — mirrors Chrome's `Node::DefaultEventHandler()`.
 pub(crate) enum DefaultAction {
     /// No default behavior for this event.
     None,
@@ -20,12 +23,8 @@ pub(crate) enum DefaultAction {
     Scroll { target: u32, delta: Offset },
     /// JS called `preventDefault()` on a scrollable event.
     ScrollPrevented,
-    /// Tab key — advance focus to the next focusable element.
-    FocusNext,
-    /// Shift+Tab — move focus to the previous focusable element.
-    FocusPrev,
-    /// Enter/Space on a focused element — trigger its activation behavior.
-    Activate,
+    /// Tab / Shift+Tab — handled by `LocalFrame` where `FocusController` is accessible.
+    FocusNavigate { forward: bool },
 }
 
 #[cfg(test)]
@@ -45,5 +44,13 @@ mod tests {
             }
             _ => panic!("expected Scroll"),
         }
+    }
+
+    #[test]
+    fn focus_navigate_carries_direction() {
+        let fwd = DefaultAction::FocusNavigate { forward: true };
+        let bwd = DefaultAction::FocusNavigate { forward: false };
+        assert!(matches!(fwd, DefaultAction::FocusNavigate { forward: true }));
+        assert!(matches!(bwd, DefaultAction::FocusNavigate { forward: false }));
     }
 }

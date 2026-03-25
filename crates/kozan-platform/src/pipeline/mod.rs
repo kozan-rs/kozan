@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 
-use kozan_core::widget::FrameWidget;
+use kozan_core::page::Page;
 use kozan_scheduler::{Scheduler, WakeSender};
 
 use crate::context::ViewContext;
@@ -239,11 +239,11 @@ fn new_scheduler(deps: &ViewDeps) -> (Scheduler, WakeSender) {
 }
 
 fn new_view_context(deps: &ViewDeps, wake: WakeSender) -> ViewContext {
-    let mut frame = FrameWidget::new();
-    frame.resize(deps.viewport.width, deps.viewport.height);
-    frame.set_scale_factor(deps.viewport.scale_factor);
+    let mut page = Page::new();
+    page.resize(deps.viewport.width, deps.viewport.height);
+    page.set_scale_factor(deps.viewport.scale_factor);
     ViewContext::new(
-        frame,
+        page,
         wake,
         deps.host.clone(),
         deps.window_id,

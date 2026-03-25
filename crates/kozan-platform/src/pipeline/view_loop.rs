@@ -131,7 +131,9 @@ fn on_lifecycle(scheduler: &mut Scheduler, ctx: &mut ViewContext, lc: LifecycleE
             }
             ctx.invalidate_style();
         }
-        LifecycleEvent::Focused(_) => {}
+        LifecycleEvent::Focused(focused) => {
+            ctx.on_focus_changed(focused);
+        }
     }
     scheduler.set_needs_frame();
 }

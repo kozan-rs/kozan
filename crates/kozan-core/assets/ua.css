@@ -810,6 +810,10 @@ area {
     display: none ! important;
 }
 
+[hidden] {
+    display: none;
+}
+
 iframe:fullscreen {
     /* iframes in full-screen mode don't show a border. */
     border: none !important;

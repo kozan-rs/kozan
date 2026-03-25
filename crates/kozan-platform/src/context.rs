@@ -18,7 +18,7 @@ use kozan_core::compositor::layer_tree::LayerTree;
 use kozan_core::paint::DisplayList;
 use kozan_core::scroll::ScrollOffsets;
 use kozan_core::scroll::ScrollTree;
-use kozan_core::widget::FrameWidget;
+use kozan_core::page::Page;
 use kozan_scheduler::WakeSender;
 
 use crate::host::PlatformHost;
@@ -54,7 +54,7 @@ pub struct FrameOutput {
 /// The user-facing API inside a view.
 ///
 /// Passed to the view's init closure. Provides access to:
-/// - The document (DOM tree, via `FrameWidget`)
+/// - The document (DOM tree, via `Page`)
 /// - The cross-thread sender (for giving to background tasks)
 /// - The platform host (for requesting redraws, setting title, etc.)
 /// - The window identity (which window this view belongs to)
@@ -71,8 +71,8 @@ pub struct FrameOutput {
 /// ```
 pub struct ViewContext {
     /// The engine entry point — DOM, layout, paint.
-    /// Chrome equivalent: `LocalFrameView`.
-    frame: FrameWidget,
+    /// Chrome equivalent: `Page` + `LocalFrame` + `LocalFrameView`.
+    page: Page,
 
     wake_sender: WakeSender,
     host: Arc<dyn PlatformHost>,
@@ -101,14 +101,14 @@ pub struct ViewContext {
 impl ViewContext {
     /// Create a new view context. Called internally by the view thread.
     pub(crate) fn new(
-        frame: FrameWidget,
+        page: Page,
         wake_sender: WakeSender,
         host: Arc<dyn PlatformHost>,
         window_id: WindowId,
         render_sender: mpsc::Sender<RenderEvent>,
     ) -> Self {
         Self {
-            frame,
+            page,
             wake_sender,
             host,
             window_id,
@@ -122,7 +122,7 @@ impl ViewContext {
     /// Read-only access to the document.
     #[inline]
     pub fn document(&self) -> &Document {
-        self.frame.document()
+        self.page.document()
     }
 
     /// Register custom font data (TTF/OTF/TTC bytes) into the font system.
@@ -150,7 +150,7 @@ impl ViewContext {
         &self,
         data: impl Into<kozan_core::layout::inline::font_system::FontBlob>,
     ) -> Vec<String> {
-        self.frame.font_system().register_font(data)
+        self.page.font_system().register_font(data)
     }
 
     /// Spawn a `!Send` async task on the view thread's executor.
@@ -275,7 +275,7 @@ impl ViewContext {
 
     /// Previous frame's pipeline timing.
     pub(crate) fn last_frame_timing(&self) -> kozan_primitives::timing::FrameTiming {
-        self.frame.last_timing()
+        self.page.last_timing()
     }
 
     /// Check if the document has pending changes that need a frame.
@@ -284,31 +284,31 @@ impl ViewContext {
     /// (e.g. `style().w(pct(...))`) without requesting a frame.
     /// Chrome equivalent: checking `Document::NeedsStyleRecalc()` after microtask checkpoint.
     pub(crate) fn document_needs_frame(&self) -> bool {
-        self.frame.document().needs_visual_update()
+        self.page.document().needs_visual_update()
     }
 
     /// Apply scroll offsets received from the compositor.
     /// Chrome: main thread applies scroll deltas posted from compositor thread.
     pub(crate) fn apply_scroll_sync(&mut self, offsets: ScrollOffsets) {
-        self.frame.apply_compositor_scroll(&offsets);
+        self.page.apply_compositor_scroll(&offsets);
     }
 
     /// Run style → layout → paint, then post the result to the render thread.
     /// Chrome: `LocalFrameView::UpdateLifecyclePhases()` then `FinishCommit()`.
     pub(crate) fn update_lifecycle_and_commit(&mut self) {
-        self.frame.update_lifecycle();
+        self.page.update_lifecycle();
 
-        let dl = self.frame.last_display_list();
-        let layer_tree = self.frame.take_layer_tree();
+        let dl = self.page.last_display_list();
+        let layer_tree = self.page.take_layer_tree();
 
         if let (Some(dl), Some(tree)) = (dl, layer_tree) {
-            let (scroll_tree, _scroll_offsets) = self.frame.scroll_state_snapshot();
+            let (scroll_tree, _scroll_offsets) = self.page.scroll_state_snapshot();
             let _ = self.render_sender.send(RenderEvent::Commit(FrameOutput {
                 display_list: dl,
                 layer_tree: tree,
                 scroll_tree,
-                viewport_width: self.frame.viewport().width(),
-                viewport_height: self.frame.viewport().height(),
+                viewport_width: self.page.viewport().width(),
+                viewport_height: self.page.viewport().height(),
             }));
         }
     }
@@ -318,7 +318,7 @@ impl ViewContext {
     /// Returns `true` if DOM state changed (hover/focus/active changed,
     /// or event listeners were dispatched that may have mutated the DOM).
     pub(crate) fn on_input(&mut self, input: kozan_core::InputEvent) -> bool {
-        self.frame.handle_input(input)
+        self.page.handle_input(input)
     }
 
     /// Mark that styles need recalculation.
@@ -327,16 +327,23 @@ impl ViewContext {
     /// event listeners may have mutated the DOM. Chrome equivalent:
     /// `Document::SetNeedsStyleRecalc()`.
     pub(crate) fn invalidate_style(&mut self) {
-        self.frame.mark_needs_update();
+        self.page.mark_needs_update();
     }
 
     /// Notify the frame of a resize event.
     pub(crate) fn on_resize(&mut self, width: u32, height: u32) {
-        self.frame.resize(width, height);
+        self.page.resize(width, height);
     }
 
     /// Notify the frame of a scale factor change.
     pub(crate) fn on_scale_factor_changed(&mut self, factor: f64) {
-        self.frame.set_scale_factor(factor);
+        self.page.set_scale_factor(factor);
+    }
+
+    /// Window gained or lost focus.
+    /// On blur: clears element focus (dispatch blur/focusout events).
+    /// On focus: no-op (previously focused element stays focused — Chrome behavior).
+    pub(crate) fn on_focus_changed(&mut self, focused: bool) {
+        self.page.set_window_focused(focused);
     }
 }

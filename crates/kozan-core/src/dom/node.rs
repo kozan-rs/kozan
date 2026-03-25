@@ -300,10 +300,31 @@ impl NodeFlags {
 /// element-specific data (e.g., `TypeId::of::<ButtonData>()`).
 #[derive(Copy, Clone)]
 pub struct NodeMeta {
-    /// Packed flags: node type, container, dirty, focus, connection.
-    pub flags: NodeFlags,
-    /// `TypeId` of the data in `DataStorage`. `TypeId::of::<()>()` for no data.
-    pub data_type_id: TypeId,
+    flags: NodeFlags,
+    data_type_id: TypeId,
+}
+
+impl NodeMeta {
+    pub(crate) fn new(flags: NodeFlags, data_type_id: TypeId) -> Self {
+        Self { flags, data_type_id }
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn flags(&self) -> NodeFlags {
+        self.flags
+    }
+
+    #[inline]
+    pub(crate) fn flags_mut(&mut self) -> &mut NodeFlags {
+        &mut self.flags
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn data_type_id(&self) -> TypeId {
+        self.data_type_id
+    }
 }
 
 #[cfg(test)]

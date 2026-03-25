@@ -371,6 +371,58 @@ impl Handle {
             .collect()
     }
 
+    /// First child that is an Element (skip Text, Comment, etc.).
+    #[must_use]
+    pub fn first_element_child(&self) -> Option<Handle> {
+        let mut cursor = self.first_child();
+        while let Some(node) = cursor {
+            if node.is_element() {
+                return Some(node);
+            }
+            cursor = node.next_sibling();
+        }
+        None
+    }
+
+    /// Last child that is an Element.
+    #[must_use]
+    pub fn last_element_child(&self) -> Option<Handle> {
+        let mut cursor = self.last_child();
+        while let Some(node) = cursor {
+            if node.is_element() {
+                return Some(node);
+            }
+            cursor = node.prev_sibling();
+        }
+        None
+    }
+
+    /// Next sibling that is an Element.
+    #[must_use]
+    pub fn next_element_sibling(&self) -> Option<Handle> {
+        let mut cursor = self.next_sibling();
+        while let Some(node) = cursor {
+            if node.is_element() {
+                return Some(node);
+            }
+            cursor = node.next_sibling();
+        }
+        None
+    }
+
+    /// Previous sibling that is an Element.
+    #[must_use]
+    pub fn prev_element_sibling(&self) -> Option<Handle> {
+        let mut cursor = self.prev_sibling();
+        while let Some(node) = cursor {
+            if node.is_element() {
+                return Some(node);
+            }
+            cursor = node.prev_sibling();
+        }
+        None
+    }
+
     // ---- Node kind ----
 
     #[must_use]
@@ -422,26 +474,58 @@ impl Handle {
         crate::events::dispatch(self.cell, self.id, event, &mut store)
     }
 
+    /// Chrome: `Node::DefaultEventHandler()` — per-element default behavior.
+    ///
+    /// Called after the bubble phase when `!preventDefault`. Each element type
+    /// can handle events before they fall through to browser-level defaults.
+    pub(crate) fn default_event_handler(&self, event: &dyn std::any::Any) -> bool {
+        self.cell.read(|doc| {
+            let Some(meta) = doc.node_meta(self.id) else {
+                return false;
+            };
+            if meta.data_type_id() == std::any::TypeId::of::<crate::html::ButtonData>() {
+                return self.default_event_handler_button(event);
+            }
+            false
+        })
+    }
+
+    /// Button: Enter/Space → synthetic click (W3C activation behavior).
+    fn default_event_handler_button(&self, event: &dyn std::any::Any) -> bool {
+        use crate::events::keyboard_event::KeyDownEvent;
+        use crate::input::KeyCode;
+
+        let Some(ke) = event.downcast_ref::<KeyDownEvent>() else {
+            return false;
+        };
+        if !matches!(ke.key, KeyCode::Enter | KeyCode::Space) {
+            return false;
+        }
+        self.dispatch_event(&crate::events::mouse_event::ClickEvent {
+            x: 0.0,
+            y: 0.0,
+            button: crate::input::MouseButton::Left,
+            modifiers: ke.modifiers,
+        });
+        true
+    }
+
     /// Programmatic focus (W3C `HTMLElement.focus()`).
-    /// Reads focused_element, dispatches events, then writes state.
     pub fn focus(&self) {
         if !self.is_alive() {
             return;
         }
-        let old = self.cell.read(|doc| doc.focused_element);
-        // move_focus is on &self Document — it dispatches events first,
-        // then does a single cell().write() for state changes.
         self.cell.read(|doc| {
-            doc.move_focus(old, Some(self.id.index()), false);
+            doc.set_focused_element(Some(self.id.index()), false);
         });
     }
 
     /// Programmatic blur (W3C `HTMLElement.blur()`).
     pub fn blur(&self) {
-        let is_focused = self.cell.read(|doc| doc.focused_element == Some(self.id));
+        let is_focused = self.cell.read(|doc| doc.focused_element() == Some(self.id));
         if is_focused {
             self.cell.read(|doc| {
-                doc.move_focus(Some(self.id), None, false);
+                doc.set_focused_element(None, false);
             });
         }
     }
