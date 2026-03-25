@@ -128,6 +128,17 @@ All unsafe lives in `DocumentCell`. Every `unsafe` block has a `// SAFETY:` comm
 
 Test behavior, not stubs. Test names describe the scenario (`capture_fires_before_bubble`, not `test_event`). No `#[allow(dead_code)]` in tests.
 
+## Refactoring
+
+Full refactors are not only allowed — they're preferred when they solve deeper problems. Never apply a quick hack when a proper restructuring is the correct fix.
+
+- If a struct has responsibilities that belong elsewhere, move them. Don't add wrapper methods.
+- If logic is in the wrong place, relocate it. Don't paper over it with delegation.
+- If a pattern doesn't scale (e.g. TypeId matching instead of dispatch tables), replace the pattern entirely.
+- If fixing a bug requires touching 5 files because the architecture is wrong, fix the architecture first.
+- Prefer the complex-but-correct solution over the quick-but-hacky one. A 200-line refactor that eliminates a class of bugs is better than a 5-line band-aid.
+- Every struct should own its behavior, not just hold data. If external code reaches into a struct's fields to do work, that work belongs on the struct.
+
 ## Hard Rules
 
 1. No comments that restate the code.

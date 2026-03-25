@@ -71,3 +71,11 @@ kozan-primitives = { version = "0.1", path = "crates/kozan-primitives" }
 kozan-scheduler = { version = "0.1", path = "crates/kozan-scheduler" }
 kozan-vello = { version = "0.1", path = "crates/kozan-vello" }
 kozan-winit = { version = "0.1", path = "crates/kozan-winit" }
+
+# Chrome strategy: optimized third-party, debug first-party.
+# Makes `cargo run -p dashboard` usable without --release.
+[profile.dev]
+opt-level = 0
+
+[profile.dev.package."*"]
+opt-level = 2
