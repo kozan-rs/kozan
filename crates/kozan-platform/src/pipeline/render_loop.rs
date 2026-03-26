@@ -18,6 +18,11 @@ pub enum RenderEvent {
     Resize { width: u32, height: u32 },
     ScaleFactorChanged(f64),
     Scroll { delta: Offset, point: Point },
+    /// Keyboard-driven scroll — target is already resolved by the view thread.
+    ScrollTo { target: u32, delta: Offset },
+    MouseDown { point: Point },
+    MouseUp { point: Point },
+    MouseMove { point: Point },
     Shutdown,
 }
 
@@ -103,12 +108,31 @@ impl<S: RenderSurface> RenderLoop<S> {
     }
 
     fn drain_events(&mut self, rx: &mpsc::Receiver<RenderEvent>) -> bool {
-        loop {
-            match rx.try_recv() {
-                Ok(RenderEvent::Shutdown) => return false,
-                Ok(event) => self.handle_event(event),
-                Err(mpsc::TryRecvError::Empty) => return true,
-                Err(mpsc::TryRecvError::Disconnected) => return false,
+        if self.compositor.needs_animate() {
+            // Chrome: `SetNeedsAnimateForScrollbarAnimation()` — keep rendering
+            // during fade animation instead of blocking on the channel.
+            loop {
+                match rx.try_recv() {
+                    Ok(RenderEvent::Shutdown) => return false,
+                    Ok(event) => self.handle_event(event),
+                    Err(mpsc::TryRecvError::Empty) => return true,
+                    Err(mpsc::TryRecvError::Disconnected) => return false,
+                }
+            }
+        } else {
+            match rx.recv() {
+                Ok(RenderEvent::Shutdown) | Err(_) => return false,
+                Ok(event) => {
+                    self.handle_event(event);
+                    loop {
+                        match rx.try_recv() {
+                            Ok(RenderEvent::Shutdown) => return false,
+                            Ok(event) => self.handle_event(event),
+                            Err(mpsc::TryRecvError::Empty) => return true,
+                            Err(mpsc::TryRecvError::Disconnected) => return false,
+                        }
+                    }
+                }
             }
         }
     }
@@ -172,6 +196,10 @@ impl<S: RenderSurface> RenderLoop<S> {
             }
             RenderEvent::ScaleFactorChanged(sf) => self.device_scale_factor = sf,
             RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
+            RenderEvent::ScrollTo { target, delta } => self.apply_scroll_to(target, delta),
+            RenderEvent::MouseDown { point } => self.handle_mouse_down(point),
+            RenderEvent::MouseUp { point } => self.handle_mouse_up(point),
+            RenderEvent::MouseMove { point } => self.handle_mouse_move(point),
             RenderEvent::Shutdown => {}
         }
     }
@@ -180,6 +208,10 @@ impl<S: RenderSurface> RenderLoop<S> {
         match event {
             RenderEvent::ScaleFactorChanged(sf) => self.device_scale_factor = sf,
             RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
+            RenderEvent::ScrollTo { target, delta } => self.apply_scroll_to(target, delta),
+            RenderEvent::MouseDown { point } => self.handle_mouse_down(point),
+            RenderEvent::MouseUp { point } => self.handle_mouse_up(point),
+            RenderEvent::MouseMove { point } => self.handle_mouse_move(point),
             _ => {}
         }
     }
@@ -196,15 +228,63 @@ impl<S: RenderSurface> RenderLoop<S> {
             return;
         }
 
-        let target = self.compositor.hit_test_scroll_target(point);
+        // Screen-logical coords → content-logical coords.
+        // Page zoom shrinks the layout viewport, so a screen pixel covers
+        // more content pixels. Hit-test and delta must be in content space.
+        let z = self.page_zoom_factor as f32;
+        let content_point = Point::new(point.x / z, point.y / z);
+        let content_delta = Offset::new(delta.dx / z, delta.dy / z);
+
+        let target = self.compositor.hit_test_scroll_target(content_point);
 
         if let Some(target) = target {
-            if self.compositor.try_scroll(target, delta) {
+            if self.compositor.try_scroll(target, content_delta) {
                 let _ = self.view_tx.send(ViewEvent::ScrollSync(
                     self.compositor.scroll_offsets().clone(),
                 ));
             }
         }
+    }
+
+    fn apply_scroll_to(&mut self, target: u32, delta: Offset) {
+        if !self.compositor.has_content() {
+            return;
+        }
+        if self.compositor.try_scroll(target, delta) {
+            let _ = self.view_tx.send(ViewEvent::ScrollSync(
+                self.compositor.scroll_offsets().clone(),
+            ));
+        }
+    }
+
+    fn handle_mouse_down(&mut self, point: Point) {
+        if !self.compositor.has_content() {
+            return;
+        }
+        let z = self.page_zoom_factor as f32;
+        let content_point = Point::new(point.x / z, point.y / z);
+        if self.compositor.handle_mouse_down(content_point) {
+            let _ = self.view_tx.send(ViewEvent::ScrollSync(
+                self.compositor.scroll_offsets().clone(),
+            ));
+        }
+    }
+
+    fn handle_mouse_move(&mut self, point: Point) {
+        if !self.compositor.has_content() {
+            return;
+        }
+        let z = self.page_zoom_factor as f32;
+        let content_point = Point::new(point.x / z, point.y / z);
+        if self.compositor.handle_mouse_move(content_point) {
+            let _ = self.view_tx.send(ViewEvent::ScrollSync(
+                self.compositor.scroll_offsets().clone(),
+            ));
+        }
+    }
+
+    fn handle_mouse_up(&mut self, _point: Point) {
+        self.compositor.handle_mouse_up();
     }
 
     fn replay_queued_scrolls(&mut self) {

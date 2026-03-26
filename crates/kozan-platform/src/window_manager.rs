@@ -195,6 +195,9 @@ impl<R: Renderer> WindowManager<R> {
             .set_cursor_physical(physical_x, physical_y);
         let (x, y) = state.input().cursor();
         let modifiers = state.input().modifiers();
+        state.send_to_render(RenderEvent::MouseMove {
+            point: Point::new(x as f32, y as f32),
+        });
         state.send_to_view(ViewEvent::Input(InputEvent::MouseMove(MouseMoveEvent {
             x,
             y,
@@ -235,6 +238,13 @@ impl<R: Renderer> WindowManager<R> {
         state.input_mut().update_button_modifier(&button, btn_state);
         let (x, y) = state.input().cursor();
         let modifiers = state.input().modifiers();
+        if button == MouseButton::Left {
+            let point = Point::new(x as f32, y as f32);
+            match btn_state {
+                ButtonState::Pressed => state.send_to_render(RenderEvent::MouseDown { point }),
+                ButtonState::Released => state.send_to_render(RenderEvent::MouseUp { point }),
+            };
+        }
         state.send_to_view(ViewEvent::Input(InputEvent::MouseButton(
             MouseButtonEvent {
                 x,
