@@ -326,7 +326,13 @@ impl ViewContext {
         if let Some(handled) = self.try_browser_shortcut(&input) {
             return handled;
         }
-        self.page.handle_input(input)
+        let (state_changed, scroll_action) = self.page.handle_input(input);
+
+        if let Some((target, delta)) = scroll_action {
+            let _ = self.render_sender.send(RenderEvent::ScrollTo { target, delta });
+        }
+
+        state_changed
     }
 
     /// Browser-level keyboard shortcuts intercepted before DOM dispatch.

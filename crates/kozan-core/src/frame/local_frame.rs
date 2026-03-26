@@ -62,18 +62,19 @@ impl LocalFrame {
         &mut self.view
     }
 
-    /// Handle an input event. Returns `true` if visual state changed.
+    /// Chrome: `EventHandler::HandleInputEvent()`.
     ///
-    /// Chrome: `EventHandler::HandleInputEvent()` dispatches DOM events,
-    /// then the frame coordinator applies default actions (scroll, focus).
+    /// Returns `(state_changed, scroll_action)`. Scroll actions are returned
+    /// to the caller so the platform layer can route them to the compositor
+    /// (scroll is owned by the compositor thread, not the view thread).
     pub fn handle_input(
         &mut self,
         event: InputEvent,
         focus: &mut FocusController,
         viewport: &Viewport,
-    ) -> bool {
+    ) -> (bool, Option<(u32, kozan_primitives::geometry::Offset)>) {
         let Some(fragment) = self.view.last_fragment() else {
-            return false;
+            return (false, None);
         };
         let fragment = Arc::clone(fragment);
 
@@ -95,13 +96,13 @@ impl LocalFrame {
 
         match result.default_action {
             DefaultAction::Scroll { target, delta } => {
-                self.apply_scroll(target, delta) || result.state_changed
+                (result.state_changed, Some((target, delta)))
             }
             DefaultAction::FocusNavigate { forward } => {
                 focus.advance(&self.doc, forward);
-                true
+                (true, None)
             }
-            DefaultAction::ScrollPrevented | DefaultAction::None => result.state_changed,
+            DefaultAction::ScrollPrevented | DefaultAction::None => (result.state_changed, None),
         }
     }
 

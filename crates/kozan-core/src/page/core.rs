@@ -116,10 +116,14 @@ impl Page {
         self.visual_viewport.set_offset(x, y);
     }
 
-    /// Handle an input event. Returns `true` if visual state changed.
-    ///
     /// Chrome: `WebFrameWidgetImpl::HandleInputEvent()`.
-    pub fn handle_input(&mut self, event: InputEvent) -> bool {
+    ///
+    /// Returns `(state_changed, scroll_action)`. Scroll actions are returned
+    /// to the platform layer for routing to the compositor.
+    pub fn handle_input(
+        &mut self,
+        event: InputEvent,
+    ) -> (bool, Option<(u32, kozan_primitives::geometry::Offset)>) {
         self.frame
             .handle_input(event, &mut self.focus, &self.viewport)
     }
