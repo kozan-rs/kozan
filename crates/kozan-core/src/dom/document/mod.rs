@@ -684,8 +684,44 @@ impl Document {
         }
     }
 
+    /// Total number of live nodes (elements + text + document).
     pub fn node_count(&self) -> u32 {
         self.ids.count()
+    }
+
+    /// Number of live element nodes (excludes text and document nodes).
+    pub fn element_count(&self) -> u32 {
+        let mut count = 0u32;
+        for i in 0..self.ids.capacity() as u32 {
+            if self.ids.live_generation(i).is_none() {
+                continue;
+            }
+            if let Some(meta) = self.meta.get(i) {
+                if meta.flags().is_element() {
+                    count += 1;
+                }
+            }
+        }
+        count
+    }
+
+    /// Maximum depth of the DOM tree from root.
+    pub fn tree_depth(&self) -> u32 {
+        fn depth_of(doc: &Document, index: u32) -> u32 {
+            let mut max_child_depth = 0u32;
+            if let Some(td) = doc.tree.get(index) {
+                let mut child = td.first_child;
+                while child != INVALID {
+                    max_child_depth = max_child_depth.max(depth_of(doc, child));
+                    child = doc
+                        .tree
+                        .get(child)
+                        .map_or(INVALID, |c| c.next_sibling);
+                }
+            }
+            max_child_depth + 1
+        }
+        depth_of(self, self.root)
     }
 
     pub fn root_index(&self) -> u32 {
