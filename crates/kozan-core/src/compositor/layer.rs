@@ -1,46 +1,50 @@
 //! Compositor layer — GPU-side representation of a painted surface.
 //!
-//! Chrome: `cc::Layer` + `cc::PictureLayerImpl`.
-//!
-//! Each layer is an independently compositable surface. The compositor
-//! can change a layer's transform, opacity, or clip without repainting
-//! its content — enabling vsync-rate scroll and compositor-driven animations.
+//! Chrome: `cc::LayerImpl` with virtual `AppendQuads()`.
 
-use kozan_primitives::geometry::{Offset, Rect};
+use std::any::Any;
+
+use kozan_primitives::geometry::{Offset, Point, Rect};
 use kozan_primitives::transform::Transform3D;
+use smallvec::SmallVec;
 
-/// Opaque handle into the layer tree.
+use super::frame::FrameQuad;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LayerId(pub(super) u32);
 
-/// A compositable surface in the layer tree.
-///
-/// Chrome: `cc::PictureLayerImpl` — owns rasterized tiles, transform,
-/// clip, and opacity. The compositor mutates transform/opacity/scroll
-/// per-frame without touching the main thread.
+/// Chrome: `SharedQuadState` — accumulated state for quad production.
+pub(crate) struct QuadContext {
+    pub origin: Point,
+    pub container_rect: Rect,
+}
+
+/// Chrome: `LayerImpl` virtual interface.
+pub(crate) trait LayerContent: Send + Sync {
+    fn append_quads(&self, ctx: &QuadContext) -> SmallVec<[FrameQuad; 2]>;
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+/// Chrome: `cc::LayerImpl` base fields.
 pub struct Layer {
-    /// DOM node that owns this layer (for scroll offset lookup).
-    pub dom_node: Option<u32>,
-    /// Bounds in the parent layer's coordinate space.
-    pub bounds: Rect,
-    /// Full 4x4 transform relative to parent.
-    /// Chrome: part of the property tree. The compositor uses the
-    /// inverse for hit testing (screen point → layer local space).
-    pub transform: Transform3D,
-    /// Current scroll offset — the compositor mutates this directly.
-    pub scroll_offset: Offset,
-    /// Layer opacity (1.0 = fully opaque). Compositor-animatable.
-    pub opacity: f32,
-    /// Clip rect in parent coordinates. `None` = no clip.
-    pub clip: Option<Rect>,
-    /// Child layers (front-to-back order).
-    pub children: Vec<LayerId>,
-    /// Whether this layer corresponds to a user-scrollable container.
-    pub is_scrollable: bool,
+    pub(crate) dom_node: Option<u32>,
+    pub(crate) bounds: Rect,
+    pub(crate) transform: Transform3D,
+    pub(crate) scroll_offset: Offset,
+    pub(crate) opacity: f32,
+    pub(crate) clip: Option<Rect>,
+    pub(crate) children: Vec<LayerId>,
+    pub(crate) is_scrollable: bool,
+    pub(crate) content: Box<dyn LayerContent>,
 }
 
 impl Layer {
-    pub(super) fn new(dom_node: Option<u32>, bounds: Rect) -> Self {
+    pub(crate) fn new(
+        dom_node: Option<u32>,
+        bounds: Rect,
+        content: Box<dyn LayerContent>,
+    ) -> Self {
         Self {
             dom_node,
             bounds,
@@ -50,6 +54,7 @@ impl Layer {
             clip: None,
             children: Vec::new(),
             is_scrollable: false,
+            content,
         }
     }
 }
@@ -57,11 +62,15 @@ impl Layer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kozan_primitives::geometry::Rect;
+    use crate::compositor::content_layer::ContentLayer;
 
     #[test]
     fn new_layer_defaults() {
-        let layer = Layer::new(Some(5), Rect::new(0.0, 0.0, 200.0, 100.0));
+        let layer = Layer::new(
+            Some(5),
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            Box::new(ContentLayer),
+        );
         assert_eq!(layer.dom_node, Some(5));
         assert!(layer.transform.is_identity());
         assert_eq!(layer.opacity, 1.0);

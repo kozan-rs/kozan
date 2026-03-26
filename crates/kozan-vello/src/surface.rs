@@ -166,6 +166,7 @@ impl RenderSurface for VelloSurface {
             &params.frame.display_list,
             params.content_scale,
             &params.frame.scroll_offsets,
+            &params.frame.quads,
         );
 
         self.vello
