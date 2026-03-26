@@ -272,6 +272,7 @@ impl FrameScheduler {
     /// Callbacks that return `true` are kept for the next frame (loop).
     /// Callbacks that return `false` are removed (one-shot).
     /// Returns the number of callbacks executed.
+    ///
     pub fn run_callbacks(&mut self, info: FrameInfo) -> usize {
         debug_assert!(
             self.in_frame,
@@ -281,11 +282,8 @@ impl FrameScheduler {
         let mut callbacks = std::mem::take(&mut self.callbacks);
         let count = callbacks.len();
 
-        // Call each, keep the ones that return true.
         callbacks.retain_mut(|cb| cb(info));
 
-        // Put survivors back — they run again next frame.
-        // Any new callbacks registered during this frame are in pending_callbacks.
         self.callbacks = callbacks;
 
         count

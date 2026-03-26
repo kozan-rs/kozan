@@ -45,8 +45,9 @@ use crate::waker::{WakeReceiver, WakeSender};
 
 /// Result of one scheduler iteration.
 ///
-/// Callers **must** use `park_timeout` to decide how long to park
-/// the thread. Ignoring it causes either spinning or missed wake-ups.
+/// After tick(), call `scheduler.park_timeout()` to determine how long
+/// to park — but only AFTER all post-tick state updates (dirty checks,
+/// callback re-registration).
 #[derive(Debug, Clone, Copy)]
 #[must_use]
 pub struct TickResult {
@@ -64,11 +65,6 @@ pub struct TickResult {
 
     /// Whether a frame was produced.
     pub frame_produced: bool,
-
-    /// Suggested park duration until next work.
-    /// `Duration::ZERO` means there's more work to do.
-    /// `None` means park indefinitely (wait for wake).
-    pub park_timeout: Option<Duration>,
 }
 
 /// The main event loop scheduler. One per window thread.
@@ -85,12 +81,12 @@ pub struct TickResult {
 /// // Give sender to background threads.
 /// // On the window thread:
 /// loop {
-///     let result = scheduler.tick(&mut |info| {
+///     scheduler.tick(&mut |info| {
 ///         doc.recalc_styles();
 ///         // layout, paint...
 ///     });
 ///
-///     if let Some(timeout) = result.park_timeout {
+///     if let Some(timeout) = scheduler.park_timeout() {
 ///         // Park thread for timeout duration (or until woken).
 ///     }
 /// }
@@ -244,7 +240,6 @@ impl Scheduler {
             cross_thread_tasks: 0,
             futures_polled: 0,
             frame_produced: false,
-            park_timeout: None,
         };
 
         // 1. Receive cross-thread tasks — route by their priority.
@@ -283,9 +278,6 @@ impl Scheduler {
             self.frame_scheduler.end_frame();
             result.frame_produced = true;
         }
-
-        // 7. Calculate park timeout.
-        result.park_timeout = self.calculate_park_timeout();
 
         result
     }
@@ -344,10 +336,12 @@ impl Scheduler {
         &self.executor
     }
 
-    // ---- Internal ----
-
     /// Calculate how long the thread should park.
-    fn calculate_park_timeout(&self) -> Option<Duration> {
+    ///
+    /// Chrome: `ThreadControllerImpl::DoWork()` returns a `NextWorkInfo` with
+    /// the next wake time. Called AFTER all post-tick processing (dirty checks,
+    /// callback re-registration) so the full state is visible.
+    pub fn park_timeout(&self) -> Option<Duration> {
         // If there's immediate work, don't park.
         if self.task_queue.has_ready()
             || !self.microtask_queue.is_empty()
@@ -560,21 +554,22 @@ mod tests {
     }
 
     #[test]
-    fn park_timeout_zero_when_work() {
+    fn park_timeout_none_when_idle() {
         let (mut sched, _sender) = Scheduler::new();
-        sched.post_task(TaskPriority::Normal, || {});
-
-        let result = sched.tick(&mut |_| {});
-        // After running, no more work → park timeout is None (indefinite).
-        // But the tick itself should have run the task.
-        assert_eq!(result.tasks_run, 1);
+        let _ = sched.tick(&mut |_| {});
+        assert!(sched.park_timeout().is_none());
     }
 
     #[test]
-    fn park_timeout_none_when_idle() {
+    fn park_timeout_some_when_frame_needed() {
         let (mut sched, _sender) = Scheduler::new();
-        let result = sched.tick(&mut |_| {});
-        assert!(result.park_timeout.is_none());
+        sched.set_needs_frame();
+        let _ = sched.tick(&mut |_| {});
+        // After frame produced, needs_frame cleared → None
+        assert!(sched.park_timeout().is_none());
+        // Set again → should return Some (time until vsync)
+        sched.set_needs_frame();
+        assert!(sched.park_timeout().is_some());
     }
 
     #[test]

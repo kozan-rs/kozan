@@ -2,6 +2,20 @@
 //!
 //! Chrome: renderer main thread event loop — drain events, tick scheduler,
 //! commit frame, park until next event or vsync.
+//!
+//! # Frame scheduling
+//!
+//! When the view thread needs a frame (dirty DOM, active frame callbacks),
+//! it calls `request_redraw()` which asks the OS for a vsync-aligned
+//! `RedrawRequested` event. This replaces the old `recv_timeout(budget)`
+//! approach with real OS vsync signaling.
+//!
+//! ```text
+//! [needs frame] → request_redraw() → OS schedules vsync
+//!     → RedrawRequested arrives as ViewEvent::Paint
+//!     → tick() produces frame
+//!     → if still dirty → request_redraw() again
+//! ```
 
 use std::sync::mpsc;
 
@@ -12,10 +26,13 @@ use crate::event::{LifecycleEvent, ViewEvent};
 
 /// The view thread's main loop. Returns when Shutdown is received.
 pub fn run(scheduler: &mut Scheduler, ctx: &mut ViewContext, rx: &mpsc::Receiver<ViewEvent>) {
+    // Kick off the first frame if there are callbacks registered during init.
+    if ctx.has_frame_callbacks() || ctx.document_needs_frame() {
+        ctx.request_redraw();
+    }
+
     loop {
         // 1. Drain pending events, coalescing consecutive resizes.
-        //    Resize is handled via fast-path (immediate commit) so we only
-        //    need the final size when multiple arrive in a single batch.
         let mut pending_resize: Option<(u32, u32)> = None;
         while let Ok(event) = rx.try_recv() {
             match event {
@@ -28,28 +45,31 @@ pub fn run(scheduler: &mut Scheduler, ctx: &mut ViewContext, rx: &mpsc::Receiver
         }
 
         // 1b. Fast-path resize: layout + paint + commit immediately.
-        //     The render thread is blocking until it receives this commit,
-        //     so we must not defer it to the next scheduler tick.
-        //     Only layout + paint run — resize doesn't dirty style.
+        //     The render thread is blocking until it receives this commit.
         if let Some((w, h)) = pending_resize {
             ctx.on_resize(w, h);
             ctx.update_lifecycle_and_commit();
         }
 
-        // 2. Drain user frame callbacks into scheduler.
-        for cb in ctx.take_staged_frame_callbacks() {
-            scheduler.request_frame(cb);
+        // 2. Signal the scheduler that a frame is needed.
+        if ctx.has_frame_callbacks() {
+            scheduler.set_needs_frame();
         }
 
-        // 3. Tick — runs macrotasks, microtasks, frame callback (lifecycle + commit).
-        let result = scheduler.tick(&mut |info| {
+        // 3. Tick — macrotasks, microtasks, frame production.
+        //    Chrome: rAF callbacks run in LocalFrameView with full context.
+        let _ = scheduler.tick(&mut |info| {
             ctx.set_last_fps(info.fps);
+            ctx.run_frame_callbacks(info);
             ctx.update_lifecycle_and_commit();
         });
 
-        // 4. Check if async tasks dirtied the DOM.
+        // 4. Post-tick: check if more frames are needed.
         if ctx.document_needs_frame() {
             ctx.invalidate_style();
+            scheduler.set_needs_frame();
+        }
+        if ctx.has_frame_callbacks() {
             scheduler.set_needs_frame();
         }
 
@@ -58,10 +78,24 @@ pub fn run(scheduler: &mut Scheduler, ctx: &mut ViewContext, rx: &mpsc::Receiver
             .frame_scheduler_mut()
             .set_frame_timing(ctx.last_frame_timing());
 
-        // 6. Park until next event or timeout.
-        //    Resize events are handled immediately (fast-path) so the
-        //    render thread isn't left blocking on a stale commit.
-        match result.park_timeout {
+        // 6. If more frames are needed, request vsync-aligned wake.
+        //    Chrome: CCScheduler calls SetNeedsBeginFrame(true) which
+        //    subscribes to the display's vsync signal. Here, request_redraw()
+        //    asks the OS for a RedrawRequested at the next vsync.
+        let needs_next_frame = scheduler.frame_scheduler().should_produce_frame()
+            || ctx.has_frame_callbacks()
+            || ctx.document_needs_frame();
+
+        if needs_next_frame {
+            ctx.request_redraw();
+        }
+
+        // 7. Park until next event.
+        //    With vsync-driven scheduling, we don't need recv_timeout.
+        //    If a frame is needed, request_redraw() will wake us via
+        //    ViewEvent::Paint. Otherwise, park until input/lifecycle event.
+        let park_timeout = scheduler.park_timeout();
+        match park_timeout {
             Some(t) if t.is_zero() => continue,
             Some(t) => match rx.recv_timeout(t) {
                 Ok(ViewEvent::Shutdown) => return,
@@ -78,9 +112,6 @@ pub fn run(scheduler: &mut Scheduler, ctx: &mut ViewContext, rx: &mpsc::Receiver
 }
 
 /// Dispatch an event, but handle resize via the immediate fast-path.
-///
-/// When the view thread is parked and a resize wakes it, we must commit
-/// right away — the render thread is blocking in `wait_for_resize_commit`.
 fn dispatch_or_resize(scheduler: &mut Scheduler, ctx: &mut ViewContext, event: ViewEvent) {
     if let ViewEvent::Lifecycle(LifecycleEvent::Resized { width, height }) = event {
         ctx.on_resize(width, height);
@@ -100,7 +131,6 @@ fn dispatch(scheduler: &mut Scheduler, ctx: &mut ViewContext, event: ViewEvent) 
         }
         ViewEvent::Lifecycle(lc) => on_lifecycle(scheduler, ctx, lc),
         ViewEvent::Paint => {
-            ctx.invalidate_style();
             scheduler.set_needs_frame();
         }
         ViewEvent::ScrollSync(offsets) => {
@@ -113,8 +143,6 @@ fn dispatch(scheduler: &mut Scheduler, ctx: &mut ViewContext, event: ViewEvent) 
 
 fn on_lifecycle(scheduler: &mut Scheduler, ctx: &mut ViewContext, lc: LifecycleEvent) {
     match lc {
-        // Resize is handled via fast-path (dispatch_or_resize / drain loop).
-        // Should not reach here, but if it does, handle it correctly.
         LifecycleEvent::Resized { width, height } => {
             ctx.on_resize(width, height);
             ctx.update_lifecycle_and_commit();

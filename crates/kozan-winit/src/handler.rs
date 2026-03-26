@@ -199,7 +199,9 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
                     .on_scale_factor_changed(kozan_id, scale_factor, refresh_rate);
             }
 
-            WindowEvent::RedrawRequested => {}
+            WindowEvent::RedrawRequested => {
+                self.manager.on_redraw(kozan_id);
+            }
 
             // ── Keyboard ─────────────────────────────────────
             WindowEvent::ModifiersChanged(mods) => {
@@ -266,7 +268,11 @@ impl<R: Renderer> ApplicationHandler<InternalRequest> for AppHandler<R> {
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: InternalRequest) {
         match event {
             InternalRequest::Redraw(kozan_id) => {
-                self.manager.on_redraw(kozan_id);
+                if let Some(&winit_id) = self.kozan_to_winit.get(&kozan_id) {
+                    if let Some(window) = self.os_windows.get(&winit_id) {
+                        window.request_redraw();
+                    }
+                }
             }
             InternalRequest::SetTitle { window_id, title } => {
                 if let Some(&winit_id) = self.kozan_to_winit.get(&window_id) {
