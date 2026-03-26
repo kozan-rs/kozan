@@ -98,7 +98,7 @@ pub fn run<R: Renderer>(renderer: R, windows: Vec<PendingWindow>) -> Result<(), 
         .build()
         .map_err(|e| RunError::EventLoopCreation(e.to_string()))?;
 
-    let host = WinitPlatformHost::new(event_loop.create_proxy());
+    let host = WinitPlatformHost::new(event_loop.create_proxy(), renderer.name());
 
     let pending = windows
         .into_iter()

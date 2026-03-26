@@ -40,6 +40,10 @@ pub trait Renderer: Send + Sync + 'static {
     /// The surface type this renderer produces.
     type Surface: RenderSurface;
 
+    /// Human-readable backend name (e.g., "Vello/wgpu").
+    /// Used by DevTools to display the active renderer.
+    fn name(&self) -> &'static str;
+
     /// Create a rendering surface for a window.
     ///
     /// # Arguments

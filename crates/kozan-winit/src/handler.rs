@@ -113,6 +113,7 @@ impl<R: Renderer> AppHandler<R> {
             return;
         }
 
+        self.host.increment_windows();
         self.kozan_to_winit.insert(kozan_id, winit_id);
         self.winit_to_kozan.insert(winit_id, kozan_id);
         self.os_windows.insert(winit_id, window);
@@ -148,6 +149,7 @@ impl<R: Renderer> AppHandler<R> {
         if let Some(kozan_id) = self.winit_to_kozan.remove(&winit_id) {
             self.manager.close_window(kozan_id);
             self.kozan_to_winit.remove(&kozan_id);
+            self.host.decrement_windows();
         }
         self.os_windows.remove(&winit_id);
     }

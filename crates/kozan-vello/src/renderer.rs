@@ -98,6 +98,10 @@ mod tests {
 impl Renderer for VelloRenderer {
     type Surface = VelloSurface;
 
+    fn name(&self) -> &'static str {
+        "Vello/wgpu"
+    }
+
     fn create_surface<W>(
         &self,
         window: &W,

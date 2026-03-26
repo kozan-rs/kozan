@@ -188,7 +188,15 @@ impl RenderSurface for VelloSurface {
         let surface_texture = match self.surface.get_current_texture() {
             Ok(t) => t,
             Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-                return Err(RendererError::SurfaceLost);
+                // Reconfigure and retry once — handles minimize, maximize,
+                // and display mode changes without killing the window.
+                self.reconfigure();
+                match self.surface.get_current_texture() {
+                    Ok(t) => t,
+                    // Still failing (e.g., window minimized to 0x0) — skip
+                    // this frame. The next resize/redraw will recover.
+                    Err(_) => return Ok(()),
+                }
             }
             Err(e) => {
                 return Err(RendererError::SurfaceTextureAcquire(e.to_string()));

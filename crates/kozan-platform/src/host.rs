@@ -18,6 +18,10 @@ use crate::request::WindowConfig;
 ///
 /// All methods are non-blocking — they send messages to the main thread.
 /// If the main thread has exited, calls are silently dropped.
+///
+/// Query methods (`window_count`, `renderer_name`) read shared atomic
+/// state directly — no message round-trip. Updated by the main thread,
+/// readable from any view thread.
 pub trait PlatformHost: Send + Sync {
     /// Request a redraw for this window.
     fn request_redraw(&self, window_id: WindowId);
@@ -33,4 +37,16 @@ pub trait PlatformHost: Send + Sync {
 
     /// Request a new window to be created.
     fn create_window(&self, config: WindowConfig);
+
+    // ── Queries (lock-free reads of shared state) ────────────
+
+    /// Number of open windows across the application.
+    fn window_count(&self) -> u32 {
+        0
+    }
+
+    /// Renderer backend name (e.g., "Vello/wgpu").
+    fn renderer_name(&self) -> &str {
+        "unknown"
+    }
 }

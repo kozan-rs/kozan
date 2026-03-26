@@ -2,14 +2,12 @@
 //!
 //! Chrome: `FrameTimingTracker` in `cc/metrics/`.
 
-#![allow(dead_code)]
-
 use std::cell::Cell;
 
 use kozan_primitives::timing::FrameTiming;
 
 /// How many frames to keep for the graph.
-const HISTORY_SIZE: usize = 120;
+pub const HISTORY_SIZE: usize = 120;
 
 /// Per-frame snapshot stored in the ring buffer.
 #[derive(Clone, Copy, Default)]
@@ -18,6 +16,8 @@ pub struct FrameSnapshot {
     pub fps: f64,
     pub frame_number: u64,
     pub budget_ms: f64,
+    pub dom_node_count: u32,
+    pub element_count: u32,
 }
 
 impl FrameSnapshot {
@@ -92,21 +92,6 @@ impl FrameHistory {
         self.avg_accum.set(0.0);
     }
 
-    /// Get frame at position (0 = oldest visible, HISTORY_SIZE-1 = newest).
-    pub fn frame_at(&self, pos: usize) -> FrameSnapshot {
-        let idx = (self.write_idx.get() + pos) % HISTORY_SIZE;
-        self.frames[idx].get()
-    }
-
-    /// Iterate frames oldest → newest.
-    pub fn iter(&self) -> impl Iterator<Item = FrameSnapshot> + '_ {
-        (0..HISTORY_SIZE).map(move |i| self.frame_at(i))
-    }
-
-    pub fn total_frames(&self) -> u64 {
-        self.total_frames.get()
-    }
-
     pub fn jank_count(&self) -> u64 {
         self.jank_count.get()
     }
@@ -117,14 +102,5 @@ impl FrameHistory {
 
     pub fn avg_ms(&self) -> f64 {
         self.avg_accum.get()
-    }
-
-    /// Number of filled slots (may be < HISTORY_SIZE at startup).
-    pub fn len(&self) -> usize {
-        (self.total_frames.get() as usize).min(HISTORY_SIZE)
-    }
-
-    pub fn capacity(&self) -> usize {
-        HISTORY_SIZE
     }
 }

@@ -1,6 +1,7 @@
 //! Concrete `PlatformHost` backed by winit's `EventLoopProxy`.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use winit::event_loop::EventLoopProxy;
 
 use kozan_platform::host::PlatformHost;
@@ -29,17 +30,36 @@ pub(crate) enum InternalRequest {
 }
 
 /// winit-backed `PlatformHost`.
+///
+/// Atomic counters are updated by the main thread (handler) and read
+/// lock-free from any view thread via `PlatformHost` query methods.
 pub(crate) struct WinitPlatformHost {
     proxy: EventLoopProxy<InternalRequest>,
+    window_count: AtomicU32,
+    renderer_name: &'static str,
 }
 
 impl WinitPlatformHost {
-    pub fn new(proxy: EventLoopProxy<InternalRequest>) -> Arc<Self> {
-        Arc::new(Self { proxy })
+    pub fn new(proxy: EventLoopProxy<InternalRequest>, renderer_name: &'static str) -> Arc<Self> {
+        Arc::new(Self {
+            proxy,
+            window_count: AtomicU32::new(0),
+            renderer_name,
+        })
     }
 
     pub(crate) fn proxy(&self) -> EventLoopProxy<InternalRequest> {
         self.proxy.clone()
+    }
+
+    /// Called by the handler when a window is successfully created.
+    pub(crate) fn increment_windows(&self) {
+        self.window_count.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Called by the handler when a window is closed.
+    pub(crate) fn decrement_windows(&self) {
+        self.window_count.fetch_sub(1, Ordering::Relaxed);
     }
 }
 
@@ -73,5 +93,13 @@ impl PlatformHost for WinitPlatformHost {
         let _ = self
             .proxy
             .send_event(InternalRequest::CreateWindow { config });
+    }
+
+    fn window_count(&self) -> u32 {
+        self.window_count.load(Ordering::Relaxed)
+    }
+
+    fn renderer_name(&self) -> &str {
+        self.renderer_name
     }
 }

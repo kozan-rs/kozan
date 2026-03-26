@@ -16,8 +16,11 @@
 //!     .run()
 //! ```
 
+mod chart;
 mod metrics;
-mod overlay;
+mod performance;
+mod recorder;
+mod shell;
 mod style;
 
 use kozan_platform::ViewContext;
@@ -25,18 +28,18 @@ use kozan_platform::ViewContext;
 /// DevTools — attach to a window for real-time performance profiling.
 ///
 /// Chrome: DevTools Performance panel — FPS meter, frame timing breakdown,
-/// pipeline phase visualization, jank detection.
+/// pipeline phase visualization, jank detection, area charts.
 pub struct DevTools;
 
 impl DevTools {
     /// Inject the DevTools overlay into the document body.
     ///
-    /// Creates a floating, draggable panel showing real-time performance
-    /// metrics. Click the panel to expand full details.
+    /// Creates a floating panel showing real-time performance metrics
+    /// with smooth area charts. Click the badge to expand full details.
     pub fn attach(ctx: &ViewContext) {
         let doc = ctx.document();
         doc.add_stylesheet(style::STYLESHEET);
-        let panel = overlay::build(doc, ctx);
+        let panel = shell::build(doc, ctx);
         doc.body().append(panel);
     }
 }

@@ -257,6 +257,16 @@ impl ViewContext {
         self.window_id
     }
 
+    /// Access to window and app-level operations.
+    ///
+    /// Chrome: `chrome.devtools.inspectedWindow` — elevated access
+    /// beyond the page's own context. Commands (create/close/resize window)
+    /// and queries (window count, renderer name).
+    #[inline]
+    pub fn platform(&self) -> &dyn PlatformHost {
+        &*self.host
+    }
+
     /// Current FPS — updated each frame by the scheduler.
     ///
     /// Returns 0.0 on the first frame. Use this to build FPS overlays.
