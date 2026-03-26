@@ -236,8 +236,4 @@ impl FrameView {
         (self.scroll_tree.clone(), self.scroll_offsets.clone())
     }
 
-    /// Borrow scroll tree and offsets simultaneously — avoids split borrow issues.
-    pub fn scroll_parts_mut(&mut self) -> (&ScrollTree, &mut ScrollOffsets) {
-        (&self.scroll_tree, &mut self.scroll_offsets)
-    }
 }

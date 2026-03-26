@@ -42,10 +42,6 @@ impl EventHandler {
         self.mouse.invalidate_hit_cache();
     }
 
-    pub fn suppress_hover(&mut self) {
-        self.mouse.suppress_hover();
-    }
-
     #[cfg(test)]
     pub fn hovered_node(&self) -> Option<crate::id::RawId> {
         self.mouse.hovered_node()

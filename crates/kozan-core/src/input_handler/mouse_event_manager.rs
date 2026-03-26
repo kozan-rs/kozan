@@ -20,7 +20,6 @@ pub(crate) struct MouseEventManager {
     mousedown_button: Option<MouseButton>,
     last_cursor: Point,
     hit_cache: HitTestCache,
-    suppress_hover: bool,
 }
 
 impl MouseEventManager {
@@ -31,18 +30,12 @@ impl MouseEventManager {
             mousedown_button: None,
             last_cursor: Point::ZERO,
             hit_cache: HitTestCache::new(),
-            suppress_hover: false,
         }
     }
 
     pub fn on_mouse_move(&mut self, ctx: &InputContext, me: crate::input::MouseMoveEvent) -> bool {
         let point = Point::new(me.x as f32, me.y as f32);
         self.last_cursor = point;
-
-        if self.suppress_hover {
-            self.suppress_hover = false;
-            return false;
-        }
 
         let hit = self.hit_at(ctx, point);
         let changed = self.update_hover(ctx, &hit, point, me.modifiers);
@@ -134,9 +127,6 @@ impl MouseEventManager {
         self.hit_cache.invalidate();
     }
 
-    pub fn suppress_hover(&mut self) {
-        self.suppress_hover = true;
-    }
 
     #[cfg(test)]
     pub fn hovered_node(&self) -> Option<RawId> {

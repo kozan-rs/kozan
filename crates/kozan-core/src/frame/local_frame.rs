@@ -8,7 +8,6 @@ use crate::input_handler::{EventHandler, InputContext};
 use super::frame_view::FrameView;
 use crate::compositor::layer_tree::LayerTree;
 use crate::dom::document::Document;
-use crate::events::ui_event::ScrollEvent;
 use crate::input::default_action::DefaultAction;
 use crate::input::InputEvent;
 use crate::layout::fragment::Fragment;
@@ -17,7 +16,7 @@ use crate::lifecycle::LifecycleState;
 use crate::page::FocusController;
 use crate::page::Viewport;
 use crate::paint::DisplayList;
-use crate::scroll::{ScrollController, ScrollOffsets, ScrollTree};
+use crate::scroll::{ScrollOffsets, ScrollTree};
 
 /// A single frame — document, lifecycle pipeline, and event handler.
 ///
@@ -104,29 +103,6 @@ impl LocalFrame {
             }
             DefaultAction::ScrollPrevented | DefaultAction::None => (result.state_changed, None),
         }
-    }
-
-    /// Apply a scroll delta and dispatch `ScrollEvent` on affected nodes.
-    fn apply_scroll(&mut self, target: u32, delta: kozan_primitives::geometry::Offset) -> bool {
-        let (tree, offsets) = self.view.scroll_parts_mut();
-        let scrolled = ScrollController::new(tree, offsets).scroll(target, delta);
-        if scrolled.is_empty() {
-            return false;
-        }
-        self.view.invalidate_paint();
-        self.event_handler.invalidate_hit_cache();
-        self.event_handler.suppress_hover();
-
-        for node_id in scrolled.iter() {
-            let offset = self.view.scroll_offsets().offset(node_id);
-            if let Some(handle) = self.doc.handle_for_index(node_id) {
-                handle.dispatch_event(&ScrollEvent {
-                    scroll_x: offset.dx,
-                    scroll_y: offset.dy,
-                });
-            }
-        }
-        true
     }
 
     /// Apply scroll offsets received from the compositor.

@@ -6,10 +6,9 @@ use std::any::Any;
 
 use smallvec::{SmallVec, smallvec};
 
-use kozan_primitives::color::Color;
 use kozan_primitives::geometry::{Point, Rect};
 
-use crate::scroll::scrollbar::{self, Orientation, THICKNESS};
+use crate::scroll::scrollbar::{self, MARGIN, Orientation, THICKNESS};
 
 use super::frame::FrameQuad;
 use super::layer::{LayerContent, QuadContext};
@@ -148,6 +147,16 @@ impl ScrollbarLayer {
 }
 
 impl LayerContent for ScrollbarLayer {
+    /// Emit a screen-space quad for the scrollbar thumb.
+    ///
+    /// Chrome: `SolidColorScrollbarLayerImpl::AppendQuads()` emits quads
+    /// in the layer's own coordinate space. The layer's `draw_transform`
+    /// positions it on screen without page zoom affecting dimensions.
+    ///
+    /// Here we do the equivalent explicitly: convert from content space
+    /// (where layout computed the geometry) to screen-logical space
+    /// (where the renderer applies only device_scale). Position and
+    /// track length scale by page_zoom; thickness stays constant.
     fn append_quads(&self, ctx: &QuadContext) -> SmallVec<[FrameQuad; 2]> {
         if !self.can_scroll() || self.opacity <= 0.0 {
             return SmallVec::new();
@@ -156,21 +165,45 @@ impl LayerContent for ScrollbarLayer {
             return SmallVec::new();
         };
 
+        use super::frame::QuadSpace;
+
         let theme = ScrollbarTheme::get();
         let color = theme.thumb_color(self.state);
         let cr = ctx.container_rect;
+        let z = ctx.page_zoom;
+
+        // Container edges in screen-logical space.
+        let scr_x = cr.x() * z;
+        let scr_y = cr.y() * z;
+        let scr_w = cr.width() * z;
+        let scr_h = cr.height() * z;
+
+        // Thumb track position (proportion along the scroll axis) scales
+        // with zoom. Cross-axis position is pinned at a fixed screen-pixel
+        // offset from the container edge — THICKNESS and MARGIN stay constant.
+        let screen_rect = match self.orientation {
+            Orientation::Vertical => Rect::new(
+                scr_x + scr_w - THICKNESS - MARGIN,
+                scr_y + thumb.y() * z,
+                THICKNESS,
+                thumb.height() * z,
+            ),
+            Orientation::Horizontal => Rect::new(
+                scr_x + thumb.x() * z,
+                scr_y + scr_h - THICKNESS - MARGIN,
+                thumb.width() * z,
+                THICKNESS,
+            ),
+        };
+        let screen_clip = Rect::new(scr_x, scr_y, scr_w, scr_h);
 
         smallvec![FrameQuad {
-            rect: Rect::new(
-                cr.x() + thumb.x(),
-                cr.y() + thumb.y(),
-                thumb.width(),
-                thumb.height(),
-            ),
-            clip: Some(cr),
+            rect: screen_rect,
+            clip: Some(screen_clip),
             color,
             radius: THICKNESS / 2.0,
             opacity: self.opacity,
+            space: QuadSpace::Screen,
         }]
     }
 
@@ -196,8 +229,9 @@ mod tests {
 
     fn ctx(w: f32, h: f32) -> QuadContext {
         QuadContext {
-            origin: Point::ZERO,
+            _origin: Point::ZERO,
             container_rect: Rect::new(0.0, 0.0, w, h),
+            page_zoom: 1.0,
         }
     }
 

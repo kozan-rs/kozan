@@ -15,8 +15,11 @@ pub struct LayerId(pub(super) u32);
 
 /// Chrome: `SharedQuadState` — accumulated state for quad production.
 pub(crate) struct QuadContext {
-    pub origin: Point,
+    pub _origin: Point,
     pub container_rect: Rect,
+    /// Page zoom factor — overlay layers use this to convert content-space
+    /// geometry to screen-space so they render at fixed device-pixel size.
+    pub page_zoom: f32,
 }
 
 /// Chrome: `LayerImpl` virtual interface.

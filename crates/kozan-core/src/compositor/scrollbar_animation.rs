@@ -12,7 +12,6 @@ enum FadePhase {
     Hidden,
     Visible,
     WaitingToFade { since: Instant },
-    FadingOut { start: Instant },
 }
 
 /// Chrome: `cc::ScrollbarAnimationController`.
@@ -75,17 +74,13 @@ impl ScrollbarAnimation {
                     (1.0 - t).max(0.0)
                 }
             }
-            FadePhase::FadingOut { start } => {
-                let t = now.duration_since(start).as_secs_f32() / theme.fade_duration_secs();
-                (1.0 - t).max(0.0)
-            }
         }
     }
 
     pub(crate) fn is_animating(&self) -> bool {
         matches!(
             self.fade,
-            FadePhase::WaitingToFade { .. } | FadePhase::FadingOut { .. }
+            FadePhase::WaitingToFade { .. }
         )
     }
 }
