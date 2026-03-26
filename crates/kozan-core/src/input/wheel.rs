@@ -18,9 +18,9 @@ use super::modifiers::Modifiers;
 /// dispatched to the element under the cursor (like Chrome's scroll targeting).
 #[derive(Debug, Clone, Copy)]
 pub struct WheelEvent {
-    /// Cursor X position in physical pixels, relative to view origin.
+    /// Cursor X in screen-logical pixels, relative to view origin.
     pub x: f64,
-    /// Cursor Y position in physical pixels, relative to view origin.
+    /// Cursor Y in screen-logical pixels, relative to view origin.
     pub y: f64,
     /// Scroll amount and type.
     pub delta: WheelDelta,

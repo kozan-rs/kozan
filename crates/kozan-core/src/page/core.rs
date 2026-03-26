@@ -226,7 +226,7 @@ mod tests {
     #[test]
     fn handle_input_without_fragment() {
         let mut page = Page::new();
-        let changed = page.handle_input(InputEvent::MouseMove(RawMouseMoveEvent {
+        let (changed, _scroll) = page.handle_input(InputEvent::MouseMove(RawMouseMoveEvent {
             x: 100.0,
             y: 200.0,
             modifiers: Modifiers::EMPTY,

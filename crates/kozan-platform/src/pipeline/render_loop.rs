@@ -144,6 +144,7 @@ impl<S: RenderSurface> RenderLoop<S> {
                 width: self.width,
                 height: self.height,
                 content_scale: self.content_scale(),
+                device_scale: self.device_scale_factor,
             };
             match self.surface.render(&params) {
                 Ok(()) => return true,
@@ -186,6 +187,7 @@ impl<S: RenderSurface> RenderLoop<S> {
     }
 
     fn handle_event(&mut self, event: RenderEvent) {
+        let event = self.apply_page_zoom_to_event(event);
         match event {
             RenderEvent::Commit(output) => self.commit(output),
             RenderEvent::Resize { width, height } => {
@@ -205,6 +207,7 @@ impl<S: RenderSurface> RenderLoop<S> {
     }
 
     fn handle_non_resize(&mut self, event: RenderEvent) {
+        let event = self.apply_page_zoom_to_event(event);
         match event {
             RenderEvent::ScaleFactorChanged(sf) => self.device_scale_factor = sf,
             RenderEvent::Scroll { delta, point } => self.apply_scroll(delta, point),
@@ -216,10 +219,40 @@ impl<S: RenderSurface> RenderLoop<S> {
         }
     }
 
+    /// Chrome: `TransformWebInputEvent` — screen-logical → content-logical.
+    /// Applied once at the event boundary so handlers never think about zoom.
+    fn apply_page_zoom_to_event(&self, event: RenderEvent) -> RenderEvent {
+        let z = self.page_zoom_factor as f32;
+        if (z - 1.0).abs() < f32::EPSILON {
+            return event;
+        }
+        let inv = 1.0 / z;
+        match event {
+            RenderEvent::Scroll { delta, point } => RenderEvent::Scroll {
+                delta: Offset::new(delta.dx * inv, delta.dy * inv),
+                point: Point::new(point.x * inv, point.y * inv),
+            },
+            RenderEvent::MouseDown { point } => RenderEvent::MouseDown {
+                point: Point::new(point.x * inv, point.y * inv),
+            },
+            RenderEvent::MouseUp { point } => RenderEvent::MouseUp {
+                point: Point::new(point.x * inv, point.y * inv),
+            },
+            RenderEvent::MouseMove { point } => RenderEvent::MouseMove {
+                point: Point::new(point.x * inv, point.y * inv),
+            },
+            other => other,
+        }
+    }
+
     fn commit(&mut self, output: FrameOutput) {
         self.page_zoom_factor = output.page_zoom_factor;
-        self.compositor
-            .commit(output.display_list, output.layer_tree, output.scroll_tree);
+        self.compositor.commit(
+            output.display_list,
+            output.layer_tree,
+            output.scroll_tree,
+            output.page_zoom_factor as f32,
+        );
     }
 
     fn apply_scroll(&mut self, delta: Offset, point: Point) {
@@ -228,17 +261,10 @@ impl<S: RenderSurface> RenderLoop<S> {
             return;
         }
 
-        // Screen-logical coords → content-logical coords.
-        // Page zoom shrinks the layout viewport, so a screen pixel covers
-        // more content pixels. Hit-test and delta must be in content space.
-        let z = self.page_zoom_factor as f32;
-        let content_point = Point::new(point.x / z, point.y / z);
-        let content_delta = Offset::new(delta.dx / z, delta.dy / z);
-
-        let target = self.compositor.hit_test_scroll_target(content_point);
+        let target = self.compositor.hit_test_scroll_target(point);
 
         if let Some(target) = target {
-            if self.compositor.try_scroll(target, content_delta) {
+            if self.compositor.try_scroll(target, delta) {
                 let _ = self.view_tx.send(ViewEvent::ScrollSync(
                     self.compositor.scroll_offsets().clone(),
                 ));
@@ -261,9 +287,7 @@ impl<S: RenderSurface> RenderLoop<S> {
         if !self.compositor.has_content() {
             return;
         }
-        let z = self.page_zoom_factor as f32;
-        let content_point = Point::new(point.x / z, point.y / z);
-        if self.compositor.handle_mouse_down(content_point) {
+        if self.compositor.handle_mouse_down(point) {
             let _ = self.view_tx.send(ViewEvent::ScrollSync(
                 self.compositor.scroll_offsets().clone(),
             ));
@@ -274,9 +298,7 @@ impl<S: RenderSurface> RenderLoop<S> {
         if !self.compositor.has_content() {
             return;
         }
-        let z = self.page_zoom_factor as f32;
-        let content_point = Point::new(point.x / z, point.y / z);
-        if self.compositor.handle_mouse_move(content_point) {
+        if self.compositor.handle_mouse_move(point) {
             let _ = self.view_tx.send(ViewEvent::ScrollSync(
                 self.compositor.scroll_offsets().clone(),
             ));

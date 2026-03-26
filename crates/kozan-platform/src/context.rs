@@ -33,8 +33,14 @@ use crate::pipeline::render_loop::RenderEvent;
 pub(crate) type StagedFuture = Pin<Box<dyn Future<Output = ()> + 'static>>;
 
 /// A frame callback — like `requestAnimationFrame(callback)`.
+///
+/// Chrome: rAF callbacks run inside `LocalFrameView` with full access to
+/// `document` and `window`. Same here — callbacks receive `&ViewContext`
+/// so they can query Document, Viewport, zoom, etc.
+///
 /// Returns `true` to keep for next frame (loop), `false` for one-shot.
-pub(crate) type FrameCallback = Box<dyn FnMut(kozan_scheduler::FrameInfo) -> bool + 'static>;
+pub type FrameCallback =
+    Box<dyn FnMut(kozan_scheduler::FrameInfo, &ViewContext) -> bool + 'static>;
 
 /// Everything the view thread produces per frame — posted to the render thread.
 ///
@@ -90,9 +96,14 @@ pub struct ViewContext {
     /// `ViewContext` is `!Send` and lives entirely on the view thread.
     staged_futures: Rc<RefCell<Vec<StagedFuture>>>,
 
-    /// Frame callbacks queued via `request_frame()`.
-    /// Drained into the scheduler each tick — like `requestAnimationFrame`.
-    staged_frame_callbacks: Rc<RefCell<Vec<FrameCallback>>>,
+    /// Chrome: `LocalFrameView::frame_request_callbacks_`.
+    /// Callbacks registered via `request_frame()`. Run each frame with
+    /// `&ViewContext` so they can access Document, Viewport, etc.
+    frame_callbacks: RefCell<Vec<FrameCallback>>,
+
+    /// Callbacks registered DURING a frame (inside another callback).
+    /// Moved to `frame_callbacks` after the current frame's callbacks finish.
+    pending_frame_callbacks: RefCell<Vec<FrameCallback>>,
 
     /// Last computed FPS — updated each frame by the scheduler.
     /// Shared via `Rc<Cell>` so async tasks can read it.
@@ -115,7 +126,8 @@ impl ViewContext {
             window_id,
             render_sender,
             staged_futures: Rc::new(RefCell::new(Vec::new())),
-            staged_frame_callbacks: Rc::new(RefCell::new(Vec::new())),
+            frame_callbacks: RefCell::new(Vec::new()),
+            pending_frame_callbacks: RefCell::new(Vec::new()),
             last_fps: Rc::new(std::cell::Cell::new(0.0)),
         }
     }
@@ -182,12 +194,37 @@ impl ViewContext {
         self.staged_futures.borrow_mut().drain(..).collect()
     }
 
-    /// Take frame callbacks queued via `request_frame()`.
+    /// Whether there are frame callbacks waiting to run.
     ///
-    /// Called by the event loop each tick to register them with the scheduler.
-    /// Uses `mem::take` — zero allocation, swaps with empty Vec.
-    pub(crate) fn take_staged_frame_callbacks(&self) -> Vec<FrameCallback> {
-        std::mem::take(&mut *self.staged_frame_callbacks.borrow_mut())
+    /// Checks BOTH the main buffer and pending buffer — callbacks
+    /// registered during init go to pending and must still trigger
+    /// frame production.
+    pub(crate) fn has_frame_callbacks(&self) -> bool {
+        !self.frame_callbacks.borrow().is_empty()
+            || !self.pending_frame_callbacks.borrow().is_empty()
+    }
+
+    /// Chrome: `LocalFrameView::RunAnimationFrameCallbacks()`.
+    ///
+    /// Runs all registered frame callbacks with `&self` so they can access
+    /// Document, Viewport, zoom, etc. Callbacks that return `true` are kept
+    /// for the next frame. Uses take-call-put to allow callbacks to call
+    /// `request_frame` (new registrations go to pending, merged after).
+    pub(crate) fn run_frame_callbacks(&self, info: kozan_scheduler::FrameInfo) {
+        // 1. Merge pending (from init or previous frame's request_frame calls).
+        self.frame_callbacks
+            .borrow_mut()
+            .append(&mut *self.pending_frame_callbacks.borrow_mut());
+
+        // 2. Take all callbacks — leaves frame_callbacks empty so
+        //    request_frame() during execution goes to pending.
+        let mut cbs = std::mem::take(&mut *self.frame_callbacks.borrow_mut());
+
+        // 3. Run. Callbacks that return true are kept for next frame.
+        cbs.retain_mut(|cb| cb(info, self));
+
+        // 4. Put survivors back.
+        *self.frame_callbacks.borrow_mut() = cbs;
     }
 
     /// Get a clone of the cross-thread sender.
@@ -246,25 +283,56 @@ impl ViewContext {
 
     /// Register a frame callback — like `requestAnimationFrame`.
     ///
+    /// Chrome: rAF callbacks run inside `LocalFrameView` with full access
+    /// to `document` and `window`. Same here — callbacks receive
+    /// `&ViewContext` so they can read Document, Viewport, zoom, etc.
+    ///
     /// Returns `bool`: `true` = keep for next frame, `false` = one-shot.
     ///
     /// ```ignore
     /// // One-shot:
-    /// ctx.request_frame(|_info| { do_something(); false });
+    /// ctx.request_frame(|_info, _ctx| { do_something(); false });
     ///
-    /// // Render loop (like requestAnimationFrame in a loop):
-    /// ctx.request_frame(move |info| {
-    ///     fps_label.set_content(format!("{:.0} FPS", info.fps));
-    ///     true // keep running
+    /// // Render loop with live viewport access:
+    /// ctx.request_frame(move |info, ctx| {
+    ///     let zoom = ctx.page_zoom();
+    ///     let nodes = ctx.document().node_count();
+    ///     label.set_content(format!("{:.0} FPS | zoom {:.0}%", info.fps, zoom * 100.0));
+    ///     true
     /// });
     /// ```
     pub fn request_frame(
         &self,
-        callback: impl FnMut(kozan_scheduler::FrameInfo) -> bool + 'static,
+        callback: impl FnMut(kozan_scheduler::FrameInfo, &ViewContext) -> bool + 'static,
     ) {
-        self.staged_frame_callbacks
+        // During `run_frame_callbacks`, `frame_callbacks` is taken then
+        // restored. New registrations during execution go to pending
+        // and are merged after the current batch finishes.
+        self.pending_frame_callbacks
             .borrow_mut()
             .push(Box::new(callback));
+    }
+
+    // ── Viewport & display ────────────────────────────────────────────────
+
+    /// Chrome: `window.devicePixelRatio`.
+    #[inline]
+    pub fn device_pixel_ratio(&self) -> f64 {
+        self.page.viewport().scale_factor()
+    }
+
+    /// Chrome: Ctrl+/- page zoom level (1.0 = 100%).
+    #[inline]
+    pub fn page_zoom(&self) -> f64 {
+        self.page.page_zoom()
+    }
+
+    /// Read-only snapshot of the viewport.
+    ///
+    /// Chrome: `VisualProperties` — physical size, DPI, zoom, logical size.
+    #[inline]
+    pub fn viewport(&self) -> &kozan_core::page::Viewport {
+        self.page.viewport()
     }
 
     // ── Internal (view thread only) ───────────────────────────────────────
@@ -322,10 +390,11 @@ impl ViewContext {
     ///
     /// Chrome: browser-level shortcuts (Ctrl+/-, Ctrl+0) are intercepted
     /// before reaching Blink. Same here — zoom never hits DOM dispatch.
-    pub(crate) fn on_input(&mut self, input: kozan_core::InputEvent) -> bool {
+    pub(crate) fn on_input(&mut self, mut input: kozan_core::InputEvent) -> bool {
         if let Some(handled) = self.try_browser_shortcut(&input) {
             return handled;
         }
+        input.apply_page_zoom(self.page.page_zoom());
         let (state_changed, scroll_action) = self.page.handle_input(input);
 
         if let Some((target, delta)) = scroll_action {

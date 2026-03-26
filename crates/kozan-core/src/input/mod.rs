@@ -56,6 +56,40 @@ pub enum InputEvent {
     Keyboard(KeyboardEvent),
 }
 
+impl InputEvent {
+    /// Chrome: `TransformWebInputEvent` — converts screen-logical coordinates
+    /// to content-logical coordinates by dividing by page zoom.
+    ///
+    /// Called once at each thread's input boundary so downstream code never
+    /// thinks about zoom. Device DPI is already handled by `InputState`;
+    /// this handles the remaining page-zoom factor.
+    pub fn apply_page_zoom(&mut self, zoom: f64) {
+        if (zoom - 1.0).abs() < f64::EPSILON {
+            return;
+        }
+        let inv = 1.0 / zoom;
+        match self {
+            InputEvent::MouseMove(e) => {
+                e.x *= inv;
+                e.y *= inv;
+            }
+            InputEvent::MouseButton(e) => {
+                e.x *= inv;
+                e.y *= inv;
+            }
+            InputEvent::MouseEnter(e) => {
+                e.x *= inv;
+                e.y *= inv;
+            }
+            InputEvent::Wheel(e) => {
+                e.x *= inv;
+                e.y *= inv;
+            }
+            InputEvent::MouseLeave(_) | InputEvent::Keyboard(_) => {}
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,6 +98,56 @@ mod tests {
     fn input_event_is_send() {
         fn assert_send<T: Send>() {}
         assert_send::<InputEvent>();
+    }
+
+    #[test]
+    fn apply_page_zoom_scales_mouse_coords() {
+        let mut evt = InputEvent::MouseMove(MouseMoveEvent {
+            x: 200.0,
+            y: 400.0,
+            modifiers: Modifiers::EMPTY,
+            timestamp: std::time::Instant::now(),
+        });
+        evt.apply_page_zoom(2.0);
+        if let InputEvent::MouseMove(e) = evt {
+            assert!((e.x - 100.0).abs() < 1e-9);
+            assert!((e.y - 200.0).abs() < 1e-9);
+        } else {
+            panic!("wrong variant");
+        }
+    }
+
+    #[test]
+    fn apply_page_zoom_noop_at_1x() {
+        let mut evt = InputEvent::MouseMove(MouseMoveEvent {
+            x: 200.0,
+            y: 400.0,
+            modifiers: Modifiers::EMPTY,
+            timestamp: std::time::Instant::now(),
+        });
+        evt.apply_page_zoom(1.0);
+        if let InputEvent::MouseMove(e) = evt {
+            assert!((e.x - 200.0).abs() < 1e-9);
+            assert!((e.y - 400.0).abs() < 1e-9);
+        } else {
+            panic!("wrong variant");
+        }
+    }
+
+    #[test]
+    fn apply_page_zoom_skips_keyboard() {
+        let mut evt = InputEvent::Keyboard(KeyboardEvent {
+            physical_key: KeyCode::Enter,
+            logical_key: Key::Named(NamedKey::Enter),
+            state: ButtonState::Pressed,
+            modifiers: Modifiers::EMPTY,
+            location: KeyLocation::Standard,
+            text: None,
+            repeat: false,
+            timestamp: std::time::Instant::now(),
+        });
+        evt.apply_page_zoom(2.0);
+        assert!(matches!(evt, InputEvent::Keyboard(_)));
     }
 
     #[test]

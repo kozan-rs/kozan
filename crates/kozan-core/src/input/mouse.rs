@@ -16,13 +16,13 @@ use super::modifiers::Modifiers;
 ///
 /// Chrome equivalent: `WebMouseEvent` with type `kMouseMove`.
 ///
-/// Position is in physical pixels (f64) relative to the view's top-left corner.
-/// Use `ViewContext::scale_factor()` to convert to logical pixels.
+/// Coordinates are in screen-logical pixels (physical / device_scale_factor).
+/// Page zoom conversion happens once via `InputEvent::apply_page_zoom`.
 #[derive(Debug, Clone, Copy)]
 pub struct MouseMoveEvent {
-    /// Cursor X position in physical pixels, relative to view origin.
+    /// Cursor X in screen-logical pixels, relative to view origin.
     pub x: f64,
-    /// Cursor Y position in physical pixels, relative to view origin.
+    /// Cursor Y in screen-logical pixels, relative to view origin.
     pub y: f64,
     /// Modifier keys and mouse button state at the time of this event.
     pub modifiers: Modifiers,
@@ -39,9 +39,9 @@ pub struct MouseMoveEvent {
 /// cursor position and attaches it (like Chrome's `InputRouterImpl`).
 #[derive(Debug, Clone, Copy)]
 pub struct MouseButtonEvent {
-    /// Cursor X position in physical pixels.
+    /// Cursor X in screen-logical pixels.
     pub x: f64,
-    /// Cursor Y position in physical pixels.
+    /// Cursor Y in screen-logical pixels.
     pub y: f64,
     /// Which button was pressed or released.
     pub button: MouseButton,
