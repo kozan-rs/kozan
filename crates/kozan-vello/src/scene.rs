@@ -36,9 +36,13 @@ impl SceneBuilder {
     /// `scroll_adjustments`: compositor overrides for scroll transforms.
     /// When a `PushTransform` has a `scroll_node`, the compositor's offset
     /// replaces the baked-in value — enabling vsync-rate scroll without repaint.
+    /// `scale_factor`: content scale (device DPI × page zoom) for display list.
+    /// `device_scale`: device DPI only — for compositor overlays (scrollbars)
+    /// that must stay a fixed device-pixel size regardless of page zoom.
     pub fn build(
         list: &DisplayList,
         scale_factor: f64,
+        device_scale: f64,
         scroll_offsets: &ScrollOffsets,
         quads: &[FrameQuad],
     ) -> Scene {
@@ -337,29 +341,50 @@ impl SceneBuilder {
             }
         }
 
-        let root_transform = Affine::scale(scale_factor);
+        use kozan_core::compositor::frame::QuadSpace;
+
+        let content_transform = Affine::scale(scale_factor);
+        let device_transform = Affine::scale(device_scale);
+
         for quad in quads {
             let color = vello::peniko::Color::new([
                 quad.color.r, quad.color.g, quad.color.b, quad.color.a * quad.opacity,
             ]);
 
-            if let Some(clip) = quad.clip {
+            // Content quads: rendered with content_scale (device DPI × page zoom).
+            // Screen quads (scrollbar overlays): already converted to
+            // screen-logical space by the layer — rendered with device_scale only.
+            let (transform, r, clip_rect, radius) = match quad.space {
+                QuadSpace::Content => (
+                    content_transform,
+                    quad.rect,
+                    quad.clip,
+                    quad.radius as f64,
+                ),
+                QuadSpace::Screen => (
+                    device_transform,
+                    quad.rect,
+                    quad.clip,
+                    quad.radius as f64,
+                ),
+            };
+
+            if let Some(clip) = clip_rect {
                 let cr = vello::kurbo::Rect::new(
                     clip.x() as f64, clip.y() as f64,
                     clip.right() as f64, clip.bottom() as f64,
                 );
-                scene.push_clip_layer(Fill::NonZero, root_transform, &cr);
+                scene.push_clip_layer(Fill::NonZero, transform, &cr);
             }
 
-            let r = quad.rect;
             let rrect = vello::kurbo::RoundedRect::new(
                 r.x() as f64, r.y() as f64,
                 r.right() as f64, r.bottom() as f64,
-                quad.radius as f64,
+                radius,
             );
-            scene.fill(Fill::NonZero, root_transform, color, None, &rrect);
+            scene.fill(Fill::NonZero, transform, color, None, &rrect);
 
-            if quad.clip.is_some() {
+            if clip_rect.is_some() {
                 scene.pop_layer();
             }
         }
@@ -392,7 +417,7 @@ mod tests {
     #[test]
     fn empty_list_produces_empty_scene() {
         let list = empty_display_list();
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         // An empty display list should produce a scene with no encoding errors.
         // Scene::new() is the baseline — we just verify it doesn't panic.
         assert!(scene.encoding().is_empty());
@@ -401,7 +426,7 @@ mod tests {
     #[test]
     fn single_rect_produces_nonempty_scene() {
         let list = single_rect_display_list();
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         assert!(!scene.encoding().is_empty());
     }
 
@@ -409,14 +434,14 @@ mod tests {
     fn scale_factor_does_not_panic() {
         let list = single_rect_display_list();
         // High DPI scale factor
-        let scene = SceneBuilder::build(&list, 2.0, &ScrollOffsets::new(), &[]);
+        let scene = SceneBuilder::build(&list, 2.0, 2.0, &ScrollOffsets::new(), &[]);
         assert!(!scene.encoding().is_empty());
     }
 
     #[test]
     fn fractional_scale_factor() {
         let list = single_rect_display_list();
-        let scene = SceneBuilder::build(&list, 1.5, &ScrollOffsets::new(), &[]);
+        let scene = SceneBuilder::build(&list, 1.5, 1.5, &ScrollOffsets::new(), &[]);
         assert!(!scene.encoding().is_empty());
     }
 
@@ -433,7 +458,7 @@ mod tests {
         builder.push(DisplayItem::PopClip);
         let list = builder.finish();
 
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         assert!(!scene.encoding().is_empty());
     }
 
@@ -448,7 +473,7 @@ mod tests {
         builder.push(DisplayItem::PopOpacity);
         let list = builder.finish();
 
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         assert!(!scene.encoding().is_empty());
     }
 
@@ -467,7 +492,7 @@ mod tests {
         builder.push(DisplayItem::PopTransform);
         let list = builder.finish();
 
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         assert!(!scene.encoding().is_empty());
     }
 
@@ -486,7 +511,7 @@ mod tests {
         }));
         let list = builder.finish();
 
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         assert!(!scene.encoding().is_empty());
     }
 
@@ -503,7 +528,7 @@ mod tests {
         }));
         let list = builder.finish();
 
-        let scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
         assert!(!scene.encoding().is_empty());
     }
 
@@ -518,6 +543,6 @@ mod tests {
         let list = builder.finish();
 
         // Should not panic — the guard `if transforms.len() > 1` prevents underflow.
-        let _scene = SceneBuilder::build(&list, 1.0, &ScrollOffsets::new(), &Vec::new());
+        let _scene = SceneBuilder::build(&list, 1.0, 1.0, &ScrollOffsets::new(), &Vec::new());
     }
 }

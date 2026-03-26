@@ -18,8 +18,11 @@ pub struct RenderParams<'a> {
     pub height: u32,
     /// Content scale: CSS pixels × content_scale = physical pixels.
     /// Combines device DPI and page zoom: `device_scale_factor × page_zoom_factor`.
-    /// Pinch zoom is a separate compositor transform (future).
     pub content_scale: f64,
+    /// Device DPI scale only (no page zoom). Used for compositor overlays
+    /// (scrollbars) that must stay a fixed device-pixel size regardless of zoom.
+    /// Chrome: overlay scrollbars are drawn post-zoom at fixed device size.
+    pub device_scale: f64,
 }
 
 /// A per-window GPU rendering target.

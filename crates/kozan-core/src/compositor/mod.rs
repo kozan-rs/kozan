@@ -58,6 +58,7 @@ pub struct Compositor {
     scrollbar_controller: ScrollbarController,
     scrollbar_animations: Storage<ScrollbarAnimation>,
     last_hovered_scrollbar: Option<u32>,
+    page_zoom: f32,
 }
 
 impl Default for Compositor {
@@ -77,6 +78,7 @@ impl Compositor {
             scrollbar_controller: ScrollbarController::new(),
             scrollbar_animations: Storage::new(),
             last_hovered_scrollbar: None,
+            page_zoom: 1.0,
         }
     }
 
@@ -86,10 +88,12 @@ impl Compositor {
         display_list: Arc<DisplayList>,
         layer_tree: LayerTree,
         scroll_tree: ScrollTree,
+        page_zoom: f32,
     ) {
         self.display_list = Some(display_list);
         self.layer_tree = Some(layer_tree);
         self.scroll_tree = scroll_tree;
+        self.page_zoom = page_zoom;
     }
 
     /// Chrome: `InputHandlerProxy::RouteToTypeSpecificHandler()`.
@@ -193,7 +197,8 @@ impl Compositor {
         let layer = tree.layer(layer_id);
         let origin = layer.transform.transform_point(parent_origin);
         let ctx = QuadContext {
-            origin,
+            _origin: origin,
+            page_zoom: self.page_zoom,
             container_rect: Rect::new(
                 origin.x,
                 origin.y,
@@ -483,7 +488,7 @@ mod tests {
         let mut c = Compositor::new();
         let dl = empty_display_list();
         let (tree, _offsets) = test_scroll_state();
-        c.commit(Arc::clone(&dl), LayerTree::new(), tree);
+        c.commit(Arc::clone(&dl), LayerTree::new(), tree, 1.0);
         assert!(c.has_content());
         assert!(Arc::ptr_eq(
             &c.produce_frame().expect("frame").display_list,
@@ -495,13 +500,13 @@ mod tests {
     fn commit_does_not_overwrite_compositor_scroll_offsets() {
         let mut c = Compositor::new();
         let (tree, _offsets) = test_scroll_state();
-        c.commit(empty_display_list(), LayerTree::new(), tree);
+        c.commit(empty_display_list(), LayerTree::new(), tree, 1.0);
 
         c.try_scroll(1, Offset::new(0.0, 120.0));
         assert_eq!(c.scroll_offsets().offset(1).dy, 120.0);
 
         let (tree2, _offsets2) = test_scroll_state();
-        c.commit(empty_display_list(), LayerTree::new(), tree2);
+        c.commit(empty_display_list(), LayerTree::new(), tree2, 1.0);
         assert_eq!(c.scroll_offsets().offset(1).dy, 120.0);
     }
 
@@ -509,7 +514,7 @@ mod tests {
     fn try_scroll_updates_offsets() {
         let mut c = Compositor::new();
         let (tree, _offsets) = test_scroll_state();
-        c.commit(empty_display_list(), LayerTree::new(), tree);
+        c.commit(empty_display_list(), LayerTree::new(), tree, 1.0);
 
         assert!(c.try_scroll(1, Offset::new(0.0, 100.0)));
         assert_eq!(c.scroll_offsets().offset(1).dy, 100.0);
@@ -519,7 +524,7 @@ mod tests {
     fn try_scroll_clamps() {
         let mut c = Compositor::new();
         let (tree, _offsets) = test_scroll_state();
-        c.commit(empty_display_list(), LayerTree::new(), tree);
+        c.commit(empty_display_list(), LayerTree::new(), tree, 1.0);
         c.try_scroll(1, Offset::new(0.0, 99999.0));
         assert_eq!(c.scroll_offsets().offset(1).dy, 1400.0);
     }
@@ -528,7 +533,7 @@ mod tests {
     fn try_scroll_unknown_node() {
         let mut c = Compositor::new();
         let (tree, _offsets) = test_scroll_state();
-        c.commit(empty_display_list(), LayerTree::new(), tree);
+        c.commit(empty_display_list(), LayerTree::new(), tree, 1.0);
         assert!(!c.try_scroll(99, Offset::new(0.0, 100.0)));
     }
 
@@ -536,7 +541,7 @@ mod tests {
     fn produce_frame_has_scroll_offsets() {
         let mut c = Compositor::new();
         let (tree, _offsets) = test_scroll_state();
-        c.commit(empty_display_list(), LayerTree::new(), tree);
+        c.commit(empty_display_list(), LayerTree::new(), tree, 1.0);
         c.try_scroll(1, Offset::new(0.0, 200.0));
 
         let frame = c.produce_frame().expect("frame");
