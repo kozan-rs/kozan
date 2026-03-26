@@ -1,0 +1,306 @@
+/* ── DevTools root ─────────────────────────────────────────── */
+
+.kdt-root {
+    position: fixed;
+    z-index: 2147483647;
+    font-size: 11px;
+    font-family: system-ui;
+    color: #e8eaed;
+    pointer-events: auto;
+}
+
+/* ── Badge (collapsed state) ───────────────────────────────── */
+
+.kdt-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background-color: rgba(32, 33, 36, 0.92);
+    border-radius: 6px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.08);
+    min-width: 80px;
+}
+
+.kdt-fps-number {
+    font-weight: 700;
+    font-size: 14px;
+    min-width: 32px;
+}
+
+.kdt-fps-label {
+    font-size: 10px;
+    color: #9aa0a6;
+}
+
+.kdt-fps-green  { color: #34a853; }
+.kdt-fps-yellow { color: #fbbc04; }
+.kdt-fps-red    { color: #ea4335; }
+
+/* ── Expanded panel ────────────────────────────────────────── */
+
+.kdt-panel {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    background-color: rgba(32, 33, 36, 0.95);
+    border-radius: 8px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.08);
+    min-width: 320px;
+}
+
+.kdt-panel-open {
+    display: flex;
+}
+
+/* ── Title bar (draggable) ─────────────────────────────────── */
+
+.kdt-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 6px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.kdt-title {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.kdt-titlebar-spacer {
+    flex-grow: 1;
+}
+
+.kdt-close-btn {
+    color: #9aa0a6;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.kdt-action-btn {
+    font-size: 10px;
+    color: #8ab4f8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: rgba(138, 180, 248, 0.08);
+}
+
+/* ── Bottleneck indicator ──────────────────────────────────── */
+
+.kdt-bottleneck {
+    font-size: 10px;
+    color: #fbbc04;
+    padding: 2px 0px;
+}
+
+/* ── Timing row ────────────────────────────────────────────── */
+
+.kdt-timing-grid {
+    display: flex;
+    gap: 4px;
+}
+
+.kdt-timing-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    padding: 6px 4px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.kdt-timing-value {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.kdt-timing-label {
+    font-size: 9px;
+    color: #9aa0a6;
+}
+
+.kdt-color-style  { color: #8ab4f8; }
+.kdt-color-layout { color: #81c995; }
+.kdt-color-paint  { color: #fcad70; }
+.kdt-color-total  { color: #e8eaed; }
+.kdt-color-fps    { color: #34a853; }
+
+/* ── Budget bar ────────────────────────────────────────────── */
+
+.kdt-budget-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.kdt-budget-header {
+    display: flex;
+    align-items: center;
+}
+
+.kdt-budget-label {
+    font-size: 10px;
+    color: #9aa0a6;
+}
+
+.kdt-budget-spacer {
+    flex-grow: 1;
+}
+
+.kdt-budget-pct {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.kdt-budget-track {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.kdt-budget-fill {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #34a853;
+}
+
+.kdt-budget-warn { background-color: #fbbc04; }
+.kdt-budget-over { background-color: #ea4335; }
+
+/* ── Frame graph ───────────────────────────────────────────── */
+
+.kdt-graph-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.kdt-graph-header {
+    display: flex;
+    align-items: center;
+}
+
+.kdt-graph-label {
+    font-size: 10px;
+    color: #9aa0a6;
+}
+
+.kdt-graph-spacer {
+    flex-grow: 1;
+}
+
+.kdt-graph-stats {
+    font-size: 10px;
+    color: #9aa0a6;
+}
+
+.kdt-graph {
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    overflow: hidden;
+    padding: 2px;
+}
+
+.kdt-bar {
+    flex-grow: 1;
+    min-width: 1px;
+    border-radius: 1px;
+    background-color: #34a853;
+}
+
+.kdt-bar-warn  { background-color: #fbbc04; }
+.kdt-bar-jank  { background-color: #ea4335; }
+
+/* ── Info row ──────────────────────────────────────────────── */
+
+.kdt-info-grid {
+    display: flex;
+    gap: 12px;
+    padding-top: 4px;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.kdt-info-item {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.kdt-info-label {
+    font-size: 10px;
+    color: #9aa0a6;
+}
+
+.kdt-info-value {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* ── Event log ─────────────────────────────────────────────── */
+
+.kdt-log-section {
+    display: flex;
+    flex-direction: column;
+    padding-top: 4px;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.kdt-log-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #9aa0a6;
+    padding: 4px 0px;
+}
+
+.kdt-log-arrow {
+    font-size: 9px;
+    color: #9aa0a6;
+    min-width: 8px;
+}
+
+.kdt-log-body {
+    display: none;
+    flex-direction: column;
+    max-height: 120px;
+    overflow: auto;
+}
+
+.kdt-log-open {
+    display: flex;
+}
+
+.kdt-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.kdt-log-entry {
+    font-size: 10px;
+    color: #bdc1c6;
+    padding: 3px 6px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.04);
+}

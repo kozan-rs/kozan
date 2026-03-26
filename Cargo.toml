@@ -65,6 +65,7 @@ unsafe_code = { level = "allow", priority = 1 }
 
 [workspace.dependencies]
 kozan-core = { version = "0.1", path = "crates/kozan-core" }
+kozan-devtools = { version = "0.1", path = "crates/kozan-devtools" }
 kozan-macros = { version = "0.1", path = "crates/kozan-macros" }
 kozan-platform = { version = "0.1", path = "crates/kozan-platform" }
 kozan-primitives = { version = "0.1", path = "crates/kozan-primitives" }

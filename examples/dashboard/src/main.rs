@@ -31,8 +31,7 @@ fn build_ui(ctx: &ViewContext) {
     shell.class_add("shell");
     doc.body().child(shell);
 
-    let fps_badge = build_fps_overlay(doc, ctx);
-    doc.body().child(fps_badge);
+    kozan_devtools::DevTools::attach(ctx);
 
     shell.child(build_header(doc));
 
@@ -42,27 +41,6 @@ fn build_ui(ctx: &ViewContext) {
 
     body.child(build_sidebar(doc));
     body.child(build_content(doc, ctx));
-}
-
-// ── FPS overlay ──────────────────────────────────────────────
-
-fn build_fps_overlay(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
-    let badge = doc.div();
-    badge.class_add("fps-badge");
-
-    let text = doc.create_text("-- FPS");
-    badge.append(text);
-
-    ctx.request_frame(move |info| {
-        let t = info.prev_timing;
-        text.set_content(format!(
-            "{:.0} FPS | {:.1}ms  S={:.1} L={:.1} P={:.1}",
-            info.fps, t.total_ms, t.style_ms, t.layout_ms, t.paint_ms,
-        ));
-        true
-    });
-
-    badge
 }
 
 // ── Header ───────────────────────────────────────────────────

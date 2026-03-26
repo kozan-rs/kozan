@@ -1,0 +1,18 @@
+[package]
+name = "kozan-devtools"
+description = "Chrome-style DevTools overlay for Kozan — performance profiling, frame graphs, and pipeline inspection"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan-core.workspace = true
+kozan-platform.workspace = true
+kozan-primitives.workspace = true
+kozan-scheduler.workspace = true
+
+[lints]
+workspace = true

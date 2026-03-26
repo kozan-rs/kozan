@@ -485,6 +485,7 @@ name = "dashboard"
 version = "0.1.0"
 dependencies = [
  "kozan",
+ "kozan-devtools",
 ]
 
 [[package]]
@@ -1236,6 +1237,16 @@ dependencies = [
  "url",
  "walkdir",
  "web_atoms",
+]
+
+[[package]]
+name = "kozan-devtools"
+version = "0.1.0"
+dependencies = [
+ "kozan-core",
+ "kozan-platform",
+ "kozan-primitives",
+ "kozan-scheduler",
 ]
 
 [[package]]

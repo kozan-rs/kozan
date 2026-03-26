@@ -10,6 +10,7 @@ repository.workspace = true
 
 [dependencies]
 kozan = { path = "../../crates/kozan" }
+kozan-devtools = { workspace = true }
 
 [lints]
 workspace = true
