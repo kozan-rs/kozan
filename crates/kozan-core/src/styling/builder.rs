@@ -17,6 +17,7 @@ use style::values::specified::{
     Color, FontSize, FontWeight, Margin, NonNegativeLengthPercentage, Opacity, Size,
 };
 
+use super::units::InsetValue;
 use crate::dom::document_cell::DocumentCell;
 use crate::id::RawId;
 
@@ -168,6 +169,43 @@ impl StyleAccess {
 
     pub fn position(&mut self, value: PositionProperty) -> &mut Self {
         self.pending.push(PropertyDeclaration::Position(value));
+        self
+    }
+
+    // ── Inset (top/right/bottom/left) ──
+
+    pub fn top(&mut self, value: impl Into<InsetValue>) -> &mut Self {
+        self.pending.push(PropertyDeclaration::Top(value.into().0));
+        self
+    }
+
+    pub fn right(&mut self, value: impl Into<InsetValue>) -> &mut Self {
+        self.pending
+            .push(PropertyDeclaration::Right(value.into().0));
+        self
+    }
+
+    pub fn bottom(&mut self, value: impl Into<InsetValue>) -> &mut Self {
+        self.pending
+            .push(PropertyDeclaration::Bottom(value.into().0));
+        self
+    }
+
+    pub fn left(&mut self, value: impl Into<InsetValue>) -> &mut Self {
+        self.pending
+            .push(PropertyDeclaration::Left(value.into().0));
+        self
+    }
+
+    pub fn inset(&mut self, value: impl Into<InsetValue> + Clone) -> &mut Self {
+        let v = value.into();
+        self.pending
+            .push(PropertyDeclaration::Top(v.0.clone()));
+        self.pending
+            .push(PropertyDeclaration::Right(v.0.clone()));
+        self.pending
+            .push(PropertyDeclaration::Bottom(v.0.clone()));
+        self.pending.push(PropertyDeclaration::Left(v.0));
         self
     }
 

@@ -138,6 +138,21 @@ impl From<CssValue> for NonNegativeLengthPercentage {
     }
 }
 
+/// Wrapper for CSS inset values (top/right/bottom/left).
+///
+/// Accepts `px()`, `pct()`, `auto()` — same as margin properties.
+pub struct InsetValue(pub(crate) style::values::specified::Inset);
+
+impl From<CssValue> for InsetValue {
+    fn from(v: CssValue) -> Self {
+        use style::values::generics::position::Inset;
+        match v {
+            CssValue::Auto => InsetValue(Inset::Auto),
+            other => InsetValue(Inset::LengthPercentage(to_length_percentage(other))),
+        }
+    }
+}
+
 // ---- Color helpers ----
 
 use style::color::AbsoluteColor;
