@@ -321,19 +321,16 @@ fn compute_text_measure(
     use crate::layout::inline::font_system::FontQuery;
     let query = FontQuery::from_computed(parent_style);
 
-    let max_w = match available_space.width {
-        taffy::AvailableSpace::Definite(w) => Some(w),
-        taffy::AvailableSpace::MaxContent => None,
-        taffy::AvailableSpace::MinContent => Some(0.0),
-    };
-
-    let text_metrics = measurer.shape_text(text, &query);
     let fm = measurer.query_metrics(&query);
 
-    let text_width = if let Some(mw) = max_w {
-        text_metrics.width.min(mw)
-    } else {
-        text_metrics.width
+    // Chrome: NGInlineNode::ComputeMinMaxSizes() — min-content is the
+    // widest unbreakable word, not zero.
+    let text_width = match available_space.width {
+        taffy::AvailableSpace::Definite(w) => {
+            measurer.shape_text(text, &query).width.min(w)
+        }
+        taffy::AvailableSpace::MaxContent => measurer.shape_text(text, &query).width,
+        taffy::AvailableSpace::MinContent => measurer.shape_text_min_content(text, &query),
     };
 
     let lh = crate::layout::inline::measurer::resolve_line_height(

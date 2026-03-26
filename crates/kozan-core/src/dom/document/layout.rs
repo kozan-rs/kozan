@@ -293,16 +293,7 @@ impl Document {
 
         let size = Size::new(layout.size.width, layout.size.height);
 
-        // Chrome: `NGPhysicalBoxFragment::ComputeScrollableOverflow()`.
-        let scrollable_overflow = {
-            let mut max_w = 0.0_f32;
-            let mut max_h = 0.0_f32;
-            for child in &children {
-                max_w = max_w.max(child.offset.x + child.fragment.size.width);
-                max_h = max_h.max(child.offset.y + child.fragment.size.height);
-            }
-            Size::new(max_w, max_h)
-        };
+        let scrollable_overflow = compute_scrollable_overflow(&children);
 
         let display = layout_data.style.display;
         let dir = shared::InlineDirection::from_style(&style);
@@ -392,6 +383,25 @@ impl Document {
             escaped_margins: EscapedMargins::default(),
         }
     }
+}
+
+/// CSS Overflow Module Level 3 §2.1 — scrollable overflow region.
+///
+/// Chrome: `NGPhysicalBoxFragment::ComputeScrollableOverflow()`.
+///
+/// Recursive: a child contributes its `scrollable_overflow` if it doesn't
+/// clip on that axis, otherwise just its border box. Since fragments are
+/// built bottom-up, each child's `scrollable_overflow` already includes
+/// its own descendants.
+fn compute_scrollable_overflow(children: &[ChildFragment]) -> Size {
+    let mut max_w = 0.0_f32;
+    let mut max_h = 0.0_f32;
+    for child in children {
+        let (w, h) = child.fragment.overflow_extent();
+        max_w = max_w.max(child.offset.x + w);
+        max_h = max_h.max(child.offset.y + h);
+    }
+    Size::new(max_w, max_h)
 }
 
 fn overflow_clip_from_style(overflow: style::computed_values::overflow_x::T) -> OverflowClip {

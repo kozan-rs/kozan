@@ -344,6 +344,29 @@ impl Fragment {
         }
     }
 
+    /// CSS Overflow Module Level 3 §2.1 — this fragment's overflow extent.
+    ///
+    /// Per axis: if this fragment clips, returns its border box size.
+    /// Otherwise, returns the max of its size and its scrollable overflow
+    /// (which already includes descendants recursively).
+    #[must_use]
+    pub fn overflow_extent(&self) -> (f32, f32) {
+        let Some(data) = self.try_as_box() else {
+            return (self.size.width, self.size.height);
+        };
+        let w = if data.overflow_x.clips() {
+            self.size.width
+        } else {
+            data.scrollable_overflow.width.max(self.size.width)
+        };
+        let h = if data.overflow_y.clips() {
+            self.size.height
+        } else {
+            data.scrollable_overflow.height.max(self.size.height)
+        };
+        (w, h)
+    }
+
     /// Get line fragment data if this is a line.
     #[must_use]
     pub fn try_as_line(&self) -> Option<&LineFragmentData> {

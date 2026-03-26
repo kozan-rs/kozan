@@ -172,6 +172,15 @@ pub trait TextMeasurer {
         self.measure(text, query.font_size)
     }
 
+    /// Chrome: `NGInlineNode::ComputeMinMaxSizes()` — widest unbreakable segment.
+    fn shape_text_min_content(&self, text: &str, query: &super::font_system::FontQuery) -> f32 {
+        let mut widest = 0.0_f32;
+        for word in text.split_whitespace() {
+            widest = widest.max(self.shape_text(word, query).width);
+        }
+        widest
+    }
+
     /// Get font metrics using a full `FontQuery` (correct font family + weight).
     /// Default delegates to `font_metrics()` ignoring family/weight.
     fn query_metrics(&self, query: &super::font_system::FontQuery) -> FontMetrics {

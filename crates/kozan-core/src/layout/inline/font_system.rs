@@ -315,6 +315,29 @@ impl TextMeasurer for FontSystem {
         FontSystem::shape_text(self, text, query)
     }
 
+    fn shape_text_min_content(&self, text: &str, query: &FontQuery) -> f32 {
+        if text.is_empty() {
+            return 0.0;
+        }
+        let mut font_cx = self.font_cx.borrow_mut();
+        let mut layout_cx = self.layout_cx.borrow_mut();
+
+        let font_stack = family_to_stack(&query.font_family);
+        let mut builder = layout_cx.ranged_builder(&mut font_cx, text, 1.0, true);
+        builder.push_default(StyleProperty::FontSize(query.font_size));
+        builder.push_default(StyleProperty::FontWeight(ParleyFontWeight::new(
+            query.font_weight as f32,
+        )));
+        builder.push_default(StyleProperty::FontStyle(query.font_style));
+        builder.push_default(StyleProperty::FontStack(font_stack));
+
+        let mut layout: Layout<[u8; 4]> = builder.build(text);
+        // max_width=Some(0) forces a break at every opportunity.
+        // The resulting layout.width() is the widest unbreakable segment.
+        layout.break_all_lines(Some(0.0));
+        layout.width()
+    }
+
     fn query_metrics(&self, query: &FontQuery) -> FontMetrics {
         FontSystem::query_metrics(self, query)
     }
