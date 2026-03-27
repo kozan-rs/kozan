@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/*", "examples/*"]
+members = ["crates/*"]
 
 [workspace.package]
 version = "0.1.0"
@@ -13,85 +13,37 @@ repository = "https://github.com/kozan-rs/kozan"
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
-# Allow these in a UI engine codebase
 module_name_repetitions = "allow"
 cast_possible_truncation = "allow"
 cast_sign_loss = "allow"
 cast_precision_loss = "allow"
+cast_possible_wrap = "allow"
+cast_lossless = "allow"
 too_many_lines = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 return_self_not_must_use = "allow"
 wildcard_imports = "allow"
-field_reassign_with_default = "allow"
 float_cmp = "allow"
-inline_always = "allow"
 doc_markdown = "allow"
 similar_names = "allow"
 struct_field_names = "allow"
-unnecessary_wraps = "allow"
 needless_pass_by_value = "allow"
-semicolon_if_nothing_returned = "allow"
-redundant_closure_for_method_calls = "allow"
-ptr_as_ptr = "allow"
-assertions_on_constants = "allow"
-manual_map = "allow"
+uninlined_format_args = "allow"
 items_after_statements = "allow"
 unreadable_literal = "allow"
 single_match_else = "allow"
 match_same_arms = "allow"
-range_plus_one = "allow"
 trivially_copy_pass_by_ref = "allow"
-cast_possible_wrap = "allow"
 manual_let_else = "allow"
-map_unwrap_or = "allow"
-unchecked_time_subtraction = "allow"
-many_single_char_names = "allow"
-unnecessary_operation = "allow"
-cast_lossless = "allow"
-uninlined_format_args = "allow"
-if_not_else = "allow"
-needless_lifetimes = "allow"
-struct_excessive_bools = "allow"
-match_wildcard_for_single_variants = "allow"
 unused_self = "allow"
-needless_continue = "allow"
-used_underscore_binding = "allow"
-elidable_lifetime_names = "allow"
 
 [workspace.lints.rust]
-# DocumentCell is the one exception to unsafe
-unsafe_code = { level = "allow", priority = 1 }
+unsafe_code = "deny"
 
 [workspace.dependencies]
-kozan = { version = "0.1", path = "crates/kozan" }
-kozan-canvas = { version = "0.1", path = "crates/kozan-canvas" }
-kozan-core = { version = "0.1", path = "crates/kozan-core" }
-kozan-devtools = { version = "0.1", path = "crates/kozan-devtools" }
-kozan-macros = { version = "0.1", path = "crates/kozan-macros" }
-kozan-platform = { version = "0.1", path = "crates/kozan-platform" }
-kozan-primitives = { version = "0.1", path = "crates/kozan-primitives" }
-kozan-scheduler = { version = "0.1", path = "crates/kozan-scheduler" }
-kozan-vello = { version = "0.1", path = "crates/kozan-vello" }
-kozan-winit = { version = "0.1", path = "crates/kozan-winit" }
+kozan-style = { version = "0.1", path = "crates/kozan-style" }
 
-# Stylo fork — enables all gecko-only CSS properties for servo mode.
-# https://github.com/kozan-rs/stylo (branch: kozan-enable-all-properties)
-[patch.crates-io]
-stylo                = { path = "../kozan-stylo/style" }
-stylo_dom            = { path = "../kozan-stylo/stylo_dom" }
-stylo_traits         = { path = "../kozan-stylo/style_traits" }
-stylo_atoms          = { path = "../kozan-stylo/stylo_atoms" }
-stylo_static_prefs   = { path = "../kozan-stylo/stylo_static_prefs" }
-stylo_derive         = { path = "../kozan-stylo/style_derive" }
-stylo_malloc_size_of = { path = "../kozan-stylo/malloc_size_of" }
-servo_arc            = { path = "../kozan-stylo/servo_arc" }
-to_shmem             = { path = "../kozan-stylo/to_shmem" }
-to_shmem_derive      = { path = "../kozan-stylo/to_shmem_derive" }
-selectors            = { path = "../kozan-stylo/selectors" }
-
-# Chrome strategy: optimized third-party, debug first-party.
-# Makes `cargo run -p dashboard` usable without --release.
 [profile.dev]
 opt-level = 0
 
