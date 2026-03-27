@@ -9,6 +9,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+kozan-canvas.workspace = true
 kozan-primitives.workspace = true
 kozan-macros.workspace = true
 taffy = { version = "0.9", features = ["flexbox", "grid", "block_layout", "content_size", "calc", "detailed_layout_info"] }

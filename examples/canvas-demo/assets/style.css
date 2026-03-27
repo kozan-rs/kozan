@@ -1,0 +1,59 @@
+/* ── Canvas 2D Stress Test ────────────────────────────── */
+
+body {
+    background-color: #1a1a2e;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    min-height: 100%;
+}
+
+.header {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e8eaed;
+    padding-bottom: 12px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Scene grid ────────────────────────────────────────── */
+
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8ab4f8;
+}
+
+/* ── Canvas viewport ──────────────────────────────────── */
+
+.scene-canvas {
+    width: 300px;
+    height: 200px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.25);
+}

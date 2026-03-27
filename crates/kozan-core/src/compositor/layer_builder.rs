@@ -47,6 +47,7 @@ impl<'a> LayerTreeBuilder<'a> {
         let is_scrollable =
             data.overflow_x.is_user_scrollable() || data.overflow_y.is_user_scrollable();
         layer.is_scrollable = is_scrollable;
+        layer.is_stacking_context = data.is_stacking_context;
 
         if is_scrollable {
             if let Some(dom_id) = fragment.dom_node {
@@ -134,12 +135,18 @@ impl<'a> LayerTreeBuilder<'a> {
                 parent_offset.y + child.offset.y,
             );
 
-            let is_scrollable = matches!(
+            // Chrome: promote to compositor layer if scrollable OR a stacking
+            // context. Stacking contexts (position: fixed, z-index, opacity, etc.)
+            // must block scroll hit-testing — events on an overlay must not
+            // reach scroll containers behind it.
+            let needs_layer = matches!(
                 child.fragment.kind,
-                FragmentKind::Box(ref d) if d.overflow_x.is_user_scrollable() || d.overflow_y.is_user_scrollable()
+                FragmentKind::Box(ref d) if d.overflow_x.is_user_scrollable()
+                    || d.overflow_y.is_user_scrollable()
+                    || d.is_stacking_context
             );
 
-            if is_scrollable {
+            if needs_layer {
                 let child_id = self.build_layer(&child.fragment);
                 self.tree.layer_mut(child_id).transform =
                     Transform3D::translate(child_pos.x, child_pos.y, 0.0);

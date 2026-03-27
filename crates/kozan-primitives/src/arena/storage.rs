@@ -183,6 +183,22 @@ impl<T> Storage<T> {
             })
     }
 
+    /// Iterate over all initialized `(index, &mut value)` pairs.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (u32, &mut T)> + '_ {
+        self.initialized
+            .iter()
+            .enumerate()
+            .zip(self.slots.iter_mut())
+            .filter_map(|((i, &init), slot)| {
+                if init {
+                    // SAFETY: initialized[i] is true, so the slot was written via set().
+                    Some((i as u32, unsafe { slot.assume_init_mut() }))
+                } else {
+                    None
+                }
+            })
+    }
+
     /// Mark a slot as uninitialized and drop its value.
     /// Safe to call on already-uninitialized slots (no-op).
     pub fn clear_slot(&mut self, index: u32) {

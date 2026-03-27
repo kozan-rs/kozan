@@ -239,6 +239,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "canvas-demo"
+version = "0.1.0"
+dependencies = [
+ "kozan",
+ "kozan-canvas",
+ "kozan-devtools",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1244,11 +1253,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kozan-canvas"
+version = "0.1.0"
+dependencies = [
+ "kozan-primitives",
+]
+
+[[package]]
 name = "kozan-core"
 version = "0.1.0"
 dependencies = [
  "app_units",
  "euclid",
+ "kozan-canvas",
  "kozan-macros",
  "kozan-primitives",
  "parley",
@@ -1271,6 +1288,7 @@ dependencies = [
 name = "kozan-devtools"
 version = "0.1.0"
 dependencies = [
+ "kozan-canvas",
  "kozan-core",
  "kozan-platform",
  "kozan-primitives",
@@ -1317,6 +1335,7 @@ dependencies = [
 name = "kozan-vello"
 version = "0.1.0"
 dependencies = [
+ "kozan-canvas",
  "kozan-core",
  "kozan-platform",
  "kozan-primitives",
@@ -2354,8 +2373,6 @@ dependencies = [
 [[package]]
 name = "selectors"
 version = "0.36.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5d9c0c92a92d33f08817311cf3f2c29a3538a8240e94a6a3c622ce652d7e00c"
 dependencies = [
  "bitflags 2.11.0",
  "cssparser",
@@ -2433,8 +2450,6 @@ dependencies = [
 [[package]]
 name = "servo_arc"
 version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "170fb83ab34de17dc69aa7c67482b22218ddb85da56546f9bd6b929e32a05930"
 dependencies = [
  "serde",
  "stable_deref_trait",
@@ -2628,8 +2643,6 @@ dependencies = [
 [[package]]
 name = "stylo"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3db1bbd0d306397f76ab4bc2d08bee9eda5eb5f70ce18abce5f429e14a93bc50"
 dependencies = [
  "app_units",
  "arrayvec",
@@ -2685,8 +2698,6 @@ dependencies = [
 [[package]]
 name = "stylo_atoms"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d42e774cee69976c2ecd3bb20807f6aed425d755e9d6f452c0b6db44076f325"
 dependencies = [
  "string_cache",
  "string_cache_codegen",
@@ -2695,8 +2706,6 @@ dependencies = [
 [[package]]
 name = "stylo_derive"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a288f2c2ac1ac7e99aea3b5863989234eb02d4703d3a7676bf1e371d07f83357"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2708,8 +2717,6 @@ dependencies = [
 [[package]]
 name = "stylo_dom"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd0e8a383ccc3c4f6a821a47da1411b3857a7274d2d1568d1e01ca15341963ca"
 dependencies = [
  "bitflags 2.11.0",
  "stylo_malloc_size_of",
@@ -2718,8 +2725,6 @@ dependencies = [
 [[package]]
 name = "stylo_malloc_size_of"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cdff8744ef9ccdd7381e28566413446608759cb5eeec418a798c72ae95d86fd"
 dependencies = [
  "app_units",
  "cssparser",
@@ -2736,14 +2741,10 @@ dependencies = [
 [[package]]
 name = "stylo_static_prefs"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61b56e722f192b3716459e30f3d5ae4825f476757703446a3580086668784a8c"
 
 [[package]]
 name = "stylo_traits"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "354e851d78b99d3ab591a76a9f768048493540d3575d1acc1e59ad640f36e449"
 dependencies = [
  "app_units",
  "bitflags 2.11.0",
@@ -2912,8 +2913,6 @@ dependencies = [
 [[package]]
 name = "to_shmem"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eab187810ca1e6aaa4c97a06492aac9ade2ffae6a301fd2aac103656f5a69edb"
 dependencies = [
  "cssparser",
  "servo_arc",
@@ -2926,8 +2925,6 @@ dependencies = [
 [[package]]
 name = "to_shmem_derive"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ba1f5563024b63bb6acb4558452d9ba737518c1d11fcc1861febe98d1e31cf4"
 dependencies = [
  "darling",
  "proc-macro2",

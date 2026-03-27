@@ -2,6 +2,7 @@
 //!
 //! Chrome: `cc/input/scroll_node.h`.
 
+use crate::layout::fragment::OverscrollBehavior;
 use kozan_primitives::geometry::Size;
 
 /// Scroll geometry for one scrollable element.
@@ -22,6 +23,10 @@ pub struct ScrollNode {
     pub scrollable_x: bool,
     /// Whether CSS allows vertical scrolling on this node.
     pub scrollable_y: bool,
+    /// CSS `overscroll-behavior-x` — controls scroll chain propagation.
+    pub overscroll_x: OverscrollBehavior,
+    /// CSS `overscroll-behavior-y` — controls scroll chain propagation.
+    pub overscroll_y: OverscrollBehavior,
 }
 
 impl ScrollNode {
@@ -58,6 +63,8 @@ mod tests {
             content: Size::new(content.0, content.1),
             scrollable_x: true,
             scrollable_y: true,
+            overscroll_x: OverscrollBehavior::Auto,
+            overscroll_y: OverscrollBehavior::Auto,
         }
     }
 

@@ -28,7 +28,8 @@ pub use kozan_core::Document;
 
 // HTML elements — the types users create.
 pub use kozan_core::{
-    HtmlAnchorElement, HtmlAudioElement, HtmlButtonElement, HtmlCanvasElement, HtmlDivElement,
+    Canvas2D, HtmlAnchorElement, HtmlAudioElement, HtmlButtonElement, HtmlCanvasElement,
+    HtmlDivElement,
     HtmlFormElement, HtmlHeadingElement, HtmlImageElement, HtmlInputElement, HtmlLabelElement,
     HtmlParagraphElement, HtmlSelectElement, HtmlSpanElement, HtmlTextAreaElement,
     HtmlVideoElement,

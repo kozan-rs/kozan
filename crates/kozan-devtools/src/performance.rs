@@ -8,13 +8,13 @@ use std::rc::Rc;
 
 use kozan_core::styling::units::pct;
 use kozan_core::{ContainerNode, Document, Element, HtmlDivElement, Node, Text};
+use kozan_primitives::color::Color;
 use kozan_platform::ViewContext;
 
 use crate::chart::AreaChart;
 use crate::metrics::{FrameHistory, FrameSnapshot};
 
 /// Performance tab — owns its DOM subtree and update logic.
-/// Shell only needs `container` to mount it and `update()` to refresh.
 pub struct PerformanceTab {
     pub container: HtmlDivElement,
 
@@ -54,27 +54,43 @@ impl PerformanceTab {
         let container = doc.div();
         container.class_add("kdt-perf-tab");
 
+        // Timing grid
         let (timing_grid, style_val, layout_val, paint_val, total_val, fps_val) =
             build_timing_grid(doc);
         container.child(timing_grid);
 
+        // Bottleneck
         let bottleneck = doc.create_text("");
         let bottleneck_el = doc.div();
         bottleneck_el.class_add("kdt-bottleneck");
         bottleneck_el.append(bottleneck);
         container.child(bottleneck_el);
 
+        // Budget bar
         let (budget_row, budget_fill, budget_pct) = build_budget_bar(doc);
         container.child(budget_row);
 
+        // Separator
+        add_sep(doc, &container);
+
+        // Charts
         let charts = doc.div();
         charts.class_add("kdt-charts-section");
-        let chart_budget = AreaChart::build(doc, "Budget %", "kdt-color-budget");
-        let chart_fps = AreaChart::build(doc, "FPS", "kdt-color-fps");
-        let chart_nodes = AreaChart::build(doc, "DOM Nodes", "kdt-color-nodes");
-        let chart_style = AreaChart::build(doc, "Style ms", "kdt-color-style-time");
-        let chart_layout = AreaChart::build(doc, "Layout ms", "kdt-color-layout-time");
-        let chart_paint = AreaChart::build(doc, "Paint ms", "kdt-color-paint-time");
+
+        // New color scheme matching the CSS tokens
+        let chart_budget = AreaChart::build(doc, "Budget", "kdt-color-budget",
+            Color::from_rgb8(74, 222, 128));
+        let chart_fps = AreaChart::build(doc, "FPS", "kdt-color-fps",
+            Color::from_rgb8(107, 138, 253));
+        let chart_nodes = AreaChart::build(doc, "Nodes", "kdt-color-nodes",
+            Color::from_rgb8(45, 212, 191));
+        let chart_style = AreaChart::build(doc, "Style", "kdt-color-style-time",
+            Color::from_rgb8(167, 139, 250));
+        let chart_layout = AreaChart::build(doc, "Layout", "kdt-color-layout-time",
+            Color::from_rgb8(251, 191, 36));
+        let chart_paint = AreaChart::build(doc, "Paint", "kdt-color-paint-time",
+            Color::from_rgb8(251, 146, 60));
+
         charts
             .child(chart_budget.lane)
             .child(chart_fps.lane)
@@ -84,9 +100,14 @@ impl PerformanceTab {
             .child(chart_paint.lane);
         container.child(charts);
 
+        // Separator
+        add_sep(doc, &container);
+
+        // Stats row
         let (stats_row, stats_avg, stats_peak, stats_jank) = build_stats_row(doc);
         container.child(stats_row);
 
+        // Info grid
         let (info_grid, info_nodes, info_viewport, info_zoom, info_frame, info_windows, info_renderer) =
             build_info_row(doc, ctx);
         container.child(info_grid);
@@ -212,7 +233,7 @@ impl PerformanceTab {
         let vp = ctx.viewport();
 
         self.info_nodes.set_content(format!("{} ({} el)", doc.node_count(), doc.element_count()));
-        self.info_viewport.set_content(format!("{:.0}x{:.0}", vp.logical_width(), vp.logical_height()));
+        self.info_viewport.set_content(format!("{:.0}\u{00d7}{:.0}", vp.logical_width(), vp.logical_height()));
 
         let zoom = vp.page_zoom_factor();
         self.info_zoom.set_content(format!("{:.0}%", zoom * 100.0));
@@ -245,6 +266,12 @@ fn bottleneck_text(t: &kozan_primitives::timing::FrameTiming) -> String {
         else if (max - t.style_ms).abs() < f64::EPSILON { "Style" }
         else { "Paint" };
     format!("Bottleneck: {phase} ({:.0}% of frame)", max / t.total_ms * 100.0)
+}
+
+fn add_sep(doc: &Document, parent: &HtmlDivElement) {
+    let sep = doc.div();
+    sep.class_add("kdt-sep");
+    parent.child(sep);
 }
 
 fn labeled_cell(doc: &Document, initial: &str, label: &str, color_class: &str) -> (HtmlDivElement, Text) {

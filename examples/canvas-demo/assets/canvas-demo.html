@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Canvas 2D Stress Test — Browser Reference</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #1a1a2e;
+    color: #e8eaed;
+    padding: 24px;
+  }
+  .header {
+    font-size: 20px;
+    font-weight: 700;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+  }
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8ab4f8;
+  }
+  canvas {
+    border-radius: 4px;
+    background: rgba(0,0,0,0.25);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">Canvas 2D Stress Test — Browser Reference</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const W = 300, H = 200;
+const PI = Math.PI;
+
+function makeCanvas(title) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const titleEl = document.createElement('div');
+  titleEl.className = 'card-title';
+  titleEl.textContent = title;
+  card.appendChild(titleEl);
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  card.appendChild(canvas);
+  document.getElementById('grid').appendChild(card);
+  return canvas.getContext('2d');
+}
+
+// ── Scene 1: Filled Rectangles ──────────────────────────
+
+(function() {
+  const ctx = makeCanvas('1. Filled Rectangles');
+  const palette = [
+    [231,76,60], [46,204,113], [52,152,219], [241,196,15],
+    [155,89,182], [230,126,34], [26,188,156], [44,62,80],
+  ];
+  for (let i = 0; i < 8; i++) {
+    const col = i % 4, row = Math.floor(i / 4);
+    const x = 10 + col * 72, y = 15 + row * 90;
+    const [r,g,b] = palette[i];
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(x, y, 62, 80);
+  }
+})();
+
+// ── Scene 2: Stroked Rectangles ─────────────────────────
+
+(function() {
+  const ctx = makeCanvas('2. Stroked Rectangles');
+  const items = [[1,'rgb(231,76,60)'],[2,'rgb(46,204,113)'],[3,'rgb(52,152,219)'],[5,'rgb(241,196,15)']];
+  for (let i = 0; i < 4; i++) {
+    const x = 12 + i * 72;
+    const [lw, css] = items[i];
+    ctx.strokeStyle = css;
+    ctx.lineWidth = lw;
+    ctx.strokeRect(x, 20, 60, 160);
+  }
+})();
+
+// ── Scene 3: Path Shapes ────────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('3. Paths (triangle, star, arrow)');
+
+  // Filled triangle
+  ctx.fillStyle = 'rgb(46,204,113)';
+  ctx.beginPath();
+  ctx.moveTo(50, 10); ctx.lineTo(95, 90); ctx.lineTo(5, 90);
+  ctx.closePath(); ctx.fill();
+
+  // Stroked triangle
+  ctx.strokeStyle = 'rgb(231,76,60)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(50, 110); ctx.lineTo(95, 190); ctx.lineTo(5, 190);
+  ctx.closePath(); ctx.stroke();
+
+  // 5-pointed star
+  ctx.fillStyle = 'rgb(241,196,15)';
+  ctx.beginPath();
+  const cx = 165, cy = 55, outer = 42, inner = 18;
+  for (let i = 0; i < 10; i++) {
+    const angle = -PI/2 + i * PI/5;
+    const r = i % 2 === 0 ? outer : inner;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath(); ctx.fill();
+
+  // Arrow
+  ctx.fillStyle = 'rgb(52,152,219)';
+  ctx.beginPath();
+  ctx.moveTo(210,130); ctx.lineTo(280,160); ctx.lineTo(210,190);
+  ctx.lineTo(210,175); ctx.lineTo(130,175); ctx.lineTo(130,145);
+  ctx.lineTo(210,145);
+  ctx.closePath(); ctx.fill();
+})();
+
+// ── Scene 4: Circles & Arcs ────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('4. Circles & Arcs');
+  const circles = [[50,55,35,'rgb(231,76,60)'],[130,55,30,'rgb(52,152,219)'],[210,55,40,'rgb(46,204,113)']];
+  for (const [cx,cy,r,css] of circles) {
+    ctx.fillStyle = css;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, PI*2); ctx.fill();
+  }
+  const arcs = [
+    [60,150,30, 0, PI*0.75, 'rgb(155,89,182)'],
+    [150,150,30, PI*0.25, PI*1.5, 'rgb(230,126,34)'],
+    [240,150,30, 0, PI*1.75, 'rgb(26,188,156)'],
+  ];
+  for (const [cx,cy,r,start,end,css] of arcs) {
+    ctx.strokeStyle = css; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(cx, cy, r, start, end); ctx.stroke();
+  }
+})();
+
+// ── Scene 5: Bezier Curves ──────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('5. Bezier Curves');
+
+  ctx.strokeStyle = 'rgb(231,76,60)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(20,80); ctx.quadraticCurveTo(75,10,130,80); ctx.stroke();
+
+  ctx.strokeStyle = 'rgb(46,204,113)';
+  ctx.beginPath(); ctx.moveTo(20,120); ctx.quadraticCurveTo(75,190,130,120); ctx.stroke();
+
+  ctx.strokeStyle = 'rgb(52,152,219)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(160,30); ctx.bezierCurveTo(180,180,260,20,280,170); ctx.stroke();
+
+  ctx.strokeStyle = 'rgb(241,196,15)';
+  ctx.beginPath(); ctx.moveTo(160,100); ctx.bezierCurveTo(200,40,240,160,280,100); ctx.stroke();
+})();
+
+// ── Scene 6: Transforms ─────────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('6. Transforms');
+  const colors = [
+    'rgb(231,76,60)','rgb(46,204,113)','rgb(52,152,219)',
+    'rgb(241,196,15)','rgb(155,89,182)','rgb(230,126,34)','rgb(26,188,156)',
+  ];
+  for (let i = 0; i < 7; i++) {
+    ctx.save();
+    ctx.translate(90, 100);
+    ctx.rotate(i * PI / 14);
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = colors[i];
+    ctx.fillRect(-50, -10, 100, 20);
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.translate(220, 100);
+  for (let i = 0; i < 5; i++) {
+    const s = 1.0 - i * 0.15;
+    ctx.save();
+    ctx.scale(s, s);
+    ctx.globalAlpha = 1.0;
+    const a = (i + 1) / 6;
+    ctx.fillStyle = `rgba(87,180,248,${a})`;
+    ctx.fillRect(-40, -40, 80, 80);
+    ctx.restore();
+  }
+  ctx.restore();
+})();
+
+// ── Scene 7: Alpha Blending ─────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('7. Alpha Blending');
+
+  for (let i = 0; i < 10; i++) {
+    ctx.globalAlpha = (i + 1) / 10;
+    ctx.fillStyle = 'rgb(52,152,219)';
+    ctx.fillRect(10 + i * 28, 15, 24, 60);
+  }
+  ctx.globalAlpha = 1.0;
+
+  ctx.globalAlpha = 0.5;
+  const overlap = [[80,145,40,'rgb(231,76,60)'],[120,145,40,'rgb(46,204,113)'],[100,115,40,'rgb(52,152,219)']];
+  for (const [cx,cy,r,css] of overlap) {
+    ctx.fillStyle = css;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1.0;
+
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = 'rgb(241,196,15)'; ctx.fillRect(180, 100, 80, 70);
+  ctx.fillStyle = 'rgb(155,89,182)'; ctx.fillRect(210, 115, 80, 70);
+  ctx.globalAlpha = 1.0;
+})();
+
+// ── Scene 8: Gradients ──────────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('8. Gradients');
+
+  let hg = ctx.createLinearGradient(10, 0, 140, 0);
+  hg.addColorStop(0.0, 'rgb(231,76,60)');
+  hg.addColorStop(0.5, 'rgb(241,196,15)');
+  hg.addColorStop(1.0, 'rgb(46,204,113)');
+  ctx.fillStyle = hg;
+  ctx.fillRect(10, 10, 130, 80);
+
+  let vg = ctx.createLinearGradient(0, 10, 0, 90);
+  vg.addColorStop(0.0, 'rgb(52,152,219)');
+  vg.addColorStop(1.0, 'rgb(155,89,182)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(155, 10, 130, 80);
+
+  let dg = ctx.createLinearGradient(10, 105, 285, 190);
+  dg.addColorStop(0.0, 'rgb(26,188,156)');
+  dg.addColorStop(0.33, 'rgb(52,152,219)');
+  dg.addColorStop(0.66, 'rgb(155,89,182)');
+  dg.addColorStop(1.0, 'rgb(231,76,60)');
+  ctx.fillStyle = dg;
+  ctx.fillRect(10, 105, 275, 85);
+})();
+
+// ── Scene 9: Clipping ───────────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('9. Clipping');
+
+  ctx.save();
+  ctx.beginPath(); ctx.arc(80, 100, 60, 0, PI*2); ctx.clip();
+  const cols = ['rgb(231,76,60)','rgb(241,196,15)','rgb(46,204,113)','rgb(52,152,219)','rgb(155,89,182)'];
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = cols[i];
+    ctx.fillRect(20 + i * 24, 40, 24, 120);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(175, 50, 110, 100); ctx.clip();
+  ctx.fillStyle = 'rgb(231,76,60)';
+  ctx.beginPath(); ctx.arc(200, 80, 50, 0, PI*2); ctx.fill();
+  ctx.fillStyle = 'rgb(52,152,219)';
+  ctx.beginPath(); ctx.arc(260, 120, 50, 0, PI*2); ctx.fill();
+  ctx.restore();
+})();
+
+// ── Scene 10: Line Styles & Dashes ──────────────────────
+
+(function() {
+  const ctx = makeCanvas('10. Line Styles & Dashes');
+
+  const widths = [1,2,4,6,8];
+  ctx.strokeStyle = 'rgb(52,152,219)';
+  for (let i = 0; i < 5; i++) {
+    ctx.lineWidth = widths[i];
+    ctx.beginPath(); ctx.moveTo(20, 20 + i*18); ctx.lineTo(130, 20 + i*18); ctx.stroke();
+  }
+
+  ctx.strokeStyle = 'rgb(231,76,60)'; ctx.lineWidth = 2;
+  ctx.setLineDash([10,5]);
+  ctx.beginPath(); ctx.moveTo(20,120); ctx.lineTo(130,120); ctx.stroke();
+
+  ctx.setLineDash([15,5,5,5]);
+  ctx.beginPath(); ctx.moveTo(20,140); ctx.lineTo(130,140); ctx.stroke();
+
+  ctx.setLineDash([2,4]);
+  ctx.beginPath(); ctx.moveTo(20,160); ctx.lineTo(130,160); ctx.stroke();
+
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = 'rgb(46,204,113)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(160, 30);
+  for (let i = 0; i < 8; i++) {
+    ctx.lineTo(160 + (i+1)*16, i%2===0 ? 70 : 30);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgb(155,89,182)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(220, 140);
+  for (let i = 0; i < 30; i++) {
+    const t = i * 0.3;
+    const r = 5 + t * 5;
+    ctx.lineTo(220 + Math.cos(t)*r, 140 + Math.sin(t)*r);
+  }
+  ctx.stroke();
+})();
+
+// ── Scene 11: Save / Restore State ──────────────────────
+
+(function() {
+  const ctx = makeCanvas('11. Save / Restore State');
+
+  ctx.fillStyle = 'rgb(44,62,80)';
+  ctx.fillRect(10, 10, 280, 180);
+
+  ctx.save();
+  ctx.fillStyle = 'rgb(231,76,60)'; ctx.globalAlpha = 0.8;
+  ctx.fillRect(20, 20, 120, 70);
+
+  ctx.save();
+  ctx.fillStyle = 'rgb(46,204,113)'; ctx.globalAlpha = 0.6;
+  ctx.fillRect(40, 40, 120, 70);
+
+  ctx.save();
+  ctx.fillStyle = 'rgb(52,152,219)'; ctx.globalAlpha = 0.4;
+  ctx.fillRect(60, 60, 120, 70);
+
+  ctx.restore(); // back to green
+  ctx.fillRect(160, 20, 60, 40);
+
+  ctx.restore(); // back to red
+  ctx.fillRect(160, 70, 60, 40);
+
+  ctx.restore(); // back to dark
+  ctx.fillRect(160, 120, 60, 40);
+
+  ctx.fillStyle = 'rgb(241,196,15)';
+  ctx.fillRect(230, 20, 50, 140);
+})();
+
+// ── Scene 12: Animated Spinner ──────────────────────────
+
+(function() {
+  const ctx = makeCanvas('12. Animated Spinner');
+  const cx = W/2, cy = H/2;
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = 0; i < 8; i++) {
+      const angle = t + i * PI/4;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.globalAlpha = (i+1)/8;
+      ctx.fillStyle = 'rgb(52,152,219)';
+      ctx.fillRect(30, -5, 30, 10);
+      ctx.restore();
+    }
+
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = 'rgb(231,76,60)';
+    ctx.beginPath(); ctx.arc(cx, cy, 15, 0, PI*2); ctx.fill();
+
+    const ox = cx + Math.cos(t*1.5)*70;
+    const oy = cy + Math.sin(t*1.5)*70;
+    ctx.fillStyle = 'rgb(46,204,113)';
+    ctx.beginPath(); ctx.arc(ox, oy, 8, 0, PI*2); ctx.fill();
+
+    requestAnimationFrame(() => draw(t + 0.02));
+  }
+  draw(0);
+})();
+
+// ── Scene 13: Animated Wave ─────────────────────────────
+
+(function() {
+  const ctx = makeCanvas('13. Animated Wave');
+  const midY = H/2;
+  const waves = [
+    ['rgb(231,76,60)', 40, 3, 0],
+    ['rgb(46,204,113)', 30, 4, 1],
+    ['rgb(52,152,219)', 20, 5, 2],
+  ];
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    for (const [css, amp, freq, phase] of waves) {
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = css;
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for (let i = 0; i <= 60; i++) {
+        const x = i * W / 60;
+        const y = midY + Math.sin(x*freq/W*PI*2 + t + phase) * amp;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+
+      ctx.globalAlpha = 0.8;
+      ctx.strokeStyle = css; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= 60; i++) {
+        const x = i * W / 60;
+        const y = midY + Math.sin(x*freq/W*PI*2 + t + phase) * amp;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+    requestAnimationFrame(() => draw(t + 0.02));
+  }
+  draw(0);
+})();
+
+// ── Scene 14: Animated Particles ────────────────────────
+
+(function() {
+  const ctx = makeCanvas('14. Animated Particles');
+  const colors = [
+    'rgb(231,76,60)','rgb(46,204,113)','rgb(52,152,219)',
+    'rgb(241,196,15)','rgb(155,89,182)','rgb(230,126,34)',
+  ];
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    const positions = [];
+    for (let i = 0; i < 30; i++) {
+      const seed = i * 73.37;
+      const speed = 0.5 + Math.abs(Math.sin(seed * 0.13)) * 1.5;
+      const phase = seed * 0.7;
+      const radius = 4 + Math.abs(Math.sin(seed * 0.3)) * 8;
+      const x = (Math.sin(seed + t*speed)*0.5 + 0.5)*(W-20) + 10;
+      const y = (Math.cos(phase + t*speed*0.7)*0.5 + 0.5)*(H-20) + 10;
+      const alpha = 0.3 + Math.abs(Math.sin(t + seed)) * 0.7;
+
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, PI*2); ctx.fill();
+
+      if (i < 10) positions.push([x, y]);
+    }
+
+    ctx.globalAlpha = 0.15;
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 1;
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i+1; j < positions.length; j++) {
+        const dx = positions[i][0]-positions[j][0];
+        const dy = positions[i][1]-positions[j][1];
+        if (dx*dx + dy*dy < 10000) {
+          ctx.beginPath();
+          ctx.moveTo(positions[i][0], positions[i][1]);
+          ctx.lineTo(positions[j][0], positions[j][1]);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1.0;
+    requestAnimationFrame(() => draw(t + 0.02));
+  }
+  draw(0);
+})();
+
+</script>
+</body>
+</html>

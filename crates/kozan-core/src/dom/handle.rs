@@ -459,6 +459,26 @@ impl Handle {
         self.node_kind() == Some(NodeType::Document)
     }
 
+    // ---- CSSOM View — layout geometry ----
+
+    /// Border-box width after layout.
+    ///
+    /// CSSOM View: `HTMLElement.offsetWidth`. Returns the element's laid-out
+    /// border-box width in CSS pixels. Returns `0.0` before first layout.
+    #[must_use]
+    pub fn offset_width(&self) -> f32 {
+        self.cell.read(|doc| doc.layout_border_box(self.id).0)
+    }
+
+    /// Border-box height after layout.
+    ///
+    /// CSSOM View: `HTMLElement.offsetHeight`. Returns the element's laid-out
+    /// border-box height in CSS pixels. Returns `0.0` before first layout.
+    #[must_use]
+    pub fn offset_height(&self) -> f32 {
+        self.cell.read(|doc| doc.layout_border_box(self.id).1)
+    }
+
     // ---- Style ----
 
     /// Per-property style access — like JavaScript's `element.style`.
@@ -472,6 +492,9 @@ impl Handle {
         crate::styling::builder::StyleAccess::new(self.cell, self.id)
     }
 
+    // ---- Overscroll behavior ----
+
+    /// Set CSS `overscroll-behavior` for both axes.
     // ---- Event dispatch (for untyped handles from hit testing) ----
 
     /// Dispatch an event to this node.

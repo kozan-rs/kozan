@@ -65,7 +65,7 @@ pub fn build(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
     let root = doc.div();
     root.class_add("kdt-root");
 
-    let initial_x = (ctx.viewport().logical_width() as f32 - 390.0).max(8.0);
+    let initial_x = (ctx.viewport().logical_width() as f32 - 420.0).max(8.0);
     root.style().top(px(8.0)).left(px(initial_x));
 
     let state = Rc::new(ShellState::new(initial_x, 8.0));
@@ -77,8 +77,9 @@ pub fn build(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
 
     let perf_tab = Rc::new(PerformanceTab::build(doc, ctx));
 
-    // Content order: performance tab first, then event log at the bottom.
+    // Content: performance tab, then separator, then event log.
     parts.content.child(perf_tab.container);
+    add_separator(doc, &parts.content);
     parts.content.child(parts.log_section);
 
     root.child(badge.container).child(parts.panel);
@@ -95,6 +96,12 @@ pub fn build(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
     let prev_vp_w = Rc::new(Cell::new(ctx.viewport().width()));
     let prev_vp_h = Rc::new(Cell::new(ctx.viewport().height()));
 
+    // Throttle: capture every frame for accuracy, but only update the
+    // expensive panel DOM (~20 text nodes + 6 canvas redraws) at ~16/sec.
+    // Badge (2 text nodes) always updates — negligible cost.
+    const PANEL_UPDATE_INTERVAL_MS: f64 = 60.0;
+    let last_panel_update = Rc::new(Cell::new(0.0f64));
+
     ctx.request_frame({
         let state = Rc::clone(&state);
         let history = Rc::clone(&history);
@@ -109,13 +116,21 @@ pub fn build(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
                 dom_node_count: doc.node_count() as u32,
                 element_count: doc.element_count() as u32,
             };
+
+            // Always capture — keeps avg/peak/jank accurate across ALL frames.
             history.push(snap);
             recorder.capture(&snap, info.timestamp.as_secs_f64() * 1000.0);
 
+            // Badge: always update (just 2 text mutations, no layout impact).
             update_badge(&badge, &snap);
 
+            // Panel: throttle expensive DOM text + chart updates.
             if state.expanded.get() {
-                perf_tab.update(&snap, &history, ctx, &prev_zoom, &prev_vp_w, &prev_vp_h, info.frame_number);
+                let now_ms = info.timestamp.as_secs_f64() * 1000.0;
+                if now_ms - last_panel_update.get() >= PANEL_UPDATE_INTERVAL_MS {
+                    last_panel_update.set(now_ms);
+                    perf_tab.update(&snap, &history, ctx, &prev_zoom, &prev_vp_w, &prev_vp_h, info.frame_number);
+                }
             }
 
             true
@@ -123,6 +138,13 @@ pub fn build(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
     });
 
     root
+}
+
+/// Inline separator div.
+fn add_separator(doc: &Document, parent: &HtmlDivElement) {
+    let sep = doc.div();
+    sep.class_add("kdt-sep");
+    parent.child(sep);
 }
 
 fn wire_badge_expand(badge_el: HtmlDivElement, panel_el: HtmlDivElement, state: &Rc<ShellState>) {
@@ -149,7 +171,6 @@ fn wire_close(
         if state.fullscreen.get() {
             state.fullscreen.set(false);
             root_el.class_remove("kdt-fullscreen");
-            // Restore position after fullscreen.
             root_el.style().top(px(state.pos_y.get())).left(px(state.pos_x.get()));
         }
     });
@@ -162,11 +183,9 @@ fn wire_fullscreen(btn: HtmlDivElement, root_el: HtmlDivElement, state: &Rc<Shel
         state.fullscreen.set(fs);
         if fs {
             root_el.class_add("kdt-fullscreen");
-            // Clear inline position so CSS fullscreen rules apply.
             root_el.set_attribute("style", "");
         } else {
             root_el.class_remove("kdt-fullscreen");
-            // Restore saved position.
             root_el.style().top(px(state.pos_y.get())).left(px(state.pos_x.get()));
         }
     });
@@ -273,12 +292,12 @@ fn build_panel(doc: &Document) -> PanelParts {
     let panel = doc.div();
     panel.class_add("kdt-panel");
 
+    // Tab bar / title bar
     let tab_bar = doc.div();
     tab_bar.class_add("kdt-tab-bar");
 
     let tab_btn = doc.div();
     tab_btn.class_add("kdt-tab");
-    tab_btn.class_add("kdt-tab-active");
     tab_btn.append(doc.create_text("Performance"));
 
     let spacer = doc.div();
@@ -296,9 +315,10 @@ fn build_panel(doc: &Document) -> PanelParts {
     fullscreen.class_add("kdt-action-btn");
     fullscreen.append(doc.create_text("[ ]"));
 
+    // Use × (multiplication sign) for close — cleaner than X
     let close = doc.div();
     close.class_add("kdt-close-btn");
-    close.append(doc.create_text("X"));
+    close.append(doc.create_text("\u{00d7}"));
 
     tab_bar
         .child(tab_btn)
@@ -314,7 +334,7 @@ fn build_panel(doc: &Document) -> PanelParts {
     content.class_add("kdt-tab-content-active");
     panel.child(content);
 
-    // Event log — built here but appended to content AFTER tab content in build().
+    // Event log
     let log_section = doc.div();
     log_section.class_add("kdt-log-section");
 

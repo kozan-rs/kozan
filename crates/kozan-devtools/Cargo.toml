@@ -9,6 +9,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+kozan-canvas.workspace = true
 kozan-core.workspace = true
 kozan-platform.workspace = true
 kozan-primitives.workspace = true

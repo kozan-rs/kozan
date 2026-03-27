@@ -277,6 +277,27 @@ impl SceneBuilder {
                     DrawCommand::BoxShadow { .. } => {
                         // TODO(M6): blur compositing.
                     }
+
+                    DrawCommand::Canvas { recording, x, y, canvas_width, canvas_height, layout_width, layout_height } => {
+                        // Browser: position at layout origin, then scale canvas bitmap to CSS layout box.
+                        let position = current_transform * Affine::translate((*x as f64, *y as f64));
+                        let transform = if (*layout_width - *canvas_width).abs() > f32::EPSILON
+                            || (*layout_height - *canvas_height).abs() > f32::EPSILON
+                        {
+                            let sx = *layout_width as f64 / *canvas_width as f64;
+                            let sy = *layout_height as f64 / *canvas_height as f64;
+                            position * Affine::scale_non_uniform(sx, sy)
+                        } else {
+                            position
+                        };
+                        crate::canvas_player::VelloCanvasPlayer::play(
+                            &mut scene,
+                            recording,
+                            transform,
+                            *canvas_width,
+                            *canvas_height,
+                        );
+                    }
                 },
 
                 // ── Clip stack ───────────────────────────────────────────────

@@ -116,6 +116,8 @@ impl ScrollTree {
                         content,
                         scrollable_x,
                         scrollable_y,
+                        overscroll_x: data.overscroll_x,
+                        overscroll_y: data.overscroll_y,
                     },
                 );
                 Some(id)
@@ -155,6 +157,7 @@ mod tests {
     use kozan_primitives::geometry::Size;
 
     fn scrollable(id: u32, parent: Option<u32>) -> ScrollNode {
+        use crate::layout::fragment::OverscrollBehavior;
         ScrollNode {
             dom_id: id,
             parent,
@@ -162,6 +165,8 @@ mod tests {
             content: Size::new(200.0, 1200.0),
             scrollable_x: false,
             scrollable_y: true,
+            overscroll_x: OverscrollBehavior::Auto,
+            overscroll_y: OverscrollBehavior::Auto,
         }
     }
 

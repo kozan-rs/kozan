@@ -19,6 +19,7 @@ use crate::events::EventListenerMap;
 use crate::events::listener::RegisteredListener;
 use crate::events::store::EventStore;
 use crate::id::{INVALID, IdAllocator, RawId};
+use crate::layout::fragment::OverflowClip;
 use crate::layout::node_data::LayoutNodeData;
 use crate::styling::StyleEngine;
 use crate::tree;
@@ -58,6 +59,15 @@ pub struct Document {
     dirty_layout_nodes: Vec<u32>,
     /// Style changed — needs restyle + relayout.
     needs_style_recalc: bool,
+    /// Canvas nodes with pending draw ops that need flushing before layout.
+    /// Chrome: each canvas calls `DidDraw()` → scheduled for `FlushCanvas()`.
+    dirty_canvas_nodes: Vec<u32>,
+    /// CSS Overflow 3 §3.3 — resolved viewport overflow for the root/ICB fragment.
+    /// Set each layout pass by `set_root_viewport_style()`.
+    viewport_overflow: [OverflowClip; 2],
+    /// True when body's overflow was propagated to viewport.
+    /// When set, body's fragment gets used `overflow: visible` per spec §3.3.
+    body_overflow_propagated: bool,
     #[cfg(debug_assertions)]
     alive: bool,
 }
@@ -84,6 +94,9 @@ impl Document {
             needs_tree_rebuild: true,
             dirty_layout_nodes: Vec::new(),
             needs_style_recalc: false,
+            dirty_canvas_nodes: Vec::new(),
+            viewport_overflow: [OverflowClip::Auto, OverflowClip::Auto],
+            body_overflow_propagated: false,
             #[cfg(debug_assertions)]
             alive: true,
         };
@@ -684,6 +697,22 @@ impl Document {
         }
     }
 
+    // ── CSSOM View — layout geometry queries ──
+
+    /// CSSOM View: border-box size after layout.
+    ///
+    /// Returns `(width, height)` from Taffy's unrounded layout output.
+    /// Returns `(0.0, 0.0)` if the node hasn't been laid out yet.
+    ///
+    /// Chrome: `Element::GetBoundingClientRect()` → `LayoutBox::Size()`.
+    pub(crate) fn layout_border_box(&self, id: RawId) -> (f32, f32) {
+        let index = id.index();
+        self.layout
+            .get(index)
+            .map(|d| (d.unrounded_layout.size.width, d.unrounded_layout.size.height))
+            .unwrap_or((0.0, 0.0))
+    }
+
     /// Total number of live nodes (elements + text + document).
     pub fn node_count(&self) -> u32 {
         self.ids.count()
@@ -768,7 +797,91 @@ impl Document {
     /// Chrome equivalent: `Document::NeedsStyleRecalc()` + layout dirty checks.
     /// Used by the scheduler to request a frame after spawned tasks mutate the DOM.
     pub fn needs_visual_update(&self) -> bool {
-        self.needs_style_recalc || self.needs_tree_rebuild || !self.dirty_layout_nodes.is_empty()
+        self.needs_dom_update() || self.needs_canvas_flush()
+    }
+
+    /// Whether DOM/style/layout changes require the full style→layout→paint pipeline.
+    ///
+    /// Chrome: `Document::NeedsStyleRecalc()` + layout dirty checks.
+    /// Canvas-only changes are excluded — they only need paint.
+    pub fn needs_dom_update(&self) -> bool {
+        self.needs_style_recalc
+            || self.needs_tree_rebuild
+            || !self.dirty_layout_nodes.is_empty()
+    }
+
+    /// Whether canvas recordings need flushing (paint-only invalidation).
+    ///
+    /// Chrome: `CanvasElement::DidDraw()` only invalidates display, not layout.
+    pub fn needs_canvas_flush(&self) -> bool {
+        !self.dirty_canvas_nodes.is_empty()
+    }
+
+    /// Draw into a canvas element's persistent context.
+    ///
+    /// Chrome: each draw call on `CanvasRenderingContext2D` records ops
+    /// and calls `DidDraw()` on the host element. We do both here:
+    /// record the op and mark the node for flushing before next layout.
+    pub(crate) fn canvas_draw(
+        &mut self,
+        idx: u32,
+        f: impl FnOnce(&mut kozan_canvas::CanvasRenderingContext2D),
+    ) {
+        let meta = self.meta.get(idx).expect("canvas node must exist");
+        debug_assert_eq!(
+            meta.data_type_id(),
+            TypeId::of::<crate::html::html_canvas_element::CanvasData>()
+        );
+        let data = unsafe {
+            self.data
+                .get_mut::<crate::html::html_canvas_element::CanvasData>(idx)
+        };
+        f(&mut data.context);
+        if !self.dirty_canvas_nodes.contains(&idx) {
+            self.dirty_canvas_nodes.push(idx);
+        }
+    }
+
+    /// Read from a canvas element's persistent context (for getters).
+    pub(crate) fn canvas_read<R>(
+        &self,
+        idx: u32,
+        f: impl FnOnce(&kozan_canvas::CanvasRenderingContext2D) -> R,
+    ) -> R {
+        let data = unsafe {
+            self.data
+                .get::<crate::html::html_canvas_element::CanvasData>(idx)
+        };
+        f(&data.context)
+    }
+
+    /// Chrome: `FlushCanvas()` — take pending recordings before layout.
+    ///
+    /// Flush dirty canvas recordings and return snapshot entries.
+    ///
+    /// Chrome: `CanvasResourceProvider::Snapshot()` — takes accumulated
+    /// draw ops and produces an immutable recording for paint.
+    ///
+    /// Returns `(node_id, recording)` pairs for updating the paint snapshot map.
+    /// Called from the frame pipeline BEFORE paint, separate from layout.
+    pub(crate) fn flush_canvas_recordings(
+        &mut self,
+    ) -> Vec<(u32, std::sync::Arc<kozan_canvas::CanvasRecording>)> {
+        let nodes: Vec<u32> = self.dirty_canvas_nodes.drain(..).collect();
+        let mut flushed = Vec::with_capacity(nodes.len());
+        for idx in nodes {
+            let data = unsafe {
+                self.data
+                    .get_mut::<crate::html::html_canvas_element::CanvasData>(idx)
+            };
+            let rec = data.context.take_recording();
+            if !rec.is_empty() {
+                let arc = std::sync::Arc::new(rec);
+                data.committed = Some(std::sync::Arc::clone(&arc));
+                flushed.push((idx, arc));
+            }
+        }
+        flushed
     }
 
     /// Returns `true` if the DOM tree structure changed (append / insert /

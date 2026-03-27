@@ -94,6 +94,21 @@ impl Compositor {
         self.layer_tree = Some(layer_tree);
         self.scroll_tree = scroll_tree;
         self.page_zoom = page_zoom;
+        // After layout, scroll containers may have shrunk. Clamp stale
+        // offsets so content doesn't sit past the new scroll bounds.
+        self.clamp_scroll_offsets();
+    }
+
+    /// Clamp all scroll offsets to the current scroll tree bounds.
+    ///
+    /// Chrome: `ScrollTree::ClampScrollOffsetToLimits()`.
+    fn clamp_scroll_offsets(&mut self) {
+        for (id, offset) in self.scroll_offsets.iter_mut() {
+            if let Some(node) = self.scroll_tree.get(id) {
+                offset.dx = offset.dx.clamp(0.0, node.max_offset_x());
+                offset.dy = offset.dy.clamp(0.0, node.max_offset_y());
+            }
+        }
     }
 
     /// Chrome: `InputHandlerProxy::RouteToTypeSpecificHandler()`.
@@ -355,7 +370,17 @@ impl Compositor {
     fn apply_scrollbar_action(&mut self, action: ScrollbarAction) -> bool {
         match action {
             ScrollbarAction::ScrollTo { element_id, offset } => {
-                self.scroll_offsets.set_offset(element_id, offset);
+                // Clamp to scroll bounds — scrollbar controller produces
+                // unclamped positions (especially during thumb drag).
+                let clamped = if let Some(node) = self.scroll_tree.get(element_id) {
+                    Offset::new(
+                        offset.dx.clamp(0.0, node.max_offset_x()),
+                        offset.dy.clamp(0.0, node.max_offset_y()),
+                    )
+                } else {
+                    offset
+                };
+                self.scroll_offsets.set_offset(element_id, clamped);
                 true
             }
             ScrollbarAction::None => false,
@@ -392,7 +417,7 @@ impl Compositor {
         let root = tree.root()?;
 
         let mut best: Option<u32> = None;
-        self.hit_test_layer(tree, root, point, &mut best);
+        self.hit_test_layer(tree, root, point, &mut best, false);
 
         best
     }
@@ -403,11 +428,26 @@ impl Compositor {
         layer_id: layer::LayerId,
         point: Point,
         best: &mut Option<u32>,
+        inside_scrollable: bool,
     ) {
         let layer = tree.layer(layer_id);
 
         if !layer.bounds.contains_point(point) {
             return;
+        }
+
+        // Stacking contexts that are NOT inside a scrollable ancestor
+        // block scroll pass-through. These are out-of-flow overlays
+        // (position: fixed, etc.) that visually occlude content behind them.
+        //
+        // Stacking contexts INSIDE scrollable containers (e.g., a z-indexed
+        // card inside a scrollable list) must NOT block — the parent scroll
+        // container handles their scroll events.
+        //
+        // Chrome: property trees separate fixed-position layers from
+        // scroll-connected layers. This flag approximates that distinction.
+        if layer.is_stacking_context && !layer.is_scrollable && !inside_scrollable {
+            *best = None;
         }
 
         if layer.is_scrollable {
@@ -425,6 +465,7 @@ impl Compositor {
             }
         }
 
+        let child_inside_scrollable = inside_scrollable || layer.is_scrollable;
         for &child_id in &layer.children {
             let child = tree.layer(child_id);
             let local_point = child
@@ -432,7 +473,7 @@ impl Compositor {
                 .inverse()
                 .map(|inv| inv.transform_point(point))
                 .unwrap_or(point);
-            self.hit_test_layer(tree, child_id, local_point, best);
+            self.hit_test_layer(tree, child_id, local_point, best, child_inside_scrollable);
         }
     }
 }
@@ -469,6 +510,8 @@ mod tests {
                 content: Size::new(800.0, 2000.0),
                 scrollable_x: false,
                 scrollable_y: true,
+                overscroll_x: crate::layout::fragment::OverscrollBehavior::Auto,
+                overscroll_y: crate::layout::fragment::OverscrollBehavior::Auto,
             },
         );
         let mut offsets = ScrollOffsets::new();

@@ -6,6 +6,9 @@
 //! scroll offsets). Methods take only what's unique per call — the
 //! fragment and its position.
 
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use kozan_primitives::color::Color;
 use kozan_primitives::geometry::{Offset, Point, Rect, Size};
 use style::properties::ComputedValues;
@@ -97,28 +100,68 @@ fn z_index(s: &ComputedValues) -> Option<i32> {
 /// Walks the fragment tree and emits display items.
 ///
 /// Chrome: `BoxFragmentPainter` holds fragment + paint info as a struct.
+///
+/// The `canvas_snapshots` map provides fresh canvas recordings resolved
+/// at paint time — decoupled from the fragment tree so canvas-only changes
+/// skip style+layout entirely (Chrome: `CanvasElement::DidDraw()` only
+/// invalidates display, not layout).
 pub(crate) struct Painter<'a> {
     builder: DisplayListBuilder,
     scroll_offsets: &'a ScrollOffsets,
+    canvas_snapshots: &'a HashMap<u32, Arc<kozan_canvas::CanvasRecording>>,
 }
 
 impl<'a> Painter<'a> {
-    pub fn new(scroll_offsets: &'a ScrollOffsets) -> Self {
+    pub fn new(
+        scroll_offsets: &'a ScrollOffsets,
+        canvas_snapshots: &'a HashMap<u32, Arc<kozan_canvas::CanvasRecording>>,
+    ) -> Self {
         Self {
             builder: DisplayListBuilder::new(),
             scroll_offsets,
+            canvas_snapshots,
         }
     }
 
     /// Paint the full tree. Chrome: `FramePainter::Paint()`.
     /// Consume the painter and produce a display list.
+    ///
+    /// CSS2 §14.2: the root element's background becomes the canvas background.
+    /// If root has no background, body's background propagates instead.
+    /// Chrome: `ViewPainter::PaintRootBackground()`.
     pub fn paint(mut self, root: &Fragment, viewport: Size) -> super::DisplayList {
+        let canvas_bg = Self::resolve_canvas_background(root);
         self.emit(DisplayItem::Draw(DrawCommand::Rect {
             rect: Rect::new(0.0, 0.0, viewport.width, viewport.height),
-            color: Color::WHITE,
+            color: canvas_bg,
         }));
         self.paint_fragment(root, Point::ZERO);
         self.builder.finish()
+    }
+
+    /// CSS2 §14.2 canvas background propagation.
+    /// Chrome: `ViewPainter::GetCanvasBackground()`.
+    fn resolve_canvas_background(root: &Fragment) -> Color {
+        // Try root element's background.
+        if let Some(style) = root.style.as_ref() {
+            let bg = stylo_color_to_color(&style.get_background().clone_background_color());
+            if bg != Color::TRANSPARENT {
+                return bg;
+            }
+        }
+        // Root is transparent — propagate from body (first child box).
+        if let FragmentKind::Box(data) = &root.kind {
+            for child in &data.children {
+                if let Some(style) = child.fragment.style.as_ref() {
+                    let bg =
+                        stylo_color_to_color(&style.get_background().clone_background_color());
+                    if bg != Color::TRANSPARENT {
+                        return bg;
+                    }
+                }
+            }
+        }
+        Color::WHITE
     }
 
     fn emit(&mut self, item: DisplayItem) {
@@ -169,9 +212,11 @@ impl<'a> Painter<'a> {
         if let Some(s) = style {
             self.paint_box_shadows(s, border_box);
             self.paint_background_and_border(s, data, border_box);
+            self.paint_replaced_content(data, origin, fragment.size, fragment.dom_node);
             self.paint_clipped_children(fragment, data, origin, s);
             self.paint_outline(s, border_box);
         } else {
+            self.paint_replaced_content(data, origin, fragment.size, fragment.dom_node);
             self.paint_unstyled_children(data, origin, fragment.size);
         }
 
@@ -268,6 +313,49 @@ impl<'a> Painter<'a> {
                     },
                 }));
             }
+        }
+    }
+
+    /// Emit a draw command for replaced content (canvas, image, video, custom).
+    ///
+    /// Chrome: `LayoutReplaced::PaintReplaced()` — dispatches via trait.
+    ///
+    /// For canvas elements, fresh recordings are resolved from the snapshot map
+    /// (decoupled from fragment tree). This allows canvas-only changes to skip
+    /// the full layout pipeline.
+    fn paint_replaced_content(
+        &mut self,
+        data: &BoxFragmentData,
+        origin: Point,
+        layout_size: Size,
+        dom_node: Option<u32>,
+    ) {
+        if let Some(content) = &data.replaced_content {
+            let mut cmd = content.to_draw_command();
+            // Browser: canvas bitmap is positioned at the element's layout origin
+            // and scaled to the CSS layout box dimensions.
+            if let DrawCommand::Canvas {
+                ref mut recording,
+                ref mut x,
+                ref mut y,
+                ref mut layout_width,
+                ref mut layout_height,
+                ..
+            } = cmd
+            {
+                // Resolve fresh recording from snapshot map (decoupled from fragments).
+                // Chrome: PaintRecord is read from CanvasElement at paint time.
+                if let Some(node_id) = dom_node {
+                    if let Some(fresh) = self.canvas_snapshots.get(&node_id) {
+                        *recording = Arc::clone(fresh);
+                    }
+                }
+                *x = origin.x;
+                *y = origin.y;
+                *layout_width = layout_size.width;
+                *layout_height = layout_size.height;
+            }
+            self.emit(DisplayItem::Draw(cmd));
         }
     }
 
@@ -495,7 +583,8 @@ impl<'a> Painter<'a> {
 
 #[cfg(test)]
 fn paint_no_scroll(root: &Fragment, viewport: Size) -> super::DisplayList {
-    Painter::new(&ScrollOffsets::new()).paint(root, viewport)
+    let empty_map = HashMap::new();
+    Painter::new(&ScrollOffsets::new(), &empty_map).paint(root, viewport)
 }
 
 #[cfg(test)]
@@ -714,7 +803,8 @@ mod tests {
         let mut offsets = ScrollOffsets::new();
         offsets.set_offset(5, Offset::new(0.0, 150.0));
 
-        let list = Painter::new(&offsets).paint(&root, viewport());
+        let canvas_snapshots = std::collections::HashMap::new();
+        let list = Painter::new(&offsets, &canvas_snapshots).paint(&root, viewport());
         let has_transform = list
             .items()
             .iter()

@@ -1,489 +1,297 @@
-/* ── DevTools root ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   kozan-devtools — Professional dark theme
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Tokens ────────────────────────────────────────────────── */
+/* bg:        rgba(22,22,26,0.96)                               */
+/* bg-panel:  rgba(28,28,34,0.98)                               */
+/* border:    rgba(255,255,255,0.06)                             */
+/* border-hi: rgba(255,255,255,0.10)                             */
+/* text:      #e2e4e8                                            */
+/* text-dim:  #8b8fa3                                            */
+/* text-mute: #5c6078                                            */
+/* accent:    #6b8afd                                            */
+/* green:     #4ade80                                            */
+/* yellow:    #fbbf24                                            */
+/* red:       #f87171                                            */
+/* orange:    #fb923c                                            */
+/* teal:      #2dd4bf                                            */
+/* purple:    #a78bfa                                            */
+/* cell-bg:   rgba(255,255,255,0.03)                             */
+
+/* ── Root ──────────────────────────────────────────────────── */
 
 .kdt-root {
     position: fixed;
     z-index: 2147483647;
     font-size: 11px;
     font-family: system-ui;
-    color: #e8eaed;
-    pointer-events: auto;
+    color: #e2e4e8;
 }
 
-/* Fullscreen mode — covers entire viewport.
-   Inline styles are cleared via set_attribute("style","") before adding this class,
-   so these rules apply without specificity conflicts. */
+/* ── Fullscreen ────────────────────────────────────────────── */
+
 .kdt-fullscreen {
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
+    top: 0px; left: 0px; right: 0px; bottom: 0px;
 }
-
 .kdt-fullscreen .kdt-panel {
-    min-width: 100%;
-    max-width: 100%;
-    height: 100%;
-    border-radius: 0px;
-    border-width: 0px;
+    min-width: 100%; max-width: 100%; height: 100%;
+    border-radius: 0px; border-width: 0px;
 }
-
 .kdt-fullscreen .kdt-tab-content {
-    max-height: calc(100vh - 40px);
-    flex-grow: 1;
+    max-height: calc(100vh - 40px); flex-grow: 1;
 }
+.kdt-fullscreen .kdt-badge { display: none; }
 
-.kdt-fullscreen .kdt-badge {
-    display: none;
-}
-
-/* ── Badge (collapsed state) ───────────────────────────────── */
+/* ── Badge ─────────────────────────────────────────────────── */
 
 .kdt-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    background-color: rgba(32, 33, 36, 0.92);
-    border-radius: 6px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(255, 255, 255, 0.08);
-    min-width: 80px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background-color: rgba(22, 22, 26, 0.96);
+    border-radius: 10px;
+    border-width: 1px; border-style: solid;
+    border-color: rgba(255, 255, 255, 0.06);
 }
 
 .kdt-fps-number {
-    font-weight: 700;
-    font-size: 14px;
-    min-width: 32px;
+    font-weight: 700; font-size: 16px; min-width: 28px;
 }
-
 .kdt-fps-label {
-    font-size: 10px;
-    color: #9aa0a6;
+    font-size: 10px; color: #8b8fa3;
 }
+.kdt-fps-green  { color: #4ade80; }
+.kdt-fps-yellow { color: #fbbf24; }
+.kdt-fps-red    { color: #f87171; }
 
-.kdt-fps-green  { color: #34a853; }
-.kdt-fps-yellow { color: #fbbc04; }
-.kdt-fps-red    { color: #ea4335; }
-
-/* ── Expanded panel ────────────────────────────────────────── */
+/* ── Panel ─────────────────────────────────────────────────── */
 
 .kdt-panel {
-    display: none;
-    flex-direction: column;
-    background-color: rgba(32, 33, 36, 0.95);
-    border-radius: 8px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(255, 255, 255, 0.08);
-    min-width: 360px;
-    max-width: 480px;
+    display: none; flex-direction: column;
+    background-color: rgba(28, 28, 34, 0.98);
+    border-radius: 12px;
+    border-width: 1px; border-style: solid;
+    border-color: rgba(255, 255, 255, 0.06);
+    min-width: 380px; max-width: 440px;
+    overflow: hidden;
 }
+.kdt-panel-open { display: flex; }
 
-.kdt-panel-open {
-    display: flex;
-}
-
-/* ── Tab bar ───────────────────────────────────────────────── */
+/* ── Tab bar / title bar ───────────────────────────────────── */
 
 .kdt-tab-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px;
+    border-bottom-width: 1px; border-bottom-style: solid;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 .kdt-tab {
-    padding: 7px 14px;
-    font-size: 11px;
-    color: #9aa0a6;
-    border-bottom-width: 2px;
-    border-bottom-style: solid;
-    border-bottom-color: transparent;
+    font-size: 11px; font-weight: 600; color: #6b8afd;
+    padding: 4px 0px;
+    border-bottom-width: 2px; border-bottom-style: solid;
+    border-bottom-color: #6b8afd;
 }
 
-.kdt-tab-active {
-    color: #8ab4f8;
-    border-bottom-color: #8ab4f8;
+.kdt-titlebar-spacer { flex-grow: 1; }
+
+.kdt-action-btn {
+    font-size: 10px; color: #8b8fa3;
+    padding: 3px 8px; border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
-/* ── Tab content (scrollable) ──────────────────────────────── */
+.kdt-close-btn {
+    font-size: 13px; color: #8b8fa3;
+    padding: 2px 6px; border-radius: 6px;
+}
+
+.kdt-record-btn {
+    font-size: 10px; color: #f87171;
+    padding: 3px 8px; border-radius: 6px;
+    background-color: rgba(248, 113, 113, 0.08);
+    border-width: 1px; border-style: solid;
+    border-color: rgba(248, 113, 113, 0.15);
+}
+.kdt-recording {
+    background-color: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+}
+
+/* ── Tab content ───────────────────────────────────────────── */
 
 .kdt-tab-content {
-    display: none;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
-    max-height: 70vh;
-    overflow-y: auto;
+    display: none; flex-direction: column;
+    gap: 10px; padding: 12px;
+    max-height: 75vh; overflow-y: auto;
+    /* CSS Overscroll Behavior §4: prevent scroll chaining to viewport */
+    /* overscroll-behavior: contain; */
 }
-
-.kdt-tab-content-active {
-    display: flex;
-}
+.kdt-tab-content-active { display: flex; }
 
 /* ── Performance tab ───────────────────────────────────────── */
 
 .kdt-perf-tab {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: flex; flex-direction: column; gap: 10px;
 }
 
-/* ── Title bar ─────────────────────────────────────────────── */
-
-.kdt-titlebar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0px;
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-.kdt-title {
-    font-weight: 600;
-    font-size: 12px;
-}
-
-.kdt-titlebar-spacer {
-    flex-grow: 1;
-}
-
-.kdt-close-btn {
-    color: #9aa0a6;
-    font-size: 14px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.04);
-}
-
-.kdt-action-btn {
-    font-size: 10px;
-    color: #8ab4f8;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background-color: rgba(138, 180, 248, 0.08);
-}
-
-.kdt-record-btn {
-    font-size: 10px;
-    color: #ea4335;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background-color: rgba(234, 67, 53, 0.08);
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(234, 67, 53, 0.2);
-}
-
-.kdt-recording {
-    background-color: rgba(234, 67, 53, 0.25);
-    color: #ff6659;
-}
-
-/* ── Bottleneck indicator ──────────────────────────────────── */
-
-.kdt-bottleneck {
-    font-size: 10px;
-    color: #fbbc04;
-    padding: 2px 0px;
-}
-
-/* ── Timing row ────────────────────────────────────────────── */
+/* ── Timing grid ───────────────────────────────────────────── */
 
 .kdt-timing-grid {
-    display: flex;
-    gap: 4px;
+    display: flex; gap: 4px;
 }
 
 .kdt-timing-cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
     flex-grow: 1;
-    padding: 6px 4px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.04);
+    padding: 8px 4px; border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 .kdt-timing-value {
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: 700; font-size: 14px; line-height: 1.2;
 }
-
 .kdt-timing-label {
-    font-size: 9px;
-    color: #9aa0a6;
+    font-size: 9px; color: #8b8fa3;
+    margin-top: 2px;
 }
 
-.kdt-color-style      { color: #8ab4f8; }
-.kdt-color-layout     { color: #81c995; }
-.kdt-color-paint      { color: #fcad70; }
-.kdt-color-total      { color: #e8eaed; }
-.kdt-color-fps        { color: #34a853; }
+.kdt-color-style       { color: #a78bfa; }
+.kdt-color-layout      { color: #fbbf24; }
+.kdt-color-paint       { color: #fb923c; }
+.kdt-color-total       { color: #e2e4e8; }
+.kdt-color-fps         { color: #4ade80; }
+
+/* ── Bottleneck ────────────────────────────────────────────── */
+
+.kdt-bottleneck {
+    font-size: 10px; color: #fbbf24;
+    padding: 0px 2px; min-height: 14px;
+}
 
 /* ── Budget bar ────────────────────────────────────────────── */
 
 .kdt-budget-row {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+    display: flex; flex-direction: column; gap: 4px;
 }
-
 .kdt-budget-header {
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
 }
-
 .kdt-budget-label {
-    font-size: 10px;
-    color: #9aa0a6;
+    font-size: 10px; color: #8b8fa3;
 }
-
-.kdt-budget-spacer {
-    flex-grow: 1;
-}
-
+.kdt-budget-spacer { flex-grow: 1; }
 .kdt-budget-pct {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 10px; font-weight: 600;
 }
-
 .kdt-budget-track {
-    height: 4px;
-    border-radius: 2px;
-    background-color: rgba(255, 255, 255, 0.08);
+    height: 3px; border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.06);
     overflow: hidden;
 }
-
 .kdt-budget-fill {
-    height: 4px;
-    border-radius: 2px;
-    background-color: #34a853;
+    height: 3px; border-radius: 2px;
+    background-color: #4ade80;
+}
+.kdt-budget-warn { background-color: #fbbf24; }
+.kdt-budget-over { background-color: #f87171; }
+
+/* ── Separator ─────────────────────────────────────────────── */
+
+.kdt-sep {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.06);
+    margin-top: 2px; margin-bottom: 2px;
 }
 
-.kdt-budget-warn { background-color: #fbbc04; }
-.kdt-budget-over { background-color: #ea4335; }
-
-/* ── Chart lanes (Performance Monitor style) ───────────────── */
+/* ── Chart lanes ───────────────────────────────────────────── */
 
 .kdt-charts-section {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding-top: 4px;
-    border-top-width: 1px;
-    border-top-style: solid;
-    border-top-color: rgba(255, 255, 255, 0.06);
+    display: flex; flex-direction: column; gap: 3px;
 }
 
 .kdt-chart-lane {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 34px;
+    display: flex; align-items: center; gap: 8px;
+    min-height: 36px; padding: 2px 0px;
 }
 
 .kdt-chart-toggle {
-    width: 10px;
-    height: 10px;
-    min-width: 10px;
-    border-radius: 2px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgba(255, 255, 255, 0.2);
+    width: 8px; height: 8px; min-width: 8px;
+    border-radius: 3px;
 }
-
-.kdt-chart-toggle-off {
-    background-color: transparent;
-}
+.kdt-chart-toggle-off { opacity: 0.25; }
 
 .kdt-chart-label {
-    font-size: 10px;
-    color: #9aa0a6;
-    min-width: 56px;
+    font-size: 10px; color: #8b8fa3; min-width: 44px;
 }
 
 .kdt-chart-value-block {
-    display: flex;
-    flex-direction: column;
-    min-width: 80px;
+    display: flex; flex-direction: column; min-width: 78px;
 }
-
 .kdt-chart-value {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 10px; font-weight: 600; line-height: 1.3;
 }
-
 .kdt-chart-stats {
-    font-size: 10px;
-    color: #6e7278;
-    white-space: nowrap;
+    font-size: 9px; color: #5c6078;
 }
 
-.kdt-chart-area {
-    display: flex;
-    align-items: flex-end;
-    height: 28px;
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-    background-color: rgba(255, 255, 255, 0.02);
-    border-radius: 2px;
+.kdt-chart-canvas {
+    height: 32px; flex: 1 1 0; min-width: 0; border-radius: 4px;
 }
+.kdt-chart-hidden { display: none; }
 
-.kdt-chart-hidden {
-    display: none;
-}
+/* Toggle background colors */
+.kdt-color-budget       { background-color: rgba(74, 222, 128, 0.7); }
+.kdt-color-fps.kdt-chart-toggle,
+.kdt-color-fps          { background-color: rgba(107, 138, 253, 0.7); }
+.kdt-color-nodes        { background-color: rgba(45, 212, 191, 0.7); }
+.kdt-color-style-time   { background-color: rgba(167, 139, 250, 0.7); }
+.kdt-color-layout-time  { background-color: rgba(251, 191, 36, 0.7); }
+.kdt-color-paint-time   { background-color: rgba(251, 146, 60, 0.7); }
 
-.kdt-chart-bar {
-    min-width: 1px;
-    flex-grow: 1;
-}
-
-.kdt-chart-grid {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    height: 1px;
-    background-color: rgba(255, 255, 255, 0.06);
-}
-
-/* ── Per-metric chart colors ───────────────────────────────── */
-
-/* Toggle backgrounds */
-.kdt-color-budget .kdt-chart-toggle,
-.kdt-color-budget.kdt-chart-toggle     { background-color: rgba(52, 168, 83, 0.6); }
-.kdt-color-fps .kdt-chart-toggle,
-.kdt-color-fps.kdt-chart-toggle        { background-color: rgba(138, 180, 248, 0.6); }
-.kdt-color-nodes .kdt-chart-toggle,
-.kdt-color-nodes.kdt-chart-toggle      { background-color: rgba(129, 201, 149, 0.6); }
-.kdt-color-style-time .kdt-chart-toggle,
-.kdt-color-style-time.kdt-chart-toggle { background-color: rgba(138, 180, 248, 0.6); }
-.kdt-color-layout-time .kdt-chart-toggle,
-.kdt-color-layout-time.kdt-chart-toggle{ background-color: rgba(129, 201, 149, 0.6); }
-.kdt-color-paint-time .kdt-chart-toggle,
-.kdt-color-paint-time.kdt-chart-toggle { background-color: rgba(252, 173, 112, 0.6); }
-
-/* Bar fill + line (border-top creates the line trace) */
-.kdt-color-budget .kdt-chart-bar     { background-color: rgba(52, 168, 83, 0.2); border-top-width: 1px; border-top-style: solid; border-top-color: #34a853; }
-.kdt-color-fps .kdt-chart-bar        { background-color: rgba(138, 180, 248, 0.2); border-top-width: 1px; border-top-style: solid; border-top-color: #8ab4f8; }
-.kdt-color-nodes .kdt-chart-bar      { background-color: rgba(129, 201, 149, 0.2); border-top-width: 1px; border-top-style: solid; border-top-color: #81c995; }
-.kdt-color-style-time .kdt-chart-bar { background-color: rgba(138, 180, 248, 0.2); border-top-width: 1px; border-top-style: solid; border-top-color: #8ab4f8; }
-.kdt-color-layout-time .kdt-chart-bar{ background-color: rgba(129, 201, 149, 0.2); border-top-width: 1px; border-top-style: solid; border-top-color: #81c995; }
-.kdt-color-paint-time .kdt-chart-bar { background-color: rgba(252, 173, 112, 0.2); border-top-width: 1px; border-top-style: solid; border-top-color: #fcad70; }
-
-/* ── Stats row (avg / peak / jank) ──────────────────────────── */
+/* ── Stats row ─────────────────────────────────────────────── */
 
 .kdt-stats-row {
-    display: flex;
-    gap: 4px;
-    padding-top: 4px;
-    border-top-width: 1px;
-    border-top-style: solid;
-    border-top-color: rgba(255, 255, 255, 0.06);
+    display: flex; gap: 4px;
 }
 
-.kdt-stats-cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-grow: 1;
-    padding: 4px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.04);
-}
-
-.kdt-stats-value {
-    font-weight: 600;
-    font-size: 12px;
-}
-
-.kdt-stats-label {
-    font-size: 9px;
-    color: #9aa0a6;
-}
-
-/* ── Info row ──────────────────────────────────────────────── */
+/* ── Info grid ─────────────────────────────────────────────── */
 
 .kdt-info-grid {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding-top: 4px;
-    border-top-width: 1px;
-    border-top-style: solid;
-    border-top-color: rgba(255, 255, 255, 0.06);
+    display: flex; gap: 14px; flex-wrap: wrap; padding: 2px 0px;
 }
-
 .kdt-info-item {
-    display: flex;
-    gap: 4px;
-    align-items: center;
+    display: flex; gap: 4px; align-items: center;
 }
-
 .kdt-info-label {
-    font-size: 10px;
-    color: #9aa0a6;
+    font-size: 9px; color: #5c6078;
 }
-
 .kdt-info-value {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 10px; font-weight: 500;
 }
 
 /* ── Event log ─────────────────────────────────────────────── */
 
 .kdt-log-section {
-    display: flex;
-    flex-direction: column;
-    padding-top: 4px;
-    border-top-width: 1px;
-    border-top-style: solid;
-    border-top-color: rgba(255, 255, 255, 0.06);
+    display: flex; flex-direction: column;
 }
-
 .kdt-log-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    color: #9aa0a6;
-    padding: 4px 0px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: #8b8fa3; padding: 4px 0px;
 }
-
 .kdt-log-arrow {
-    font-size: 9px;
-    color: #9aa0a6;
-    min-width: 8px;
+    font-size: 9px; color: #8b8fa3; min-width: 8px;
 }
-
 .kdt-log-body {
-    display: none;
-    flex-direction: column;
-    max-height: 120px;
-    overflow: auto;
+    display: none; flex-direction: column;
+    max-height: 100px; overflow: auto;
 }
-
-.kdt-log-open {
-    display: flex;
-}
-
+.kdt-log-open { display: flex; }
 .kdt-log-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+    display: flex; flex-direction: column; gap: 1px;
 }
-
 .kdt-log-entry {
-    font-size: 10px;
-    color: #bdc1c6;
-    padding: 3px 6px;
-    border-radius: 2px;
-    background-color: rgba(255, 255, 255, 0.04);
+    font-size: 10px; color: #bdc1c6;
+    padding: 3px 6px; border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.03);
 }

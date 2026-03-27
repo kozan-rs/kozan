@@ -1,34 +1,39 @@
-//! Area chart widget — dense 1px bars creating smooth filled charts.
+//! Area chart widget — Canvas 2D drawn smooth filled area charts.
 //!
 //! Chrome: Performance Monitor chart lanes. Each lane shows a single
-//! metric as a filled area chart with a solid line on top.
+//! metric as a gradient-filled area chart with a solid line on top.
 //!
-//! Since Kozan has no Canvas or SVG, we simulate area charts with
-//! densely packed 1px-wide div bars. Zero gap between bars creates
-//! the visual effect of a smooth filled area. CSS `border-top` on
-//! each bar creates the line trace.
+//! Draws directly via Canvas 2D — zero DOM nodes per chart, zero
+//! layout cost per update.
 
 use std::cell::Cell;
 use std::rc::Rc;
 
-use kozan_core::styling::units::pct;
-use kozan_core::{ClickEvent, ContainerNode, Document, Element, EventTarget, HtmlDivElement, Node, Text};
+use kozan_core::{
+    Canvas2D, ClickEvent, ContainerNode, Document, Element, EventTarget, HtmlCanvasElement,
+    HtmlDivElement, Text,
+};
+use kozan_primitives::color::Color;
 
 use crate::metrics::HISTORY_SIZE;
 
-/// A single chart lane — label, current value, avg/peak stats, and area chart.
+const CHART_HEIGHT: f32 = 32.0;
+
+/// A single chart lane — label, current value, avg/peak stats, and canvas area chart.
 pub struct AreaChart {
     /// The full lane row element.
     pub lane: HtmlDivElement,
-    /// 120 x 1px bar divs.
-    bars: Vec<HtmlDivElement>,
+    /// Canvas element — needed for reading display size after layout.
+    canvas: HtmlCanvasElement,
+    /// Canvas 2D rendering context handle.
+    ctx: Canvas2D,
     /// Current value display.
     value_text: Text,
     /// Avg/peak sub-text.
     stats_text: Text,
     /// Whether this chart lane is visible.
     enabled: Rc<Cell<bool>>,
-    /// Ring buffer of normalized values (0.0-1.0).
+    /// Ring buffer of normalized values (0.0–1.0).
     values: [Cell<f32>; HISTORY_SIZE],
     /// Write position in the ring buffer.
     write_idx: Cell<usize>,
@@ -38,15 +43,24 @@ pub struct AreaChart {
     peak: Cell<f64>,
     /// Total samples for running average.
     total_samples: Cell<u64>,
+    /// Line color (trace on top, solid).
+    line_color: Color,
+    /// Fill color top (area gradient start — line_color at 0.25 alpha).
+    fill_top: Color,
+    /// Fill color bottom (area gradient end — line_color at 0.02 alpha).
+    fill_bottom: Color,
 }
 
 impl AreaChart {
-    /// Build a chart lane: [toggle] label  value+stats  |area chart|
-    pub fn build(doc: &Document, label: &str, color_class: &str) -> Self {
+    /// Build a chart lane: [toggle] label  value+stats  |canvas chart|
+    ///
+    /// `line_color`: the solid color for the chart trace line.
+    /// The area fill is a vertical gradient from `line_color@0.25` to `line_color@0.02`.
+    pub fn build(doc: &Document, label: &str, color_class: &str, line_color: Color) -> Self {
         let lane = doc.div();
         lane.class_add("kdt-chart-lane");
 
-        // Toggle checkbox (colored square)
+        // Toggle dot (colored square)
         let toggle = doc.div();
         toggle.class_add("kdt-chart-toggle");
         toggle.class_add(color_class);
@@ -76,44 +90,31 @@ impl AreaChart {
 
         lane.child(value_block);
 
-        // Chart area container
-        let chart_area = doc.div();
-        chart_area.class_add("kdt-chart-area");
-        chart_area.class_add(color_class);
+        // Canvas chart
+        let canvas = doc.create::<HtmlCanvasElement>();
+        canvas.set_canvas_width(HISTORY_SIZE as f32);
+        canvas.set_canvas_height(CHART_HEIGHT);
+        canvas.class_add("kdt-chart-canvas");
+        let ctx = canvas.context_2d();
+        lane.child(canvas);
 
-        // Grid line at 50%
-        let grid_50 = doc.div();
-        grid_50.class_add("kdt-chart-grid");
-        grid_50.set_attribute("style", "bottom: 50%");
-        chart_area.child(grid_50);
-
-        // 120 bars
-        let mut bars = Vec::with_capacity(HISTORY_SIZE);
-        for _ in 0..HISTORY_SIZE {
-            let bar = doc.div();
-            bar.class_add("kdt-chart-bar");
-            bar.style().h(pct(0.0));
-            chart_area.child(bar);
-            bars.push(bar);
-        }
-
-        lane.child(chart_area);
-
+        let fill_top = Color::rgba(line_color.r, line_color.g, line_color.b, 0.25);
+        let fill_bottom = Color::rgba(line_color.r, line_color.g, line_color.b, 0.02);
         let enabled = Rc::new(Cell::new(true));
 
         // Toggle click handler
         {
             let enabled = Rc::clone(&enabled);
-            let chart_area_el = chart_area;
+            let canvas_el = canvas;
             let toggle_el = toggle;
             toggle_el.on::<ClickEvent>(move |_, _| {
                 let on = !enabled.get();
                 enabled.set(on);
                 if on {
-                    chart_area_el.class_remove("kdt-chart-hidden");
+                    canvas_el.class_remove("kdt-chart-hidden");
                     toggle_el.class_remove("kdt-chart-toggle-off");
                 } else {
-                    chart_area_el.class_add("kdt-chart-hidden");
+                    canvas_el.class_add("kdt-chart-hidden");
                     toggle_el.class_add("kdt-chart-toggle-off");
                 }
             });
@@ -121,7 +122,8 @@ impl AreaChart {
 
         Self {
             lane,
-            bars,
+            canvas,
+            ctx,
             value_text,
             stats_text,
             enabled,
@@ -130,17 +132,19 @@ impl AreaChart {
             avg_accum: Cell::new(0.0),
             peak: Cell::new(0.0),
             total_samples: Cell::new(0),
+            line_color,
+            fill_top,
+            fill_bottom,
         }
     }
 
-    /// Push a new value and update bar heights + stats.
+    /// Push a new value and redraw the chart.
     ///
-    /// `normalized`: 0.0-1.0 range for bar height.
+    /// `normalized`: 0.0–1.0 range for bar height.
     /// `raw`: actual metric value for avg/peak tracking.
     /// `display`: text for current value (e.g., "60", "0.3").
     /// `unit`: suffix for avg/peak display (e.g., "ms", "%", "").
     pub fn update(&self, normalized: f32, raw: f64, display: &str, unit: &str) {
-        // Track avg/peak from raw values.
         let n = self.total_samples.get() + 1;
         self.total_samples.set(n);
 
@@ -151,7 +155,6 @@ impl AreaChart {
         let prev_avg = self.avg_accum.get();
         self.avg_accum.set(prev_avg + (raw - prev_avg) / n as f64);
 
-        // Update stats sub-text.
         let avg = self.avg_accum.get();
         let peak = self.peak.get();
         self.stats_text
@@ -162,19 +165,104 @@ impl AreaChart {
             return;
         }
 
-        // Write new value into ring buffer.
         let idx = self.write_idx.get();
         self.values[idx].set(normalized.clamp(0.0, 1.0));
         self.write_idx.set((idx + 1) % HISTORY_SIZE);
 
-        // Update all bar heights from ring buffer (oldest to newest).
-        for (i, bar) in self.bars.iter().enumerate() {
+        // Sync canvas buffer to actual display size — prevents stretching.
+        // Like web: canvas.width = canvas.getBoundingClientRect().width
+        self.sync_canvas_size();
+
+        self.redraw();
+        self.value_text.set_content(display);
+    }
+
+    /// Sync canvas pixel buffer to match CSS display size.
+    ///
+    /// Only resizes when the display size actually changed. This runs at
+    /// most ~16/sec (throttled by shell), so the offset_width/height
+    /// reads are negligible.
+    fn sync_canvas_size(&self) {
+        let display_w = self.canvas.offset_width();
+        let display_h = self.canvas.offset_height();
+        if display_w < 1.0 || display_h < 1.0 {
+            return;
+        }
+        let cur_w = self.canvas.canvas_width();
+        let cur_h = self.canvas.canvas_height();
+        if (cur_w - display_w).abs() > 0.5 || (cur_h - display_h).abs() > 0.5 {
+            self.canvas.set_canvas_width(display_w);
+            self.canvas.set_canvas_height(display_h);
+        }
+    }
+
+    /// Redraw the entire area chart on canvas with gradient fill.
+    fn redraw(&self) {
+        let ctx = self.ctx;
+        let w = self.canvas.canvas_width();
+        let h = self.canvas.canvas_height();
+        let idx = self.write_idx.get();
+
+        // Clear + subtle background.
+        ctx.clear_rect(0.0, 0.0, w, h);
+        ctx.set_fill_color(Color::rgba(1.0, 1.0, 1.0, 0.015));
+        ctx.fill_rect(0.0, 0.0, w, h);
+
+        // 50% grid line.
+        ctx.set_stroke_color(Color::rgba(1.0, 1.0, 1.0, 0.04));
+        ctx.set_line_width(0.5);
+        ctx.begin_path();
+        ctx.move_to(0.0, h * 0.5);
+        ctx.line_to(w, h * 0.5);
+        ctx.stroke();
+
+        // X step: spread HISTORY_SIZE samples across actual canvas width.
+        let x_step = if HISTORY_SIZE > 1 { w / (HISTORY_SIZE - 1) as f32 } else { w };
+
+        // Area fill — gradient approximated with two passes (no canvas gradients yet).
+
+        // Pass 1: full area at bottom alpha
+        ctx.begin_path();
+        ctx.move_to(0.0, h);
+        for i in 0..HISTORY_SIZE {
             let ring_idx = (idx + 1 + i) % HISTORY_SIZE;
             let v = self.values[ring_idx].get();
-            bar.style().h(pct(v * 100.0));
+            ctx.line_to(i as f32 * x_step, h * (1.0 - v));
         }
+        ctx.line_to(w, h);
+        ctx.close_path();
+        ctx.set_fill_color(self.fill_bottom);
+        ctx.fill();
 
-        self.value_text.set_content(display);
+        // Pass 2: upper portion at higher alpha
+        ctx.begin_path();
+        ctx.move_to(0.0, h);
+        for i in 0..HISTORY_SIZE {
+            let ring_idx = (idx + 1 + i) % HISTORY_SIZE;
+            let v = self.values[ring_idx].get();
+            ctx.line_to(i as f32 * x_step, h * (1.0 - v));
+        }
+        ctx.line_to(w, h);
+        ctx.close_path();
+        ctx.set_fill_color(self.fill_top);
+        ctx.fill();
+
+        // Line trace on top.
+        ctx.begin_path();
+        for i in 0..HISTORY_SIZE {
+            let ring_idx = (idx + 1 + i) % HISTORY_SIZE;
+            let v = self.values[ring_idx].get();
+            let x = i as f32 * x_step;
+            let y = h * (1.0 - v);
+            if i == 0 {
+                ctx.move_to(x, y);
+            } else {
+                ctx.line_to(x, y);
+            }
+        }
+        ctx.set_stroke_color(self.line_color);
+        ctx.set_line_width(1.5);
+        ctx.stroke();
     }
 
     /// Clear accumulated avg/peak stats and chart history.
@@ -187,5 +275,8 @@ impl AreaChart {
         }
         self.write_idx.set(0);
         self.stats_text.set_content("");
+
+        self.ctx
+            .clear_rect(0.0, 0.0, self.canvas.canvas_width(), self.canvas.canvas_height());
     }
 }

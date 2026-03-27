@@ -296,4 +296,16 @@ pub trait Element: ContainerNode {
     fn has_attribute(&self, name: &str) -> bool {
         self.handle().attribute(name).is_some()
     }
+
+    // ── CSSOM View — layout geometry ──
+
+    /// Border-box width after layout (CSSOM `offsetWidth`).
+    fn offset_width(&self) -> f32 {
+        self.handle().offset_width()
+    }
+
+    /// Border-box height after layout (CSSOM `offsetHeight`).
+    fn offset_height(&self) -> f32 {
+        self.handle().offset_height()
+    }
 }

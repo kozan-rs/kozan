@@ -3,6 +3,7 @@
 //! Chrome: `cc/input/scroll_controller.h`.
 //! The ONLY code that mutates [`ScrollOffsets`].
 
+use crate::layout::fragment::OverscrollBehavior;
 use kozan_primitives::geometry::Offset;
 
 use super::node::ScrollNode;
@@ -57,6 +58,10 @@ impl<'a> ScrollController<'a> {
     /// Distribute delta along the scroll chain from `start` toward root.
     /// Returns the DOM node IDs that actually consumed scroll delta
     /// (empty if nothing scrolled).
+    ///
+    /// CSS Overscroll Behavior §4: when a scroll container has
+    /// `overscroll-behavior: contain` or `none`, unconsumed delta
+    /// MUST NOT propagate to ancestor scroll containers.
     pub fn scroll(&mut self, start: u32, mut delta: Offset) -> ScrolledNodes {
         let mut nodes = ScrolledNodes::new();
 
@@ -73,6 +78,15 @@ impl<'a> ScrollController<'a> {
                 nodes.push(node_id);
             }
             delta = Offset::new(delta.dx - consumed.dx, delta.dy - consumed.dy);
+
+            // CSS Overscroll Behavior §4 — stop chain propagation.
+            // `contain`/`none`: remaining delta must not bubble up.
+            if node.overscroll_x != OverscrollBehavior::Auto {
+                delta = Offset::new(0.0, delta.dy);
+            }
+            if node.overscroll_y != OverscrollBehavior::Auto {
+                delta = Offset::new(delta.dx, 0.0);
+            }
         }
 
         nodes
@@ -117,6 +131,8 @@ mod tests {
                 content: Size::new(800.0, 2000.0),
                 scrollable_x: false,
                 scrollable_y: true,
+                overscroll_x: OverscrollBehavior::Auto,
+                overscroll_y: OverscrollBehavior::Auto,
             },
         );
         tree.set(
@@ -128,6 +144,8 @@ mod tests {
                 content: Size::new(300.0, 800.0),
                 scrollable_x: false,
                 scrollable_y: true,
+                overscroll_x: OverscrollBehavior::Auto,
+                overscroll_y: OverscrollBehavior::Auto,
             },
         );
 
@@ -184,5 +202,92 @@ mod tests {
         let (tree, mut offsets) = build_chain();
         let result = ScrollController::new(&tree, &mut offsets).scroll(5, Offset::ZERO);
         assert!(result.is_empty());
+    }
+
+    #[test]
+    fn overscroll_contain_stops_propagation() {
+        let mut tree = ScrollTree::new();
+        let mut offsets = ScrollOffsets::new();
+
+        // Root: normal scroll container.
+        tree.set(
+            1,
+            ScrollNode {
+                dom_id: 1,
+                parent: None,
+                container: Size::new(800.0, 600.0),
+                content: Size::new(800.0, 2000.0),
+                scrollable_x: false,
+                scrollable_y: true,
+                overscroll_x: OverscrollBehavior::Auto,
+                overscroll_y: OverscrollBehavior::Auto,
+            },
+        );
+        // Inner: overscroll-behavior: contain — MUST NOT chain to parent.
+        tree.set(
+            5,
+            ScrollNode {
+                dom_id: 5,
+                parent: Some(1),
+                container: Size::new(300.0, 200.0),
+                content: Size::new(300.0, 800.0),
+                scrollable_x: false,
+                scrollable_y: true,
+                overscroll_x: OverscrollBehavior::Auto,
+                overscroll_y: OverscrollBehavior::Contain,
+            },
+        );
+
+        offsets.set_offset(1, Offset::ZERO);
+        offsets.set_offset(5, Offset::ZERO);
+
+        // Scroll 700 into inner (max 600) — 100 unconsumed should NOT propagate.
+        let result = ScrollController::new(&tree, &mut offsets).scroll(5, Offset::new(0.0, 700.0));
+        assert_eq!(offsets.offset(5).dy, 600.0);
+        // Parent MUST be untouched — overscroll-behavior: contain blocks chain.
+        assert_eq!(offsets.offset(1).dy, 0.0);
+        // Only inner consumed.
+        assert_eq!(result.iter().collect::<Vec<_>>(), vec![5]);
+    }
+
+    #[test]
+    fn overscroll_none_stops_propagation() {
+        let mut tree = ScrollTree::new();
+        let mut offsets = ScrollOffsets::new();
+
+        tree.set(
+            1,
+            ScrollNode {
+                dom_id: 1,
+                parent: None,
+                container: Size::new(800.0, 600.0),
+                content: Size::new(800.0, 2000.0),
+                scrollable_x: false,
+                scrollable_y: true,
+                overscroll_x: OverscrollBehavior::Auto,
+                overscroll_y: OverscrollBehavior::Auto,
+            },
+        );
+        tree.set(
+            5,
+            ScrollNode {
+                dom_id: 5,
+                parent: Some(1),
+                container: Size::new(300.0, 200.0),
+                content: Size::new(300.0, 800.0),
+                scrollable_x: false,
+                scrollable_y: true,
+                overscroll_x: OverscrollBehavior::Auto,
+                overscroll_y: OverscrollBehavior::None,
+            },
+        );
+
+        offsets.set_offset(1, Offset::ZERO);
+        offsets.set_offset(5, Offset::ZERO);
+
+        let result = ScrollController::new(&tree, &mut offsets).scroll(5, Offset::new(0.0, 700.0));
+        assert_eq!(offsets.offset(5).dy, 600.0);
+        assert_eq!(offsets.offset(1).dy, 0.0);
+        assert_eq!(result.iter().collect::<Vec<_>>(), vec![5]);
     }
 }

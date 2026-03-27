@@ -16,6 +16,8 @@
 //! | `ClipRectOp` | `DisplayItem::PushClip` |
 //! | `SaveLayerAlphaOp` | `DisplayItem::PushOpacity` |
 
+use std::sync::Arc;
+
 use kozan_primitives::color::Color;
 use kozan_primitives::geometry::Rect;
 
@@ -189,6 +191,22 @@ pub enum DrawCommand {
     // TODO(M7): LinearGradient { rect, stops, angle } — Chrome: PaintOp::DrawPaintOp + cc::PaintShader::MakeLinearGradient.
     // TODO(M7): RadialGradient { rect, stops, center, radius } — Chrome: PaintOp::DrawPaintOp + cc::PaintShader::MakeRadialGradient.
     // TODO(M7): TextShadow { x, y, runs, offset_x, offset_y, blur, color } — Chrome: TextPainter::PaintTextWithShadows().
+    /// Replay a canvas 2D recording at the given position.
+    /// Chrome: `DrawRecordOp` wrapping a canvas `PaintRecord`.
+    /// The recording is renderer-agnostic — the backend replays it
+    /// into its own scene (e.g., vello Scene).
+    Canvas {
+        recording: Arc<kozan_canvas::CanvasRecording>,
+        /// Position of the canvas element in absolute layout coordinates.
+        x: f32,
+        y: f32,
+        canvas_width: f32,
+        canvas_height: f32,
+        /// Layout box dimensions — browser scales canvas bitmap to CSS size.
+        layout_width: f32,
+        layout_height: f32,
+    },
+
     /// Draw a box shadow.
     /// Chrome: painted via `PaintOp::DrawRRectOp` with blur filter.
     BoxShadow {

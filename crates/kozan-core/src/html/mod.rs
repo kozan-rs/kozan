@@ -49,7 +49,7 @@ mod html_textarea_element;
 
 // Replaced + media elements.
 mod html_audio_element;
-mod html_canvas_element;
+pub(crate) mod html_canvas_element;
 mod html_image_element;
 mod html_video_element;
 
@@ -98,6 +98,6 @@ pub use html_textarea_element::{HtmlTextAreaElement, TextAreaData};
 
 // ---- Re-exports: replaced + media elements ----
 pub use html_audio_element::HtmlAudioElement;
-pub use html_canvas_element::{CanvasData, HtmlCanvasElement};
+pub use html_canvas_element::{Canvas2D, CanvasData, HtmlCanvasElement};
 pub use html_image_element::{HtmlImageElement, ImageData};
 pub use html_video_element::{HtmlVideoElement, VideoData};

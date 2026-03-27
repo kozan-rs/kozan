@@ -47,7 +47,7 @@ pub mod result;
 pub use context::LayoutContext;
 pub use fragment::{
     BoxFragmentData, ChildFragment, Fragment, FragmentKind, LineFragmentData, OverflowClip,
-    PhysicalInsets, TextFragmentData,
+    OverscrollBehavior, PhysicalInsets, TextFragmentData,
 };
 pub use hit_test::HitTestResult;
 pub use inline::{FontHeight, FontMetrics, TextMeasurer, TextMetrics, resolve_line_height};

@@ -64,6 +64,8 @@ elidable_lifetime_names = "allow"
 unsafe_code = { level = "allow", priority = 1 }
 
 [workspace.dependencies]
+kozan = { version = "0.1", path = "crates/kozan" }
+kozan-canvas = { version = "0.1", path = "crates/kozan-canvas" }
 kozan-core = { version = "0.1", path = "crates/kozan-core" }
 kozan-devtools = { version = "0.1", path = "crates/kozan-devtools" }
 kozan-macros = { version = "0.1", path = "crates/kozan-macros" }
@@ -72,6 +74,21 @@ kozan-primitives = { version = "0.1", path = "crates/kozan-primitives" }
 kozan-scheduler = { version = "0.1", path = "crates/kozan-scheduler" }
 kozan-vello = { version = "0.1", path = "crates/kozan-vello" }
 kozan-winit = { version = "0.1", path = "crates/kozan-winit" }
+
+# Stylo fork — enables all gecko-only CSS properties for servo mode.
+# https://github.com/kozan-rs/stylo (branch: kozan-enable-all-properties)
+[patch.crates-io]
+stylo                = { path = "../kozan-stylo/style" }
+stylo_dom            = { path = "../kozan-stylo/stylo_dom" }
+stylo_traits         = { path = "../kozan-stylo/style_traits" }
+stylo_atoms          = { path = "../kozan-stylo/stylo_atoms" }
+stylo_static_prefs   = { path = "../kozan-stylo/stylo_static_prefs" }
+stylo_derive         = { path = "../kozan-stylo/style_derive" }
+stylo_malloc_size_of = { path = "../kozan-stylo/malloc_size_of" }
+servo_arc            = { path = "../kozan-stylo/servo_arc" }
+to_shmem             = { path = "../kozan-stylo/to_shmem" }
+to_shmem_derive      = { path = "../kozan-stylo/to_shmem_derive" }
+selectors            = { path = "../kozan-stylo/selectors" }
 
 # Chrome strategy: optimized third-party, debug first-party.
 # Makes `cargo run -p dashboard` usable without --release.

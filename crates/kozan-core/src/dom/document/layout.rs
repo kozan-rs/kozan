@@ -1,18 +1,21 @@
 //! Layout methods on Document — Taffy pipeline and fragment building.
 
 use core::any::TypeId;
+use std::sync::Arc;
 
 use kozan_primitives::geometry::{Point, Size};
 
 use crate::TextData;
 use crate::dom::document::Document;
 use crate::dom::node::NodeType;
+use crate::html::html_canvas_element::{CanvasContent, CanvasData};
 use crate::layout::algo::shared;
 use crate::layout::box_model::is_stacking_context;
 use crate::layout::context::LayoutContext;
 use crate::layout::document_layout::DocumentLayoutView;
 use crate::layout::fragment::{
-    BoxFragmentData, ChildFragment, Fragment, OverflowClip, PhysicalInsets, TextFragmentData,
+    BoxFragmentData, ChildFragment, Fragment, OverflowClip, OverscrollBehavior, PhysicalInsets,
+    TextFragmentData,
 };
 use crate::layout::result::{EscapedMargins, LayoutResult};
 use crate::tree;
@@ -32,6 +35,25 @@ impl Document {
         }
         let data = unsafe { self.data.get::<TextData>(index) };
         Some(&data.content)
+    }
+
+    /// Read a canvas element's committed recording from the arena.
+    /// Returns None if the node isn't a canvas or has no recording.
+    fn canvas_replaced_content(
+        &self,
+        index: u32,
+    ) -> Option<Arc<dyn crate::layout::fragment::ReplacedContent>> {
+        let meta = self.meta.get(index)?;
+        if meta.data_type_id() != TypeId::of::<CanvasData>() {
+            return None;
+        }
+        let data = unsafe { self.data.get::<CanvasData>(index) };
+        let recording = data.committed.as_ref()?;
+        Some(Arc::new(CanvasContent {
+            recording: Arc::clone(recording),
+            canvas_width: data.canvas_width,
+            canvas_height: data.canvas_height,
+        }))
     }
 
     /// Flush `ComputedValues` -> `taffy::Style` for all nodes.
@@ -127,6 +149,8 @@ impl Document {
     /// Root is a Block container (not Flex) -- matches Chrome's initial
     /// containing block. Block children with `width: auto` stretch to
     /// fill the parent (normal block flow). Flex would not stretch them.
+    ///
+    /// Also resolves viewport overflow per CSS Overflow 3 §3.3.
     pub(crate) fn set_root_viewport_style(&mut self, root: u32) {
         let lp = crate::styling::taffy_bridge::convert::length_percentage(
             &style::values::computed::LengthPercentage::new_percent(
@@ -134,11 +158,79 @@ impl Document {
             ),
         );
         let full: taffy::Dimension = lp.into();
+
+        // CSS Overflow 3 §3.3 — viewport overflow propagation.
+        let (taffy_ox, taffy_oy) = self.resolve_viewport_overflow(root);
+
         if let Some(data) = self.layout.get_mut(root) {
             data.style.display = taffy::Display::Block;
             data.style.size.width = full;
             data.style.size.height = full;
+            data.style.overflow.x = taffy_ox;
+            data.style.overflow.y = taffy_oy;
         }
+    }
+
+    /// CSS Overflow 3 §3.3 — resolve viewport overflow propagation.
+    ///
+    /// Algorithm:
+    /// 1. If root has `overflow: visible` in both axes AND `<body>` exists
+    ///    → propagate body's overflow to viewport, body gets used `visible`.
+    /// 2. Otherwise → use root's overflow for viewport.
+    /// 3. Viewport special case: `visible` → `auto` (browsers always allow
+    ///    viewport scrolling when content overflows).
+    ///
+    /// Stores results in `self.viewport_overflow` and `self.body_overflow_propagated`
+    /// for use by the fragment builder.
+    fn resolve_viewport_overflow(&mut self, root: u32) -> (taffy::Overflow, taffy::Overflow) {
+        use style::computed_values::overflow_x::T as OT;
+
+        let root_cv = self.computed_style(root);
+        let (root_ox, root_oy) = root_cv
+            .as_ref()
+            .map(|s| (s.clone_overflow_x(), s.clone_overflow_y()))
+            .unwrap_or((OT::Visible, OT::Visible));
+
+        // §3.3: When root is <html> with overflow:visible in both axes
+        // and a <body> child exists, propagate body's overflow instead.
+        let (resolved_ox, resolved_oy, from_body) =
+            if root_ox == OT::Visible && root_oy == OT::Visible && self.body != 0 {
+                let body_cv = self.computed_style(self.body);
+                let (bx, by) = body_cv
+                    .as_ref()
+                    .map(|s| (s.clone_overflow_x(), s.clone_overflow_y()))
+                    .unwrap_or((OT::Visible, OT::Visible));
+
+                // "The element from which the value is propagated must then
+                //  have a used overflow value of visible." — reset body's
+                //  Taffy overflow so layout treats body as non-clipping.
+                if let Some(body_data) = self.layout.get_mut(self.body) {
+                    body_data.style.overflow.x = taffy::Overflow::Visible;
+                    body_data.style.overflow.y = taffy::Overflow::Visible;
+                }
+
+                (bx, by, true)
+            } else {
+                (root_ox, root_oy, false)
+            };
+
+        // CSS 2.1 §11.1.1 + CSS Overflow 3: when the resolved viewport
+        // overflow is `visible`, UAs treat it as `auto` — the viewport
+        // always allows scrolling when content overflows.
+        let final_ox = if resolved_ox == OT::Visible { OT::Auto } else { resolved_ox };
+        let final_oy = if resolved_oy == OT::Visible { OT::Auto } else { resolved_oy };
+
+        // Store for fragment builder.
+        self.viewport_overflow = [
+            overflow_clip_from_style(final_ox),
+            overflow_clip_from_style(final_oy),
+        ];
+        self.body_overflow_propagated = from_body;
+
+        (
+            crate::styling::taffy_bridge::convert::overflow(final_ox),
+            crate::styling::taffy_bridge::convert::overflow(final_oy),
+        )
     }
 
     fn apply_rtl_swap_recursive(&mut self, index: u32) {
@@ -361,6 +453,26 @@ impl Document {
                 dom_node,
             )
         } else {
+            // CSS Overflow 3 §3.3 — viewport overflow propagation.
+            // Root uses resolved viewport overflow. Body uses `visible`
+            // when its overflow was propagated to the viewport.
+            let (overflow_x, overflow_y) = if index == self.root {
+                (self.viewport_overflow[0], self.viewport_overflow[1])
+            } else if index == self.body && self.body_overflow_propagated {
+                (OverflowClip::Visible, OverflowClip::Visible)
+            } else {
+                (
+                    overflow_clip_from_style(style.clone_overflow_x()),
+                    overflow_clip_from_style(style.clone_overflow_y()),
+                )
+            };
+
+            let (overscroll_x, overscroll_y) = (
+                overscroll_from_style(style.clone_overscroll_behavior_x()),
+                overscroll_from_style(style.clone_overscroll_behavior_y()),
+            );
+
+            let replaced_content = self.canvas_replaced_content(index);
             Fragment::new_box_styled(
                 size,
                 BoxFragmentData {
@@ -369,8 +481,11 @@ impl Document {
                     border,
                     scrollable_overflow,
                     is_stacking_context: is_stacking_context(&style),
-                    overflow_x: overflow_clip_from_style(style.clone_overflow_x()),
-                    overflow_y: overflow_clip_from_style(style.clone_overflow_y()),
+                    overflow_x,
+                    overflow_y,
+                    replaced_content,
+                    overscroll_x,
+                    overscroll_y,
                 },
                 style,
                 dom_node,
@@ -413,6 +528,18 @@ fn overflow_clip_from_style(overflow: style::computed_values::overflow_x::T) -> 
         T::Auto => OverflowClip::Auto,
     }
 }
+
+fn overscroll_from_style(
+    v: style::values::computed::OverscrollBehavior,
+) -> OverscrollBehavior {
+    use style::values::computed::OverscrollBehavior as OB;
+    match v {
+        OB::Auto => OverscrollBehavior::Auto,
+        OB::Contain => OverscrollBehavior::Contain,
+        OB::None => OverscrollBehavior::None,
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -502,5 +629,191 @@ mod tests {
 
         let text_children = doc.layout_children_count(text_idx);
         assert_eq!(text_children, 0);
+    }
+
+    /// CSS Overflow 3 §3.3 — root fragment gets `overflow: auto` by default.
+    ///
+    /// When neither `<html>` nor `<body>` sets explicit overflow, the viewport
+    /// should behave as `overflow: auto` so content can scroll when it overflows.
+    #[test]
+    fn viewport_overflow_defaults_to_auto() {
+        use crate::layout::fragment::{FragmentKind, OverflowClip};
+
+        let mut doc = Document::new();
+        doc.init_body();
+        doc.set_viewport(800.0, 600.0);
+        doc.recalc_styles();
+
+        let measurer = FontSystem::new();
+        let ctx = LayoutContext {
+            text_measurer: &measurer,
+        };
+
+        let root = doc.root_index();
+        let result = doc.resolve_layout(root, Some(800.0), Some(600.0), &ctx);
+
+        let FragmentKind::Box(ref data) = result.fragment.kind else {
+            panic!("root should be a box fragment");
+        };
+        assert_eq!(data.overflow_x, OverflowClip::Auto, "viewport X should be Auto");
+        assert_eq!(data.overflow_y, OverflowClip::Auto, "viewport Y should be Auto");
+    }
+
+    /// CSS Overflow 3 §3.3 — body's overflow propagates to viewport.
+    ///
+    /// When body has `overflow: hidden` and root is `visible`, the viewport
+    /// should get `hidden` and body should get `visible`.
+    #[test]
+    fn body_overflow_propagates_to_viewport() {
+        use crate::layout::fragment::{FragmentKind, OverflowClip};
+
+        let mut doc = Document::new();
+        doc.init_body();
+        doc.set_viewport(800.0, 600.0);
+        doc.add_stylesheet("body { overflow: hidden; }");
+        doc.recalc_styles();
+
+        let measurer = FontSystem::new();
+        let ctx = LayoutContext {
+            text_measurer: &measurer,
+        };
+
+        let root = doc.root_index();
+        let result = doc.resolve_layout(root, Some(800.0), Some(600.0), &ctx);
+
+        // Root (viewport) should get body's overflow: hidden.
+        let FragmentKind::Box(ref root_data) = result.fragment.kind else {
+            panic!("root should be a box fragment");
+        };
+        assert_eq!(root_data.overflow_x, OverflowClip::Hidden, "viewport should get body's hidden");
+        assert_eq!(root_data.overflow_y, OverflowClip::Hidden, "viewport should get body's hidden");
+
+        // Body fragment should have used overflow: visible (propagation source).
+        let body_frag = &root_data.children[0];
+        let FragmentKind::Box(ref body_data) = body_frag.fragment.kind else {
+            panic!("body should be a box fragment");
+        };
+        assert_eq!(body_data.overflow_x, OverflowClip::Visible, "body should be visible after propagation");
+        assert_eq!(body_data.overflow_y, OverflowClip::Visible, "body should be visible after propagation");
+    }
+
+    /// Viewport units (vh) must resolve using the actual viewport dimensions.
+    /// `max-height: 75vh` at viewport 800×600 should resolve to 450px,
+    /// constraining the element's height.
+    #[test]
+    fn vh_units_resolve_to_viewport_height() {
+        use crate::dom::traits::ContainerNode;
+        use crate::html::HtmlDivElement;
+
+        let mut doc = Document::new();
+        doc.init_body();
+        doc.set_viewport(800.0, 600.0);
+
+        // Create a tall child inside a max-height-constrained container.
+        doc.add_stylesheet(
+            ".container { max-height: 75vh; overflow-y: auto; } \
+             .tall { height: 1000px; }",
+        );
+
+        let container = doc.create::<HtmlDivElement>();
+        container.class_add("container");
+        let tall = doc.create::<HtmlDivElement>();
+        tall.class_add("tall");
+        container.append(tall);
+        doc.body().append(container);
+
+        doc.recalc_styles();
+
+        let measurer = FontSystem::new();
+        let ctx = LayoutContext {
+            text_measurer: &measurer,
+        };
+
+        let root = doc.root_index();
+        let result = doc.resolve_layout(root, Some(800.0), Some(600.0), &ctx);
+
+        // Find the container fragment (first child of body, which is first child of root).
+        let root_data = result.fragment.try_as_box().unwrap();
+        let body_frag = &root_data.children[0];
+        let body_data = body_frag.fragment.try_as_box().unwrap();
+        let container_frag = &body_data.children[0];
+
+        // 75vh at 600px viewport = 450px. Container should be at most 450px, not 1000px.
+        let container_h = container_frag.fragment.size.height;
+        assert!(
+            container_h <= 460.0,
+            "max-height: 75vh should constrain to ~450px, got {container_h}",
+        );
+        assert!(
+            container_h > 100.0,
+            "container should have content, got {container_h}",
+        );
+    }
+
+    /// Devtools-like layout: flex column + gap + max-height: 75vh + overflow-y: auto.
+    /// This pattern must work identically to a browser — content constrained to
+    /// 75vh, scrollbar only when content overflows that constraint.
+    #[test]
+    fn flex_column_max_height_vh_constrains_overflow() {
+        use crate::dom::traits::ContainerNode;
+        use crate::html::HtmlDivElement;
+        use crate::layout::fragment::OverflowClip;
+
+        let mut doc = Document::new();
+        doc.init_body();
+        doc.set_viewport(800.0, 600.0);
+
+        doc.add_stylesheet(
+            ".scroll-body { \
+                display: flex; flex-direction: column; \
+                gap: 10px; padding: 12px; \
+                max-height: 75vh; overflow-y: auto; \
+             } \
+             .item { height: 80px; flex-shrink: 0; } \
+             .tall-item { height: 200px; flex-shrink: 0; }",
+        );
+
+        let scroll_body = doc.create::<HtmlDivElement>();
+        scroll_body.class_add("scroll-body");
+
+        // 6 items: 5×80 + 1×200 = 600px content + 5×10 gap = 650px + 24px padding = 674px
+        // 75vh = 450px. Content > container → overflow + scrollbar.
+        for i in 0..6 {
+            let item = doc.create::<HtmlDivElement>();
+            if i == 5 { item.class_add("tall-item"); } else { item.class_add("item"); }
+            scroll_body.append(item);
+        }
+        doc.body().append(scroll_body);
+
+        doc.recalc_styles();
+
+        let measurer = FontSystem::new();
+        let ctx = LayoutContext { text_measurer: &measurer };
+        let root = doc.root_index();
+        let result = doc.resolve_layout(root, Some(800.0), Some(600.0), &ctx);
+
+        let root_data = result.fragment.try_as_box().unwrap();
+        let body_frag = &root_data.children[0];
+        let body_data = body_frag.fragment.try_as_box().unwrap();
+        let container_frag = &body_data.children[0];
+        let container_data = container_frag.fragment.try_as_box().unwrap();
+
+        let container_h = container_frag.fragment.size.height;
+        // 75vh = 450px content-box + 24px padding (12px×2) = 474px total.
+        // box-sizing: content-box (default) means max-height constrains content only.
+        assert!(
+            container_h <= 480.0,
+            "flex column with max-height: 75vh should be ≤ ~474px, got {container_h}",
+        );
+
+        // Overflow should be Auto on Y axis
+        assert_eq!(container_data.overflow_y, OverflowClip::Auto);
+
+        // Scrollable overflow should be > container height (content overflows)
+        let scroll_overflow_h = container_data.scrollable_overflow.height;
+        assert!(
+            scroll_overflow_h > container_h,
+            "scrollable overflow ({scroll_overflow_h}) should exceed container ({container_h})",
+        );
     }
 }

@@ -82,6 +82,17 @@ impl AffineTransform {
         (m.x_axis.y == 0.0 && m.y_axis.x == 0.0) || (m.x_axis.x == 0.0 && m.y_axis.y == 0.0)
     }
 
+    /// Extract the six matrix components `[a, b, c, d, tx, ty]`.
+    ///
+    /// Layout: `| a c tx |`
+    ///          `| b d ty |`
+    #[must_use]
+    pub fn to_cols_array(&self) -> [f32; 6] {
+        let m = self.inner.matrix2;
+        let t = self.inner.translation;
+        [m.x_axis.x, m.x_axis.y, m.y_axis.x, m.y_axis.y, t.x, t.y]
+    }
+
     /// Compose: apply `self` first, then `other`.
     #[must_use]
     pub fn then(&self, other: &Self) -> Self {

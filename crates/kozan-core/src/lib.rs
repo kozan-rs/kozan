@@ -38,6 +38,9 @@ pub use styling::style_structs;
 pub use styling::values;
 pub use styling::{Arc, ComputedValues, PropertyDeclarationBlock};
 
+// Re-exports: layout types needed by consumers.
+pub use layout::OverscrollBehavior;
+
 // Re-exports: traits (most important — users import these).
 pub use dom::traits::{ContainerNode, Element, HasHandle, Node};
 pub use events::EventTarget;
@@ -63,7 +66,7 @@ pub use html::HtmlParagraphElement;
 pub use html::HtmlSpanElement;
 pub use html::{AnchorData, HtmlAnchorElement};
 pub use html::{ButtonData, HtmlButtonElement};
-pub use html::{CanvasData, HtmlCanvasElement};
+pub use html::{Canvas2D, CanvasData, HtmlCanvasElement};
 pub use html::{FormData, HtmlFormElement};
 pub use html::{HeadingData, HtmlHeadingElement};
 pub use html::{HtmlImageElement, ImageData};

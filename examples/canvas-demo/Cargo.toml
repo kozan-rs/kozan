@@ -1,0 +1,17 @@
+[package]
+name = "canvas-demo"
+description = "Canvas 2D vs HTML/DOM — visual comparison of both rendering approaches"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+kozan.workspace = true
+kozan-canvas.workspace = true
+kozan-devtools.workspace = true
+
+[lints]
+workspace = true

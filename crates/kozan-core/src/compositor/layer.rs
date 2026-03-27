@@ -39,6 +39,10 @@ pub struct Layer {
     pub(crate) clip: Option<Rect>,
     pub(crate) children: Vec<LayerId>,
     pub(crate) is_scrollable: bool,
+    /// Stacking contexts block scroll hit-testing — events on a
+    /// `position: fixed` overlay must not reach scroll containers behind it.
+    /// Chrome: `cc::LayerImpl::is_scroll_blocking`.
+    pub(crate) is_stacking_context: bool,
     pub(crate) content: Box<dyn LayerContent>,
 }
 
@@ -57,6 +61,7 @@ impl Layer {
             clip: None,
             children: Vec::new(),
             is_scrollable: false,
+            is_stacking_context: false,
             content,
         }
     }

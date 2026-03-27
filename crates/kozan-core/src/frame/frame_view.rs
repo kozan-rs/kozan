@@ -2,6 +2,7 @@
 //!
 //! Chrome: `LocalFrameView` (`blink/core/frame/local_frame_view.h`).
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::compositor::layer_builder::LayerTreeBuilder;
@@ -21,6 +22,11 @@ use crate::scroll::{ScrollOffsets, ScrollTree};
 /// Drives style → layout → paint. Caches immutable outputs
 /// (`Arc<Fragment>`, `Arc<DisplayList>`) for zero-copy sharing
 /// with the render thread.
+///
+/// Canvas recordings are decoupled from the fragment tree:
+/// `canvas_snapshots` holds fresh recordings resolved at paint time.
+/// Canvas-only changes skip style+layout entirely (Chrome:
+/// `CanvasElement::DidDraw()` only invalidates display, not layout).
 pub(crate) struct FrameView {
     dirty: DirtyPhases,
     font_system: FontSystem,
@@ -32,6 +38,13 @@ pub(crate) struct FrameView {
     last_layer_tree: Option<LayerTree>,
     last_timing: kozan_primitives::timing::FrameTiming,
     viewport_changed: bool,
+    /// Canvas recording snapshot map — node_id → committed recording.
+    ///
+    /// Chrome: canvas PaintRecord is read from the element at paint time,
+    /// not embedded in the layout tree. This map serves the same role:
+    /// the painter resolves fresh recordings from here, so canvas draws
+    /// never touch style or layout.
+    canvas_snapshots: HashMap<u32, Arc<kozan_canvas::CanvasRecording>>,
 }
 
 impl FrameView {
@@ -47,27 +60,52 @@ impl FrameView {
             last_layer_tree: None,
             last_timing: kozan_primitives::timing::FrameTiming::default(),
             viewport_changed: false,
+            canvas_snapshots: HashMap::new(),
         }
     }
 
     /// Run the rendering lifecycle pipeline.
     ///
     /// Chrome: `LocalFrameView::UpdateLifecyclePhases()`.
-    /// Phases: style recalc → layout → paint.
-    /// `DirtyPhases` controls which phases run — scroll only invalidates
-    /// paint, so style+layout are skipped at 60fps during scroll.
+    ///
+    /// **Phase separation** (Chrome's single responsibility per phase):
+    ///
+    /// | Source | Dirty | Phases run |
+    /// |--------|-------|------------|
+    /// | DOM mutation / class change | style | style → layout → paint |
+    /// | Viewport resize | layout | layout → paint |
+    /// | Scroll | paint | paint |
+    /// | Canvas draw | paint | canvas flush → paint |
+    ///
+    /// Canvas draws ONLY invalidate paint. They flush recordings into
+    /// `canvas_snapshots`, and the painter resolves fresh recordings from
+    /// there — the fragment tree stays cached.
     pub fn update_lifecycle(&mut self, doc: &mut Document, viewport: &Viewport) {
-        if doc.needs_visual_update() {
+        // ── Determine what changed ──────────────────────────────
+        let has_dom_changes = doc.needs_dom_update();
+        let has_canvas_changes = doc.needs_canvas_flush();
+
+        if has_dom_changes {
             self.dirty.invalidate_style();
         }
         if self.viewport_changed {
             self.dirty.invalidate_layout();
         }
 
+        // Canvas-only: flush recordings → paint only (0ms style, 0ms layout).
+        // Chrome: CanvasElement::DidDraw() → InvalidateDisplay() — never touches layout.
+        if has_canvas_changes {
+            for (node_id, recording) in doc.flush_canvas_recordings() {
+                self.canvas_snapshots.insert(node_id, recording);
+            }
+            self.dirty.invalidate_paint();
+        }
+
         if !self.dirty.needs_update() && self.last_fragment.is_some() {
             return;
         }
 
+        // ── Execute dirty phases ────────────────────────────────
         let t0 = std::time::Instant::now();
         let mut style_ms = 0.0;
         let mut layout_ms = 0.0;
@@ -141,23 +179,21 @@ impl FrameView {
     /// Paint pass — generate display list from fragment tree.
     ///
     /// Chrome: `LocalFrameView::PaintTree()`.
+    ///
+    /// The painter receives `canvas_snapshots` to resolve fresh recordings
+    /// without rebuilding the fragment tree.
     fn paint_pass(&mut self, viewport: &Viewport) {
         let Some(fragment) = &self.last_fragment else {
             return;
         };
-
-        if let Some(painted) = &self.painted_fragment {
-            if Arc::ptr_eq(painted, fragment) && !self.dirty.needs_paint() {
-                return;
-            }
-        }
 
         let viewport_size = kozan_primitives::geometry::Size::new(
             viewport.logical_width() as f32,
             viewport.logical_height() as f32,
         );
 
-        let display_list = Painter::new(&self.scroll_offsets).paint(fragment, viewport_size);
+        let display_list = Painter::new(&self.scroll_offsets, &self.canvas_snapshots)
+            .paint(fragment, viewport_size);
         self.last_display_list = Some(Arc::new(display_list));
         self.painted_fragment = Some(Arc::clone(fragment));
 

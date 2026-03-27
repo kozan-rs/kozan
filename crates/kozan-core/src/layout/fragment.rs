@@ -90,6 +90,23 @@ pub enum FragmentKind {
     Line(LineFragmentData),
 }
 
+/// Content for replaced elements (canvas, image, video, custom).
+///
+/// Chrome: `LayoutReplaced::PaintReplaced()` — each replaced element type
+/// overrides how it paints. A trait allows full customization: canvas, image,
+/// video, 3D viewports, or any user-defined replaced content — without
+/// modifying core types.
+///
+/// Stored as `Arc<dyn ReplacedContent>` on the fragment for zero-cost
+/// sharing between layout, paint, and compositor threads.
+pub trait ReplacedContent: Send + Sync + std::fmt::Debug {
+    /// Produce a draw command for this replaced content.
+    ///
+    /// Chrome: `PaintReplaced(PaintInfo&)` on each replaced element type.
+    /// The painter calls this and emits the result into the display list.
+    fn to_draw_command(&self) -> crate::paint::display_item::DrawCommand;
+}
+
 /// Data specific to box fragments (containers).
 ///
 /// Chrome equivalent: `NGPhysicalBoxFragment` fields.
@@ -110,6 +127,28 @@ pub struct BoxFragmentData {
     pub overflow_x: OverflowClip,
     /// Overflow behavior on block axis.
     pub overflow_y: OverflowClip,
+    /// Content for replaced elements (canvas, image, video, custom).
+    /// `None` for regular container boxes.
+    pub replaced_content: Option<std::sync::Arc<dyn ReplacedContent>>,
+    /// Overscroll behavior on inline axis (CSS `overscroll-behavior-x`).
+    pub overscroll_x: OverscrollBehavior,
+    /// Overscroll behavior on block axis (CSS `overscroll-behavior-y`).
+    pub overscroll_y: OverscrollBehavior,
+}
+
+/// CSS `overscroll-behavior` — controls scroll chaining at boundaries.
+///
+/// Chrome: `cc::OverscrollBehavior` on scroll nodes.
+/// Spec: <https://drafts.csswg.org/css-overscroll-1/#overscroll-behavior-properties>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum OverscrollBehavior {
+    /// Scroll chaining proceeds normally (default).
+    #[default]
+    Auto,
+    /// Do NOT chain scroll to ancestors. Local overscroll effects still apply.
+    Contain,
+    /// Do NOT chain AND no local overscroll effects.
+    None,
 }
 
 /// How overflow content is handled for a box fragment.

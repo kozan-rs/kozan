@@ -24,6 +24,7 @@
 //! ```
 //!
 
+pub mod canvas_player;
 mod convert;
 mod renderer;
 mod scene;

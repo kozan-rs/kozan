@@ -44,6 +44,10 @@ impl ScrollOffsets {
         self.offsets.iter()
     }
 
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (u32, &mut Offset)> + '_ {
+        self.offsets.iter_mut()
+    }
+
     pub fn clear(&mut self) {
         self.offsets.clear();
     }

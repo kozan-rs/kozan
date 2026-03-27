@@ -1,12 +1,15 @@
-//! Dashboard — shadcn-inspired dark theme with scrollable sidebar.
+//! Dashboard — shadcn-inspired dark theme demo.
 //!
 //! ALL styling lives in `dashboard.css`. Rust code only does structure + behavior.
 //! Compare side-by-side with `dashboard.html` in Chrome.
+//!
+//! DevTools overlay from `kozan-devtools` for live profiling.
 
 use std::time::Duration;
 
 use kozan::prelude::*;
 use kozan::time::sleep;
+use kozan_devtools::DevTools;
 
 fn main() -> kozan::Result<()> {
     let config = WindowConfig {
@@ -31,7 +34,7 @@ fn build_ui(ctx: &ViewContext) {
     shell.class_add("shell");
     doc.body().child(shell);
 
-    kozan_devtools::DevTools::attach(ctx);
+    DevTools::attach(ctx);
 
     shell.child(build_header(doc));
 
@@ -83,112 +86,32 @@ struct NavItem {
 }
 
 const NAV_MAIN: &[NavItem] = &[
-    NavItem {
-        icon: "blue",
-        label: "Dashboard",
-        active: true,
-    },
-    NavItem {
-        icon: "purple",
-        label: "Analytics",
-        active: false,
-    },
-    NavItem {
-        icon: "teal",
-        label: "Reports",
-        active: false,
-    },
-    NavItem {
-        icon: "orange",
-        label: "Calendar",
-        active: false,
-    },
-    NavItem {
-        icon: "green",
-        label: "Projects",
-        active: false,
-    },
-    NavItem {
-        icon: "cyan",
-        label: "Tasks",
-        active: false,
-    },
-    NavItem {
-        icon: "pink",
-        label: "Messages",
-        active: false,
-    },
-    NavItem {
-        icon: "amber",
-        label: "Notifications",
-        active: false,
-    },
+    NavItem { icon: "blue", label: "Dashboard", active: true },
+    NavItem { icon: "purple", label: "Analytics", active: false },
+    NavItem { icon: "teal", label: "Reports", active: false },
+    NavItem { icon: "orange", label: "Calendar", active: false },
+    NavItem { icon: "green", label: "Projects", active: false },
+    NavItem { icon: "cyan", label: "Tasks", active: false },
+    NavItem { icon: "pink", label: "Messages", active: false },
+    NavItem { icon: "amber", label: "Notifications", active: false },
 ];
 
 const NAV_SETTINGS: &[NavItem] = &[
-    NavItem {
-        icon: "zinc",
-        label: "General",
-        active: false,
-    },
-    NavItem {
-        icon: "indigo",
-        label: "Team",
-        active: false,
-    },
-    NavItem {
-        icon: "orange",
-        label: "Billing",
-        active: false,
-    },
-    NavItem {
-        icon: "rose",
-        label: "Integrations",
-        active: false,
-    },
-    NavItem {
-        icon: "teal",
-        label: "API Keys",
-        active: false,
-    },
-    NavItem {
-        icon: "purple",
-        label: "Security",
-        active: false,
-    },
-    NavItem {
-        icon: "sky",
-        label: "Appearance",
-        active: false,
-    },
+    NavItem { icon: "zinc", label: "General", active: false },
+    NavItem { icon: "indigo", label: "Team", active: false },
+    NavItem { icon: "orange", label: "Billing", active: false },
+    NavItem { icon: "rose", label: "Integrations", active: false },
+    NavItem { icon: "teal", label: "API Keys", active: false },
+    NavItem { icon: "purple", label: "Security", active: false },
+    NavItem { icon: "sky", label: "Appearance", active: false },
 ];
 
 const NAV_SUPPORT: &[NavItem] = &[
-    NavItem {
-        icon: "blue",
-        label: "Documentation",
-        active: false,
-    },
-    NavItem {
-        icon: "lime",
-        label: "Changelog",
-        active: false,
-    },
-    NavItem {
-        icon: "green",
-        label: "Help Center",
-        active: false,
-    },
-    NavItem {
-        icon: "cyan",
-        label: "Community",
-        active: false,
-    },
-    NavItem {
-        icon: "amber",
-        label: "Feedback",
-        active: false,
-    },
+    NavItem { icon: "blue", label: "Documentation", active: false },
+    NavItem { icon: "lime", label: "Changelog", active: false },
+    NavItem { icon: "green", label: "Help Center", active: false },
+    NavItem { icon: "cyan", label: "Community", active: false },
+    NavItem { icon: "amber", label: "Feedback", active: false },
 ];
 
 fn build_sidebar(doc: &Document) -> HtmlDivElement {
@@ -309,112 +232,55 @@ fn build_content(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
     let content = doc.div();
     content.class_add("content");
 
-    content.child(build_cards_row(doc, ctx));
+    content.child(build_cards_row(doc));
     content.child(build_chart_panel(doc, ctx));
     content.child(build_activity_panel(doc));
 
     content
 }
 
-// ── Cards ────────────────────────────────────────────────────
+// ── Static Cards ─────────────────────────────────────────────
 
-struct CardSpec {
-    accent: &'static str,
-    value: &'static str,
-    label: &'static str,
-    delay_ms: u64,
-    fill: f32,
-}
-
-const CARDS: &[CardSpec] = &[
-    CardSpec {
-        accent: "blue",
-        value: "$2,847",
-        label: "Revenue",
-        delay_ms: 400,
-        fill: 0.78,
-    },
-    CardSpec {
-        accent: "purple",
-        value: "1,024",
-        label: "Users",
-        delay_ms: 600,
-        fill: 0.52,
-    },
-    CardSpec {
-        accent: "teal",
-        value: "98.2%",
-        label: "Uptime",
-        delay_ms: 800,
-        fill: 0.91,
-    },
-    CardSpec {
-        accent: "orange",
-        value: "142",
-        label: "Issues",
-        delay_ms: 1000,
-        fill: 0.35,
-    },
-];
-
-fn build_cards_row(doc: &Document, ctx: &ViewContext) -> HtmlDivElement {
+fn build_cards_row(doc: &Document) -> HtmlDivElement {
     let row = doc.div();
     row.class_add("cards-row");
 
-    for spec in CARDS {
-        let card = build_card(doc, spec);
-        row.child(card);
-
-        let accent = spec.accent;
-        let fill_pct = spec.fill;
-        let delay = spec.delay_ms;
-
-        let card_class = format!("card-{accent}");
-        let fill_class = format!("fill-{accent}");
-
-        ctx.spawn(async move {
-            sleep(Duration::from_millis(delay)).await;
-            card.class_add(&card_class);
-
-            let children = card.children();
-            if let Some(icon) = children.first() {
-                icon.class_add(&fill_class);
-            }
-            if let Some(track) = children.get(3) {
-                if let Some(fill_bar) = track.first_child() {
-                    fill_bar.class_add(&fill_class);
-                    fill_bar.style().w(pct(fill_pct * 100.0));
-                }
-            }
-        });
-    }
+    row.child(build_card(doc, "blue", "$2,847", "Revenue", 78.0));
+    row.child(build_card(doc, "purple", "1,024", "Users", 52.0));
+    row.child(build_card(doc, "teal", "98.2%", "Uptime", 91.0));
+    row.child(build_card(doc, "orange", "142", "Issues", 35.0));
 
     row
 }
 
-fn build_card(doc: &Document, spec: &CardSpec) -> HtmlDivElement {
+fn build_card(doc: &Document, accent: &str, value: &str, label: &str, fill_pct: f32) -> HtmlDivElement {
     let card = doc.div();
     card.class_add("card");
+    card.class_add(&format!("card-{accent}"));
 
     let icon = doc.div();
     icon.class_add("card-icon");
-    icon.class_add(&format!("icon-{}", spec.accent));
+    icon.class_add(&format!("icon-{accent}"));
+    icon.class_add(&format!("fill-{accent}"));
 
-    let value = doc.div();
-    value.class_add("card-value");
-    value.append(doc.create_text(spec.value));
+    let val = doc.div();
+    val.class_add("card-value");
+    val.append(doc.create_text(value));
 
-    let label = doc.div();
-    label.class_add("card-label");
-    label.append(doc.create_text(spec.label));
+    let lbl = doc.div();
+    lbl.class_add("card-label");
+    lbl.append(doc.create_text(label));
 
     let track = doc.div();
     track.class_add("card-track");
     let fill = doc.div();
     fill.class_add("card-fill");
+    fill.class_add(&format!("fill-{accent}"));
+    fill.style().w(pct(fill_pct));
     track.child(fill);
 
-    card.child(icon).child(value).child(label).child(track)
+    card.child(icon).child(val).child(lbl).child(track);
+    card
 }
 
 // ── Chart panel ──────────────────────────────────────────────
@@ -489,31 +355,11 @@ struct Activity {
 }
 
 const ACTIVITIES: &[Activity] = &[
-    Activity {
-        color: "green",
-        text: "Deployment succeeded",
-        time: "2m ago",
-    },
-    Activity {
-        color: "blue",
-        text: "New user registered",
-        time: "5m ago",
-    },
-    Activity {
-        color: "orange",
-        text: "Payment processed",
-        time: "12m ago",
-    },
-    Activity {
-        color: "purple",
-        text: "Report generated",
-        time: "1h ago",
-    },
-    Activity {
-        color: "rose",
-        text: "Alert triggered",
-        time: "2h ago",
-    },
+    Activity { color: "green", text: "Deployment succeeded", time: "2m ago" },
+    Activity { color: "blue", text: "New user registered", time: "5m ago" },
+    Activity { color: "orange", text: "Payment processed", time: "12m ago" },
+    Activity { color: "purple", text: "Report generated", time: "1h ago" },
+    Activity { color: "rose", text: "Alert triggered", time: "2h ago" },
 ];
 
 fn build_activity_panel(doc: &Document) -> HtmlDivElement {
