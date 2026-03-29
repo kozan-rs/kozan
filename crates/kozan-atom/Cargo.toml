@@ -1,0 +1,22 @@
+[package]
+name = "kozan-atom"
+description = "Interned strings for the Kozan UI platform — zero-cost clone, O(1) equality"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = []
+## Pre-intern ~200 common HTML tags, attributes, and CSS identifiers.
+## Bypasses all 3 interner tiers — just an Arc clone from a LazyLock static.
+## Enable in crates that parse CSS/HTML (kozan-selector, kozan-css).
+css-atoms = []
+
+[dependencies]
+triomphe = { workspace = true }
