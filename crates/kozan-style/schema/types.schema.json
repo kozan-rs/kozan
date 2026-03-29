@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Kozan Style Types Schema",
+  "description": "Defines CSS value types (enums and bitflags) for kozan-style codegen",
+  "type": "object",
+  "properties": {
+    "enum": {
+      "type": "array",
+      "description": "CSS value enums — each generates a #[repr] Rust enum with FromStr, Display, TryFrom, as_css()",
+      "items": {
+        "type": "object",
+        "required": ["name", "repr", "default", "variants"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Rust type name in PascalCase",
+            "pattern": "^[A-Z][A-Za-z0-9]*$"
+          },
+          "repr": {
+            "type": "string",
+            "description": "Rust integer repr for compact storage",
+            "enum": ["u8", "u16"]
+          },
+          "default": {
+            "type": "string",
+            "description": "Default variant name (must match a variant's name field)"
+          },
+          "spec": {
+            "type": "string",
+            "description": "MDN or W3C spec URL. Generated as /// [spec](url) doc comment.",
+            "pattern": "^https://"
+          },
+          "variants": {
+            "type": "array",
+            "description": "Enum variants in declaration order (value = index unless overridden)",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["name", "css"],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Rust variant name in PascalCase",
+                  "pattern": "^[A-Z][A-Za-z0-9]*$"
+                },
+                "css": {
+                  "type": "string",
+                  "description": "CSS string value used in FromStr/as_css()"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bitflags": {
+      "type": "array",
+      "description": "CSS bitflag types — each generates a #[repr(transparent)] newtype with bit ops",
+      "items": {
+        "type": "object",
+        "required": ["name", "repr", "flags"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Rust type name in PascalCase",
+            "pattern": "^[A-Z][A-Za-z0-9]*$"
+          },
+          "repr": {
+            "type": "string",
+            "description": "Rust integer repr (u8 = 8 flags, u16 = 16 flags)",
+            "enum": ["u8", "u16", "u32"]
+          },
+          "spec": {
+            "type": "string",
+            "description": "MDN or W3C spec URL. Generated as /// [spec](url) doc comment.",
+            "pattern": "^https://"
+          },
+          "default": {
+            "type": "array",
+            "description": "Default flags that are set (empty = 0). E.g. [\"COMMON\", \"CONTEXTUAL\"]",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]+$"
+            }
+          },
+          "flags": {
+            "type": "array",
+            "description": "Bit flags in declaration order",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name", "css", "bit"],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Rust constant name in UPPER_SNAKE_CASE",
+                  "pattern": "^[A-Z][A-Z0-9_]+$"
+                },
+                "css": {
+                  "type": "string",
+                  "description": "CSS string value"
+                },
+                "bit": {
+                  "type": "integer",
+                  "description": "Bit position (0-based). Value = 1 << bit",
+                  "minimum": 0,
+                  "maximum": 31
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

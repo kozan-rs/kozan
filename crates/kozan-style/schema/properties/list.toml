@@ -1,0 +1,31 @@
+[[property]]
+css = "list-style-type"
+field = "list_style_type"
+type = "ListStyleType"
+initial = "ListStyleType::Disc"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type"
+
+[[property]]
+css = "list-style-position"
+field = "list_style_position"
+type = "ListStylePosition"
+initial = "ListStylePosition::Outside"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-position"
+
+[[property]]
+css = "list-style-image"
+field = "list_style_image"
+type = "Image"
+initial = "Image::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-image"
+
+[[shorthand]]
+css = "list-style"
+longhands = ["list-style-type", "list-style-position", "list-style-image"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style"

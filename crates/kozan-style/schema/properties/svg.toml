@@ -1,0 +1,256 @@
+[[property]]
+css = "fill"
+field = "fill"
+type = "SvgPaint"
+initial = "SvgPaint::BLACK"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/fill"
+
+[[property]]
+css = "fill-opacity"
+field = "fill_opacity"
+type = "f32"
+initial = "1.0_f32"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/fill-opacity"
+
+[[property]]
+css = "fill-rule"
+field = "fill_rule"
+type = "FillRule"
+initial = "FillRule::Nonzero"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/fill-rule"
+
+[[property]]
+css = "stroke"
+field = "stroke"
+type = "SvgPaint"
+initial = "SvgPaint::None"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke"
+
+[[property]]
+css = "stroke-width"
+field = "stroke_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(1.0))"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-width"
+
+[[property]]
+css = "stroke-opacity"
+field = "stroke_opacity"
+type = "f32"
+initial = "1.0_f32"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-opacity"
+
+[[property]]
+css = "stroke-linecap"
+field = "stroke_linecap"
+type = "StrokeLinecap"
+initial = "StrokeLinecap::Butt"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-linecap"
+
+[[property]]
+css = "stroke-linejoin"
+field = "stroke_linejoin"
+type = "StrokeLinejoin"
+initial = "StrokeLinejoin::Miter"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-linejoin"
+
+[[property]]
+css = "stroke-miterlimit"
+field = "stroke_miterlimit"
+type = "f32"
+initial = "4.0_f32"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-miterlimit"
+
+[[property]]
+css = "stroke-dasharray"
+field = "stroke_dasharray"
+type = "StrokeDasharray"
+initial = "StrokeDasharray::None"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-dasharray"
+
+[[property]]
+css = "stroke-dashoffset"
+field = "stroke_dashoffset"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/stroke-dashoffset"
+
+[[property]]
+css = "clip-rule"
+field = "clip_rule"
+type = "FillRule"
+initial = "FillRule::Nonzero"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/clip-rule"
+
+[[property]]
+css = "color-interpolation"
+field = "color_interpolation"
+type = "ColorInterpolation"
+initial = "ColorInterpolation::SRGB"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/color-interpolation"
+
+[[property]]
+css = "color-interpolation-filters"
+field = "color_interpolation_filters"
+type = "ColorInterpolation"
+initial = "ColorInterpolation::LinearRGB"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/color-interpolation-filters"
+
+[[property]]
+css = "flood-color"
+field = "flood_color"
+type = "Color"
+initial = "Color::BLACK"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/flood-color"
+
+[[property]]
+css = "flood-opacity"
+field = "flood_opacity"
+type = "f32"
+initial = "1.0_f32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/flood-opacity"
+
+[[property]]
+css = "lighting-color"
+field = "lighting_color"
+type = "Color"
+initial = "Color::WHITE"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/lighting-color"
+
+[[property]]
+css = "stop-color"
+field = "stop_color"
+type = "Color"
+initial = "Color::BLACK"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stop-color"
+
+[[property]]
+css = "stop-opacity"
+field = "stop_opacity"
+type = "f32"
+initial = "1.0_f32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stop-opacity"
+
+[[property]]
+css = "dominant-baseline"
+field = "dominant_baseline"
+type = "DominantBaseline"
+initial = "DominantBaseline::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/dominant-baseline"
+
+[[property]]
+css = "alignment-baseline"
+field = "alignment_baseline"
+type = "AlignmentBaseline"
+initial = "AlignmentBaseline::Baseline"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/alignment-baseline"
+
+[[property]]
+css = "text-anchor"
+field = "text_anchor"
+type = "TextAnchor"
+initial = "TextAnchor::Start"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor"
+
+[[property]]
+css = "shape-rendering"
+field = "shape_rendering"
+type = "ShapeRendering"
+initial = "ShapeRendering::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/shape-rendering"
+
+[[property]]
+css = "paint-order"
+field = "paint_order"
+type = "PaintOrder"
+initial = "PaintOrder::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/paint-order"
+
+[[property]]
+css = "vector-effect"
+field = "vector_effect"
+type = "VectorEffect"
+initial = "VectorEffect::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/vector-effect"
+
+[[property]]
+css = "marker-start"
+field = "marker_start"
+type = "NoneOr<Url>"
+initial = "NoneOr::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/marker-start"
+
+[[property]]
+css = "marker-mid"
+field = "marker_mid"
+type = "NoneOr<Url>"
+initial = "NoneOr::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/marker-mid"
+
+[[property]]
+css = "marker-end"
+field = "marker_end"
+type = "NoneOr<Url>"
+initial = "NoneOr::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/marker-end"
+
+[[shorthand]]
+css = "marker"
+longhands = ["marker-start", "marker-mid", "marker-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/marker"

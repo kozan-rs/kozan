@@ -1,0 +1,62 @@
+[[property]]
+css = "break-before"
+field = "break_before"
+type = "BreakBefore"
+initial = "BreakBefore::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/break-before"
+
+[[property]]
+css = "break-after"
+field = "break_after"
+type = "BreakAfter"
+initial = "BreakAfter::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/break-after"
+
+[[property]]
+css = "break-inside"
+field = "break_inside"
+type = "BreakInside"
+initial = "BreakInside::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/break-inside"
+
+[[property]]
+css = "orphans"
+field = "orphans"
+type = "u32"
+initial = "2_u32"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/orphans"
+
+[[property]]
+css = "widows"
+field = "widows"
+type = "u32"
+initial = "2_u32"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/widows"
+
+[[property]]
+css = "box-decoration-break"
+field = "box_decoration_break"
+type = "BoxDecorationBreak"
+initial = "BoxDecorationBreak::Slice"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/box-decoration-break"
+
+[[property]]
+css = "print-color-adjust"
+field = "print_color_adjust"
+type = "PrintColorAdjust"
+initial = "PrintColorAdjust::Economy"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/print-color-adjust"

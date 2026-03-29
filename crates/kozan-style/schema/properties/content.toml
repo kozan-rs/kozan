@@ -1,0 +1,44 @@
+[[property]]
+css = "content"
+field = "content"
+type = "Content"
+initial = "Content::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/content"
+
+[[property]]
+css = "counter-reset"
+field = "counter_reset"
+type = "CounterList"
+initial = "CounterList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/counter-reset"
+
+[[property]]
+css = "counter-increment"
+field = "counter_increment"
+type = "CounterList"
+initial = "CounterList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/counter-increment"
+
+[[property]]
+css = "counter-set"
+field = "counter_set"
+type = "CounterList"
+initial = "CounterList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/counter-set"
+
+[[property]]
+css = "quotes"
+field = "quotes"
+type = "Quotes"
+initial = "Quotes::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/quotes"

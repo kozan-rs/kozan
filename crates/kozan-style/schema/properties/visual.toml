@@ -1,0 +1,488 @@
+[[property]]
+css = "background-color"
+field = "background_color"
+type = "Color"
+initial = "Color::TRANSPARENT"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-color"
+
+[[property]]
+css = "background-image"
+field = "background_image"
+type = "ImageList"
+initial = "ImageList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-image"
+
+[[property]]
+css = "background-position-x"
+field = "background_position_x"
+type = "PositionComponent"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-position-x"
+
+[[property]]
+css = "background-position-y"
+field = "background_position_y"
+type = "PositionComponent"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-position-y"
+
+[[property]]
+css = "background-size"
+field = "background_size"
+type = "BackgroundSize"
+initial = "BackgroundSize::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"
+
+[[property]]
+css = "background-repeat"
+field = "background_repeat"
+type = "BackgroundRepeat"
+initial = "BackgroundRepeat::Repeat"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"
+
+[[property]]
+css = "background-attachment"
+field = "background_attachment"
+type = "BackgroundAttachment"
+initial = "BackgroundAttachment::Scroll"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-attachment"
+
+[[property]]
+css = "background-clip"
+field = "background_clip"
+type = "BackgroundClip"
+initial = "BackgroundClip::BorderBox"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-clip"
+
+[[property]]
+css = "background-origin"
+field = "background_origin"
+type = "BackgroundOrigin"
+initial = "BackgroundOrigin::PaddingBox"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"
+
+[[property]]
+css = "border-top-color"
+field = "border_top_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-color"
+
+[[property]]
+css = "border-right-color"
+field = "border_right_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-right-color"
+
+[[property]]
+css = "border-bottom-color"
+field = "border_bottom_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-color"
+
+[[property]]
+css = "border-left-color"
+field = "border_left_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-left-color"
+
+[[property]]
+css = "border-top-style"
+field = "border_top_style"
+type = "BorderStyle"
+initial = "BorderStyle::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-style"
+
+[[property]]
+css = "border-right-style"
+field = "border_right_style"
+type = "BorderStyle"
+initial = "BorderStyle::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-right-style"
+
+[[property]]
+css = "border-bottom-style"
+field = "border_bottom_style"
+type = "BorderStyle"
+initial = "BorderStyle::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-style"
+
+[[property]]
+css = "border-left-style"
+field = "border_left_style"
+type = "BorderStyle"
+initial = "BorderStyle::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-left-style"
+
+[[property]]
+css = "border-top-left-radius"
+field = "border_top_left_radius"
+type = "CornerRadius"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-left-radius"
+
+[[property]]
+css = "border-top-right-radius"
+field = "border_top_right_radius"
+type = "CornerRadius"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-right-radius"
+
+[[property]]
+css = "border-bottom-right-radius"
+field = "border_bottom_right_radius"
+type = "CornerRadius"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-right-radius"
+
+[[property]]
+css = "border-bottom-left-radius"
+field = "border_bottom_left_radius"
+type = "CornerRadius"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-left-radius"
+
+[[property]]
+css = "border-image-source"
+field = "border_image_source"
+type = "Image"
+initial = "Image::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image-source"
+
+[[property]]
+css = "border-image-slice"
+field = "border_image_slice"
+type = "BorderImageSlice"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image-slice"
+
+[[property]]
+css = "border-image-width"
+field = "border_image_width"
+type = "Edges<specified::LengthPercentage>"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image-width"
+
+[[property]]
+css = "border-image-outset"
+field = "border_image_outset"
+type = "Edges<specified::LengthPercentage>"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image-outset"
+
+[[property]]
+css = "border-image-repeat"
+field = "border_image_repeat"
+type = "BorderImageRepeat"
+initial = "BorderImageRepeat::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image-repeat"
+
+[[property]]
+css = "opacity"
+field = "opacity"
+type = "f32"
+initial = "1.0_f32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/opacity"
+
+[[property]]
+css = "box-shadow"
+field = "box_shadow"
+type = "ShadowList"
+initial = "ShadowList::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow"
+
+[[property]]
+css = "outline-width"
+field = "outline_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(3.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-width"
+
+[[property]]
+css = "outline-style"
+field = "outline_style"
+type = "OutlineStyle"
+initial = "OutlineStyle::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-style"
+
+[[property]]
+css = "outline-color"
+field = "outline_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color"
+
+[[property]]
+css = "outline-offset"
+field = "outline_offset"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-offset"
+
+[[property]]
+css = "image-rendering"
+field = "image_rendering"
+type = "ImageRendering"
+initial = "ImageRendering::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering"
+
+[[property]]
+css = "mix-blend-mode"
+field = "mix_blend_mode"
+type = "MixBlendMode"
+initial = "MixBlendMode::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode"
+
+[[property]]
+css = "background-blend-mode"
+field = "background_blend_mode"
+type = "MixBlendMode"
+initial = "MixBlendMode::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-blend-mode"
+
+[[shorthand]]
+css = "background"
+longhands = ["background-color", "background-image", "background-position-x", "background-position-y", "background-size", "background-repeat", "background-attachment", "background-clip", "background-origin"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background"
+
+[[shorthand]]
+css = "background-position"
+longhands = ["background-position-x", "background-position-y"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-position"
+
+[[shorthand]]
+css = "border-color"
+longhands = ["border-top-color", "border-right-color", "border-bottom-color", "border-left-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-color"
+
+[[shorthand]]
+css = "border-style"
+longhands = ["border-top-style", "border-right-style", "border-bottom-style", "border-left-style"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-style"
+
+[[shorthand]]
+css = "border-radius"
+longhands = ["border-top-left-radius", "border-top-right-radius", "border-bottom-right-radius", "border-bottom-left-radius"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius"
+
+[[shorthand]]
+css = "border-top"
+longhands = ["border-top-width", "border-top-style", "border-top-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top"
+
+[[shorthand]]
+css = "border-right"
+longhands = ["border-right-width", "border-right-style", "border-right-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-right"
+
+[[shorthand]]
+css = "border-bottom"
+longhands = ["border-bottom-width", "border-bottom-style", "border-bottom-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom"
+
+[[shorthand]]
+css = "border-left"
+longhands = ["border-left-width", "border-left-style", "border-left-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-left"
+
+[[shorthand]]
+css = "border"
+longhands = ["border-top-width", "border-right-width", "border-bottom-width", "border-left-width", "border-top-style", "border-right-style", "border-bottom-style", "border-left-style", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border"
+
+[[shorthand]]
+css = "border-image"
+longhands = ["border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image"
+
+[[shorthand]]
+css = "outline"
+longhands = ["outline-width", "outline-style", "outline-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/outline"
+
+[[logical]]
+css = "border-inline-start-color"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "border-left-color", horizontal_rtl = "border-right-color", vertical_ltr = "border-top-color", vertical_rtl = "border-bottom-color" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-start-color"
+
+[[logical]]
+css = "border-inline-end-color"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "border-right-color", horizontal_rtl = "border-left-color", vertical_ltr = "border-bottom-color", vertical_rtl = "border-top-color" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-end-color"
+
+[[logical]]
+css = "border-block-start-color"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "border-top-color", horizontal_rtl = "border-top-color", vertical_ltr = "border-left-color", vertical_rtl = "border-right-color" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-start-color"
+
+[[logical]]
+css = "border-block-end-color"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "border-bottom-color", horizontal_rtl = "border-bottom-color", vertical_ltr = "border-right-color", vertical_rtl = "border-left-color" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-end-color"
+
+[[logical]]
+css = "border-inline-start-style"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "border-left-style", horizontal_rtl = "border-right-style", vertical_ltr = "border-top-style", vertical_rtl = "border-bottom-style" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-start-style"
+
+[[logical]]
+css = "border-inline-end-style"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "border-right-style", horizontal_rtl = "border-left-style", vertical_ltr = "border-bottom-style", vertical_rtl = "border-top-style" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-end-style"
+
+[[logical]]
+css = "border-block-start-style"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "border-top-style", horizontal_rtl = "border-top-style", vertical_ltr = "border-left-style", vertical_rtl = "border-right-style" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-start-style"
+
+[[logical]]
+css = "border-block-end-style"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "border-bottom-style", horizontal_rtl = "border-bottom-style", vertical_ltr = "border-right-style", vertical_rtl = "border-left-style" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-end-style"
+
+[[logical]]
+css = "border-start-start-radius"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "border-top-left-radius", horizontal_rtl = "border-top-right-radius", vertical_ltr = "border-top-left-radius", vertical_rtl = "border-bottom-left-radius" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-start-start-radius"
+
+[[logical]]
+css = "border-start-end-radius"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "border-top-right-radius", horizontal_rtl = "border-top-left-radius", vertical_ltr = "border-top-right-radius", vertical_rtl = "border-bottom-right-radius" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-start-end-radius"
+
+[[logical]]
+css = "border-end-start-radius"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "border-bottom-left-radius", horizontal_rtl = "border-bottom-right-radius", vertical_ltr = "border-bottom-left-radius", vertical_rtl = "border-top-left-radius" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-end-start-radius"
+
+[[logical]]
+css = "border-end-end-radius"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "border-bottom-right-radius", horizontal_rtl = "border-bottom-left-radius", vertical_ltr = "border-bottom-right-radius", vertical_rtl = "border-top-right-radius" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-end-end-radius"
+
+[[shorthand]]
+css = "border-inline-color"
+longhands = ["border-inline-start-color", "border-inline-end-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-color"
+
+[[shorthand]]
+css = "border-block-color"
+longhands = ["border-block-start-color", "border-block-end-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-color"
+
+[[shorthand]]
+css = "border-inline-style"
+longhands = ["border-inline-start-style", "border-inline-end-style"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-style"
+
+[[shorthand]]
+css = "border-block-style"
+longhands = ["border-block-start-style", "border-block-end-style"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-style"
+
+[[shorthand]]
+css = "border-inline"
+longhands = ["border-inline-start-width", "border-inline-end-width", "border-inline-start-style", "border-inline-end-style", "border-inline-start-color", "border-inline-end-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline"
+
+[[shorthand]]
+css = "border-block"
+longhands = ["border-block-start-width", "border-block-end-width", "border-block-start-style", "border-block-end-style", "border-block-start-color", "border-block-end-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block"

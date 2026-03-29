@@ -1,0 +1,91 @@
+[[property]]
+css = "justify-content"
+field = "justify_content"
+type = "JustifyContent"
+initial = "JustifyContent::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content"
+
+[[property]]
+css = "justify-items"
+field = "justify_items"
+type = "AlignItems"
+initial = "AlignItems::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items"
+
+[[property]]
+css = "justify-self"
+field = "justify_self"
+type = "AlignSelf"
+initial = "AlignSelf::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self"
+
+[[property]]
+css = "align-items"
+field = "align_items"
+type = "AlignItems"
+initial = "AlignItems::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/align-items"
+
+[[property]]
+css = "align-self"
+field = "align_self"
+type = "AlignSelf"
+initial = "AlignSelf::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/align-self"
+
+[[property]]
+css = "align-content"
+field = "align_content"
+type = "AlignContent"
+initial = "AlignContent::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/align-content"
+
+[[property]]
+css = "row-gap"
+field = "row_gap"
+type = "generics::LengthPercentageOrNormal<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrNormal::Normal"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/row-gap"
+
+[[property]]
+css = "column-gap"
+field = "column_gap"
+type = "generics::LengthPercentageOrNormal<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrNormal::Normal"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-gap"
+
+[[shorthand]]
+css = "gap"
+longhands = ["row-gap", "column-gap"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/gap"
+
+[[shorthand]]
+css = "place-content"
+longhands = ["align-content", "justify-content"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/place-content"
+
+[[shorthand]]
+css = "place-items"
+longhands = ["align-items", "justify-items"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/place-items"
+
+[[shorthand]]
+css = "place-self"
+longhands = ["align-self", "justify-self"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/place-self"

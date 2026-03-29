@@ -1,0 +1,72 @@
+[[property]]
+css = "column-count"
+field = "column_count"
+type = "AutoOr<u32>"
+initial = "AutoOr::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-count"
+
+[[property]]
+css = "column-width"
+field = "column_width"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-width"
+
+[[property]]
+css = "column-rule-width"
+field = "column_rule_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(3.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule-width"
+
+[[property]]
+css = "column-rule-style"
+field = "column_rule_style"
+type = "BorderStyle"
+initial = "BorderStyle::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule-style"
+
+[[property]]
+css = "column-rule-color"
+field = "column_rule_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule-color"
+
+[[property]]
+css = "column-span"
+field = "column_span"
+type = "ColumnSpan"
+initial = "ColumnSpan::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-span"
+
+[[property]]
+css = "column-fill"
+field = "column_fill"
+type = "ColumnFill"
+initial = "ColumnFill::Balance"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-fill"
+
+[[shorthand]]
+css = "columns"
+longhands = ["column-width", "column-count"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/columns"
+
+[[shorthand]]
+css = "column-rule"
+longhands = ["column-rule-width", "column-rule-style", "column-rule-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule"

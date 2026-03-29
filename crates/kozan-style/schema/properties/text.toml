@@ -1,0 +1,515 @@
+[[property]]
+css = "color"
+field = "color"
+type = "ColorProperty"
+initial = "ColorProperty::default()"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/color"
+
+[[property]]
+css = "font-family"
+field = "font_family"
+type = "FontFamily"
+initial = "FontFamily::default()"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-family"
+
+[[property]]
+css = "font-size"
+field = "font_size"
+type = "FontSize"
+initial = "FontSize::Medium"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-size"
+
+[[property]]
+css = "font-weight"
+field = "font_weight"
+type = "FontWeight"
+initial = "FontWeight::NORMAL"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight"
+
+[[property]]
+css = "font-style"
+field = "font_style"
+type = "FontStyle"
+initial = "FontStyle::Normal"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-style"
+
+[[property]]
+css = "font-stretch"
+field = "font_stretch"
+type = "FontStretch"
+initial = "FontStretch::Normal"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-stretch"
+
+[[property]]
+css = "font-variant-caps"
+field = "font_variant_caps"
+type = "FontVariantCaps"
+initial = "FontVariantCaps::EMPTY"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-caps"
+
+[[property]]
+css = "font-variant-ligatures"
+field = "font_variant_ligatures"
+type = "FontVariantLigatures"
+initial = "FontVariantLigatures::default()"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-ligatures"
+
+[[property]]
+css = "font-variant-numeric"
+field = "font_variant_numeric"
+type = "FontVariantNumeric"
+initial = "FontVariantNumeric::EMPTY"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-numeric"
+
+[[property]]
+css = "font-variant-east-asian"
+field = "font_variant_east_asian"
+type = "FontVariantEastAsian"
+initial = "FontVariantEastAsian::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-east-asian"
+
+[[property]]
+css = "font-variant-alternates"
+field = "font_variant_alternates"
+type = "FontVariantAlternates"
+initial = "FontVariantAlternates::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-alternates"
+
+[[property]]
+css = "font-variant-position"
+field = "font_variant_position"
+type = "FontVariantPosition"
+initial = "FontVariantPosition::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-position"
+
+[[property]]
+css = "font-kerning"
+field = "font_kerning"
+type = "FontKerning"
+initial = "FontKerning::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-kerning"
+
+[[property]]
+css = "font-optical-sizing"
+field = "font_optical_sizing"
+type = "FontOpticalSizing"
+initial = "FontOpticalSizing::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-optical-sizing"
+
+[[property]]
+css = "font-feature-settings"
+field = "font_feature_settings"
+type = "FontFeatureSettings"
+initial = "FontFeatureSettings::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-feature-settings"
+
+[[property]]
+css = "font-variation-settings"
+field = "font_variation_settings"
+type = "FontVariationSettings"
+initial = "FontVariationSettings::Normal"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variation-settings"
+
+[[property]]
+css = "line-height"
+field = "line_height"
+type = "LineHeight"
+initial = "LineHeight::Normal"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/line-height"
+
+[[property]]
+css = "letter-spacing"
+field = "letter_spacing"
+type = "NormalOr<specified::LengthPercentage>"
+initial = "NormalOr::Normal"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/letter-spacing"
+
+[[property]]
+css = "word-spacing"
+field = "word_spacing"
+type = "NormalOr<specified::LengthPercentage>"
+initial = "NormalOr::Normal"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/word-spacing"
+
+[[property]]
+css = "text-align"
+field = "text_align"
+type = "TextAlign"
+initial = "TextAlign::Start"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-align"
+
+[[property]]
+css = "text-align-last"
+field = "text_align_last"
+type = "TextAlignLast"
+initial = "TextAlignLast::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-align-last"
+
+[[property]]
+css = "text-indent"
+field = "text_indent"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-indent"
+
+[[property]]
+css = "text-transform"
+field = "text_transform"
+type = "TextTransform"
+initial = "TextTransform::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-transform"
+
+[[property]]
+css = "text-overflow"
+field = "text_overflow"
+type = "TextOverflow"
+initial = "TextOverflow::Clip"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-overflow"
+
+[[property]]
+css = "text-rendering"
+field = "text_rendering"
+type = "TextRendering"
+initial = "TextRendering::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-rendering"
+
+[[property]]
+css = "text-decoration-line"
+field = "text_decoration_line"
+type = "TextDecorationLine"
+initial = "TextDecorationLine::EMPTY"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-line"
+
+[[property]]
+css = "text-decoration-style"
+field = "text_decoration_style"
+type = "TextDecorationStyle"
+initial = "TextDecorationStyle::Solid"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-style"
+
+[[property]]
+css = "text-decoration-color"
+field = "text_decoration_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-color"
+
+[[property]]
+css = "text-decoration-thickness"
+field = "text_decoration_thickness"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-thickness"
+
+[[property]]
+css = "text-underline-position"
+field = "text_underline_position"
+type = "TextUnderlinePosition"
+initial = "TextUnderlinePosition::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-underline-position"
+
+[[property]]
+css = "text-underline-offset"
+field = "text_underline_offset"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-underline-offset"
+
+[[property]]
+css = "text-emphasis-style"
+field = "text_emphasis_style"
+type = "TextEmphasisStyleValue"
+initial = "TextEmphasisStyleValue::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis-style"
+
+[[property]]
+css = "text-emphasis-color"
+field = "text_emphasis_color"
+type = "Color"
+initial = "Color::CurrentColor"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis-color"
+
+[[property]]
+css = "text-emphasis-position"
+field = "text_emphasis_position"
+type = "TextEmphasisPosition"
+initial = "TextEmphasisPosition::Over"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis-position"
+
+[[property]]
+css = "text-shadow"
+field = "text_shadow"
+type = "ShadowList"
+initial = "ShadowList::None"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-shadow"
+
+[[property]]
+css = "white-space-collapse"
+field = "white_space_collapse"
+type = "WhiteSpaceCollapse"
+initial = "WhiteSpaceCollapse::Collapse"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/white-space-collapse"
+
+[[property]]
+css = "text-wrap-mode"
+field = "text_wrap_mode"
+type = "TextWrapMode"
+initial = "TextWrapMode::Wrap"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap-mode"
+
+[[property]]
+css = "word-break"
+field = "word_break"
+type = "WordBreak"
+initial = "WordBreak::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/word-break"
+
+[[property]]
+css = "overflow-wrap"
+field = "overflow_wrap"
+type = "OverflowWrap"
+initial = "OverflowWrap::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap"
+
+[[property]]
+css = "line-break"
+field = "line_break"
+type = "LineBreak"
+initial = "LineBreak::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/line-break"
+
+[[property]]
+css = "hyphens"
+field = "hyphens"
+type = "Hyphens"
+initial = "Hyphens::Manual"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/hyphens"
+
+[[property]]
+css = "tab-size"
+field = "tab_size"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(8.0))"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/tab-size"
+
+[[property]]
+css = "text-orientation"
+field = "text_orientation"
+type = "TextOrientation"
+initial = "TextOrientation::Mixed"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-orientation"
+
+[[property]]
+css = "direction"
+field = "direction"
+type = "Direction"
+initial = "Direction::Ltr"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/direction"
+
+[[property]]
+css = "writing-mode"
+field = "writing_mode"
+type = "WritingMode"
+initial = "WritingMode::HorizontalTb"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/writing-mode"
+
+[[property]]
+css = "unicode-bidi"
+field = "unicode_bidi"
+type = "UnicodeBidi"
+initial = "UnicodeBidi::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/unicode-bidi"
+
+[[property]]
+css = "vertical-align"
+field = "vertical_align"
+type = "VerticalAlign"
+initial = "VerticalAlign::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/vertical-align"
+
+[[property]]
+css = "ruby-position"
+field = "ruby_position"
+type = "RubyPosition"
+initial = "RubyPosition::AlternateOver"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-position"
+
+[[property]]
+css = "font-size-adjust"
+field = "font_size_adjust"
+type = "NoneOr<f32>"
+initial = "NoneOr::None"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-size-adjust"
+
+[[property]]
+css = "font-synthesis-weight"
+field = "font_synthesis_weight"
+type = "AutoOrNone"
+initial = "AutoOrNone::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis-weight"
+
+[[property]]
+css = "font-synthesis-style"
+field = "font_synthesis_style"
+type = "AutoOrNone"
+initial = "AutoOrNone::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis-style"
+
+[[property]]
+css = "font-synthesis-small-caps"
+field = "font_synthesis_small_caps"
+type = "AutoOrNone"
+initial = "AutoOrNone::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis-small-caps"
+
+[[property]]
+css = "text-justify"
+field = "text_justify"
+type = "TextJustify"
+initial = "TextJustify::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-justify"
+
+[[property]]
+css = "text-combine-upright"
+field = "text_combine_upright"
+type = "TextCombineUpright"
+initial = "TextCombineUpright::None"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-combine-upright"
+
+[[shorthand]]
+css = "font-synthesis"
+longhands = ["font-synthesis-weight", "font-synthesis-style", "font-synthesis-small-caps"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis"
+
+[[shorthand]]
+css = "font"
+longhands = ["font-style", "font-variant-caps", "font-weight", "font-stretch", "font-size", "line-height", "font-family"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font"
+
+[[shorthand]]
+css = "font-variant"
+longhands = ["font-variant-caps", "font-variant-ligatures", "font-variant-numeric", "font-variant-east-asian", "font-variant-alternates", "font-variant-position"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant"
+
+[[shorthand]]
+css = "text-decoration"
+longhands = ["text-decoration-line", "text-decoration-style", "text-decoration-color", "text-decoration-thickness"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration"
+
+[[shorthand]]
+css = "text-emphasis"
+longhands = ["text-emphasis-style", "text-emphasis-color"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis"
+
+[[shorthand]]
+css = "white-space"
+longhands = ["white-space-collapse", "text-wrap-mode"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/white-space"

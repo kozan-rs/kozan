@@ -1,0 +1,63 @@
+[[property]]
+css = "flex-direction"
+field = "flex_direction"
+type = "FlexDirection"
+initial = "FlexDirection::Row"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-direction"
+
+[[property]]
+css = "flex-wrap"
+field = "flex_wrap"
+type = "FlexWrap"
+initial = "FlexWrap::Nowrap"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap"
+
+[[property]]
+css = "flex-grow"
+field = "flex_grow"
+type = "f32"
+initial = "0.0_f32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-grow"
+
+[[property]]
+css = "flex-shrink"
+field = "flex_shrink"
+type = "f32"
+initial = "1.0_f32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-shrink"
+
+[[property]]
+css = "flex-basis"
+field = "flex_basis"
+type = "generics::Size<specified::LengthPercentage>"
+initial = "generics::Size::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis"
+
+[[property]]
+css = "order"
+field = "order"
+type = "i32"
+initial = "0_i32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/order"
+
+[[shorthand]]
+css = "flex-flow"
+longhands = ["flex-direction", "flex-wrap"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-flow"
+
+[[shorthand]]
+css = "flex"
+longhands = ["flex-grow", "flex-shrink", "flex-basis"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex"

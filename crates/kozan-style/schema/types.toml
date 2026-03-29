@@ -1,0 +1,1565 @@
+# Kozan CSS value types — single source of truth.
+# build.rs reads this and generates Rust enums + bitflags with:
+#   Default, Clone, Copy, Debug, PartialEq, Eq, Hash,
+#   FromStr, Display, TryFrom<repr>, as_css()
+
+[[enum]]
+name = "Display"
+repr = "u8"
+default = "Inline"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/display"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Block", css = "block" },
+    { name = "Inline", css = "inline" },
+    { name = "InlineBlock", css = "inline-block" },
+    { name = "Flex", css = "flex" },
+    { name = "InlineFlex", css = "inline-flex" },
+    { name = "Grid", css = "grid" },
+    { name = "InlineGrid", css = "inline-grid" },
+    { name = "FlowRoot", css = "flow-root" },
+    { name = "Contents", css = "contents" },
+    { name = "Table", css = "table" },
+    { name = "InlineTable", css = "inline-table" },
+    { name = "TableRow", css = "table-row" },
+    { name = "TableCell", css = "table-cell" },
+    { name = "TableCaption", css = "table-caption" },
+    { name = "TableColumn", css = "table-column" },
+    { name = "TableColumnGroup", css = "table-column-group" },
+    { name = "TableRowGroup", css = "table-row-group" },
+    { name = "TableHeaderGroup", css = "table-header-group" },
+    { name = "TableFooterGroup", css = "table-footer-group" },
+    { name = "ListItem", css = "list-item" },
+]
+
+[[enum]]
+name = "Position"
+repr = "u8"
+default = "Static"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/position"
+variants = [
+    { name = "Static", css = "static" },
+    { name = "Relative", css = "relative" },
+    { name = "Absolute", css = "absolute" },
+    { name = "Fixed", css = "fixed" },
+    { name = "Sticky", css = "sticky" },
+]
+
+[[enum]]
+name = "BoxSizing"
+repr = "u8"
+default = "ContentBox"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing"
+variants = [
+    { name = "ContentBox", css = "content-box" },
+    { name = "BorderBox", css = "border-box" },
+]
+
+[[enum]]
+name = "Overflow"
+repr = "u8"
+default = "Visible"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow"
+variants = [
+    { name = "Visible", css = "visible" },
+    { name = "Hidden", css = "hidden" },
+    { name = "Clip", css = "clip" },
+    { name = "Scroll", css = "scroll" },
+    { name = "Auto", css = "auto" },
+]
+
+[[enum]]
+name = "Float"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/float"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "InlineStart", css = "inline-start" },
+    { name = "InlineEnd", css = "inline-end" },
+]
+
+[[enum]]
+name = "Clear"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/clear"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "Both", css = "both" },
+    { name = "InlineStart", css = "inline-start" },
+    { name = "InlineEnd", css = "inline-end" },
+]
+
+[[enum]]
+name = "Visibility"
+repr = "u8"
+default = "Visible"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/visibility"
+variants = [
+    { name = "Visible", css = "visible" },
+    { name = "Hidden", css = "hidden" },
+    { name = "Collapse", css = "collapse" },
+]
+
+
+[[enum]]
+name = "FlexDirection"
+repr = "u8"
+default = "Row"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-direction"
+variants = [
+    { name = "Row", css = "row" },
+    { name = "RowReverse", css = "row-reverse" },
+    { name = "Column", css = "column" },
+    { name = "ColumnReverse", css = "column-reverse" },
+]
+
+[[enum]]
+name = "FlexWrap"
+repr = "u8"
+default = "Nowrap"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap"
+variants = [
+    { name = "Nowrap", css = "nowrap" },
+    { name = "Wrap", css = "wrap" },
+    { name = "WrapReverse", css = "wrap-reverse" },
+]
+
+[[enum]]
+name = "JustifyContent"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "FlexStart", css = "flex-start" },
+    { name = "FlexEnd", css = "flex-end" },
+    { name = "Center", css = "center" },
+    { name = "SpaceBetween", css = "space-between" },
+    { name = "SpaceAround", css = "space-around" },
+    { name = "SpaceEvenly", css = "space-evenly" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+    { name = "Stretch", css = "stretch" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+]
+
+[[enum]]
+name = "AlignItems"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/align-items"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "FlexStart", css = "flex-start" },
+    { name = "FlexEnd", css = "flex-end" },
+    { name = "Center", css = "center" },
+    { name = "Baseline", css = "baseline" },
+    { name = "FirstBaseline", css = "first baseline" },
+    { name = "LastBaseline", css = "last baseline" },
+    { name = "Stretch", css = "stretch" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+    { name = "SelfStart", css = "self-start" },
+    { name = "SelfEnd", css = "self-end" },
+]
+
+[[enum]]
+name = "AlignSelf"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/align-self"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Normal", css = "normal" },
+    { name = "FlexStart", css = "flex-start" },
+    { name = "FlexEnd", css = "flex-end" },
+    { name = "Center", css = "center" },
+    { name = "Baseline", css = "baseline" },
+    { name = "FirstBaseline", css = "first baseline" },
+    { name = "LastBaseline", css = "last baseline" },
+    { name = "Stretch", css = "stretch" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+    { name = "SelfStart", css = "self-start" },
+    { name = "SelfEnd", css = "self-end" },
+]
+
+[[enum]]
+name = "AlignContent"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/align-content"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "FlexStart", css = "flex-start" },
+    { name = "FlexEnd", css = "flex-end" },
+    { name = "Center", css = "center" },
+    { name = "SpaceBetween", css = "space-between" },
+    { name = "SpaceAround", css = "space-around" },
+    { name = "SpaceEvenly", css = "space-evenly" },
+    { name = "Stretch", css = "stretch" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+    { name = "Baseline", css = "baseline" },
+    { name = "FirstBaseline", css = "first baseline" },
+    { name = "LastBaseline", css = "last baseline" },
+]
+
+
+[[enum]]
+name = "GridAutoFlow"
+repr = "u8"
+default = "Row"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow"
+variants = [
+    { name = "Row", css = "row" },
+    { name = "Column", css = "column" },
+    { name = "RowDense", css = "row dense" },
+    { name = "ColumnDense", css = "column dense" },
+]
+
+
+[[enum]]
+name = "TextAlign"
+repr = "u8"
+default = "Start"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-align"
+variants = [
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "Center", css = "center" },
+    { name = "Justify", css = "justify" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+]
+
+[[enum]]
+name = "TextAlignLast"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-align-last"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "Center", css = "center" },
+    { name = "Justify", css = "justify" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+]
+
+[[enum]]
+name = "TextTransform"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-transform"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Capitalize", css = "capitalize" },
+    { name = "Uppercase", css = "uppercase" },
+    { name = "Lowercase", css = "lowercase" },
+    { name = "FullWidth", css = "full-width" },
+    { name = "FullSizeKana", css = "full-size-kana" },
+]
+
+[[enum]]
+name = "TextOverflow"
+repr = "u8"
+default = "Clip"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-overflow"
+variants = [
+    { name = "Clip", css = "clip" },
+    { name = "Ellipsis", css = "ellipsis" },
+]
+
+[[enum]]
+name = "WhiteSpaceCollapse"
+repr = "u8"
+default = "Collapse"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/white-space"
+variants = [
+    { name = "Collapse", css = "collapse" },
+    { name = "Preserve", css = "preserve" },
+    { name = "PreserveBreaks", css = "preserve-breaks" },
+    { name = "PreserveSpaces", css = "preserve-spaces" },
+    { name = "BreakSpaces", css = "break-spaces" },
+]
+
+[[enum]]
+name = "TextWrapMode"
+repr = "u8"
+default = "Wrap"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap"
+variants = [
+    { name = "Wrap", css = "wrap" },
+    { name = "Nowrap", css = "nowrap" },
+]
+
+[[enum]]
+name = "WordBreak"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/word-break"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "BreakAll", css = "break-all" },
+    { name = "KeepAll", css = "keep-all" },
+    { name = "BreakWord", css = "break-word" },
+]
+
+[[enum]]
+name = "OverflowWrap"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "BreakWord", css = "break-word" },
+    { name = "Anywhere", css = "anywhere" },
+]
+
+[[enum]]
+name = "Hyphens"
+repr = "u8"
+default = "Manual"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/hyphens"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Manual", css = "manual" },
+    { name = "Auto", css = "auto" },
+]
+
+[[enum]]
+name = "FontStyle"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-style"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Italic", css = "italic" },
+    { name = "Oblique", css = "oblique" },
+]
+
+[[enum]]
+name = "FontStretch"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-stretch"
+variants = [
+    { name = "UltraCondensed", css = "ultra-condensed" },
+    { name = "ExtraCondensed", css = "extra-condensed" },
+    { name = "Condensed", css = "condensed" },
+    { name = "SemiCondensed", css = "semi-condensed" },
+    { name = "Normal", css = "normal" },
+    { name = "SemiExpanded", css = "semi-expanded" },
+    { name = "Expanded", css = "expanded" },
+    { name = "ExtraExpanded", css = "extra-expanded" },
+    { name = "UltraExpanded", css = "ultra-expanded" },
+]
+
+[[enum]]
+name = "TextDecorationStyle"
+repr = "u8"
+default = "Solid"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-style"
+variants = [
+    { name = "Solid", css = "solid" },
+    { name = "Double", css = "double" },
+    { name = "Dotted", css = "dotted" },
+    { name = "Dashed", css = "dashed" },
+    { name = "Wavy", css = "wavy" },
+]
+
+[[enum]]
+name = "VerticalAlign"
+default = "Baseline"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/vertical-align"
+variants = [
+    { name = "Baseline", css = "baseline" },
+    { name = "Sub", css = "sub" },
+    { name = "Super", css = "super" },
+    { name = "TextTop", css = "text-top" },
+    { name = "TextBottom", css = "text-bottom" },
+    { name = "Middle", css = "middle" },
+    { name = "Top", css = "top" },
+    { name = "Bottom", css = "bottom" },
+    { name = "LengthPercentage", type = "specified::LengthPercentage" },
+]
+
+[[enum]]
+name = "Direction"
+repr = "u8"
+default = "Ltr"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/direction"
+variants = [
+    { name = "Ltr", css = "ltr" },
+    { name = "Rtl", css = "rtl" },
+]
+
+[[enum]]
+name = "WritingMode"
+repr = "u8"
+default = "HorizontalTb"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/writing-mode"
+variants = [
+    { name = "HorizontalTb", css = "horizontal-tb" },
+    { name = "VerticalRl", css = "vertical-rl" },
+    { name = "VerticalLr", css = "vertical-lr" },
+    { name = "SidewaysRl", css = "sideways-rl" },
+    { name = "SidewaysLr", css = "sideways-lr" },
+]
+
+[[enum]]
+name = "UnicodeBidi"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/unicode-bidi"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Embed", css = "embed" },
+    { name = "Isolate", css = "isolate" },
+    { name = "BidiOverride", css = "bidi-override" },
+    { name = "IsolateOverride", css = "isolate-override" },
+    { name = "Plaintext", css = "plaintext" },
+]
+
+
+[[enum]]
+name = "BorderStyle"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-style"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Hidden", css = "hidden" },
+    { name = "Dotted", css = "dotted" },
+    { name = "Dashed", css = "dashed" },
+    { name = "Solid", css = "solid" },
+    { name = "Double", css = "double" },
+    { name = "Groove", css = "groove" },
+    { name = "Ridge", css = "ridge" },
+    { name = "Inset", css = "inset" },
+    { name = "Outset", css = "outset" },
+]
+
+[[enum]]
+name = "BackgroundRepeat"
+repr = "u8"
+default = "Repeat"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"
+variants = [
+    { name = "Repeat", css = "repeat" },
+    { name = "RepeatX", css = "repeat-x" },
+    { name = "RepeatY", css = "repeat-y" },
+    { name = "NoRepeat", css = "no-repeat" },
+    { name = "Space", css = "space" },
+    { name = "Round", css = "round" },
+]
+
+[[enum]]
+name = "BackgroundAttachment"
+repr = "u8"
+default = "Scroll"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-attachment"
+variants = [
+    { name = "Scroll", css = "scroll" },
+    { name = "Fixed", css = "fixed" },
+    { name = "Local", css = "local" },
+]
+
+[[enum]]
+name = "BackgroundClip"
+repr = "u8"
+default = "BorderBox"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-clip"
+variants = [
+    { name = "BorderBox", css = "border-box" },
+    { name = "PaddingBox", css = "padding-box" },
+    { name = "ContentBox", css = "content-box" },
+    { name = "Text", css = "text" },
+]
+
+[[enum]]
+name = "BackgroundOrigin"
+repr = "u8"
+default = "PaddingBox"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"
+variants = [
+    { name = "BorderBox", css = "border-box" },
+    { name = "PaddingBox", css = "padding-box" },
+    { name = "ContentBox", css = "content-box" },
+]
+
+[[enum]]
+name = "BackgroundSize"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Cover", css = "cover" },
+    { name = "Contain", css = "contain" },
+]
+
+[[enum]]
+name = "ObjectFit"
+repr = "u8"
+default = "Fill"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit"
+variants = [
+    { name = "Fill", css = "fill" },
+    { name = "Contain", css = "contain" },
+    { name = "Cover", css = "cover" },
+    { name = "None", css = "none" },
+    { name = "ScaleDown", css = "scale-down" },
+]
+
+[[enum]]
+name = "ImageRendering"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Smooth", css = "smooth" },
+    { name = "HighQuality", css = "high-quality" },
+    { name = "CrispEdges", css = "crisp-edges" },
+    { name = "Pixelated", css = "pixelated" },
+]
+
+[[enum]]
+name = "MixBlendMode"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Multiply", css = "multiply" },
+    { name = "Screen", css = "screen" },
+    { name = "Overlay", css = "overlay" },
+    { name = "Darken", css = "darken" },
+    { name = "Lighten", css = "lighten" },
+    { name = "ColorDodge", css = "color-dodge" },
+    { name = "ColorBurn", css = "color-burn" },
+    { name = "HardLight", css = "hard-light" },
+    { name = "SoftLight", css = "soft-light" },
+    { name = "Difference", css = "difference" },
+    { name = "Exclusion", css = "exclusion" },
+    { name = "Hue", css = "hue" },
+    { name = "Saturation", css = "saturation" },
+    { name = "Color", css = "color" },
+    { name = "Luminosity", css = "luminosity" },
+]
+
+[[enum]]
+name = "Isolation"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/isolation"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Isolate", css = "isolate" },
+]
+
+[[enum]]
+name = "OutlineStyle"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-style"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Auto", css = "auto" },
+    { name = "Dotted", css = "dotted" },
+    { name = "Dashed", css = "dashed" },
+    { name = "Solid", css = "solid" },
+    { name = "Double", css = "double" },
+    { name = "Groove", css = "groove" },
+    { name = "Ridge", css = "ridge" },
+    { name = "Inset", css = "inset" },
+    { name = "Outset", css = "outset" },
+]
+
+
+[[enum]]
+name = "BackfaceVisibility"
+repr = "u8"
+default = "Visible"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/backface-visibility"
+variants = [
+    { name = "Visible", css = "visible" },
+    { name = "Hidden", css = "hidden" },
+]
+
+[[enum]]
+name = "TransformStyle"
+repr = "u8"
+default = "Flat"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transform-style"
+variants = [
+    { name = "Flat", css = "flat" },
+    { name = "Preserve3d", css = "preserve-3d" },
+]
+
+[[enum]]
+name = "AnimationDirection"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-direction"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Reverse", css = "reverse" },
+    { name = "Alternate", css = "alternate" },
+    { name = "AlternateReverse", css = "alternate-reverse" },
+]
+
+[[enum]]
+name = "AnimationFillMode"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-fill-mode"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Forwards", css = "forwards" },
+    { name = "Backwards", css = "backwards" },
+    { name = "Both", css = "both" },
+]
+
+[[enum]]
+name = "AnimationPlayState"
+repr = "u8"
+default = "Running"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-play-state"
+variants = [
+    { name = "Running", css = "running" },
+    { name = "Paused", css = "paused" },
+]
+
+
+[[enum]]
+name = "Cursor"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/cursor"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Default", css = "default" },
+    { name = "None", css = "none" },
+    { name = "ContextMenu", css = "context-menu" },
+    { name = "Help", css = "help" },
+    { name = "Pointer", css = "pointer" },
+    { name = "Progress", css = "progress" },
+    { name = "Wait", css = "wait" },
+    { name = "Cell", css = "cell" },
+    { name = "Crosshair", css = "crosshair" },
+    { name = "Text", css = "text" },
+    { name = "VerticalText", css = "vertical-text" },
+    { name = "Alias", css = "alias" },
+    { name = "Copy", css = "copy" },
+    { name = "Move", css = "move" },
+    { name = "NoDrop", css = "no-drop" },
+    { name = "NotAllowed", css = "not-allowed" },
+    { name = "Grab", css = "grab" },
+    { name = "Grabbing", css = "grabbing" },
+    { name = "EResize", css = "e-resize" },
+    { name = "NResize", css = "n-resize" },
+    { name = "NeResize", css = "ne-resize" },
+    { name = "NwResize", css = "nw-resize" },
+    { name = "SResize", css = "s-resize" },
+    { name = "SeResize", css = "se-resize" },
+    { name = "SwResize", css = "sw-resize" },
+    { name = "WResize", css = "w-resize" },
+    { name = "EwResize", css = "ew-resize" },
+    { name = "NsResize", css = "ns-resize" },
+    { name = "NeswResize", css = "nesw-resize" },
+    { name = "NwseResize", css = "nwse-resize" },
+    { name = "ColResize", css = "col-resize" },
+    { name = "RowResize", css = "row-resize" },
+    { name = "AllScroll", css = "all-scroll" },
+    { name = "ZoomIn", css = "zoom-in" },
+    { name = "ZoomOut", css = "zoom-out" },
+]
+
+[[enum]]
+name = "PointerEvents"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+    { name = "VisiblePainted", css = "visiblePainted" },
+    { name = "VisibleFill", css = "visibleFill" },
+    { name = "VisibleStroke", css = "visibleStroke" },
+    { name = "Visible", css = "visible" },
+    { name = "Painted", css = "painted" },
+    { name = "Fill", css = "fill" },
+    { name = "Stroke", css = "stroke" },
+    { name = "All", css = "all" },
+]
+
+[[enum]]
+name = "UserSelect"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/user-select"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+    { name = "Text", css = "text" },
+    { name = "All", css = "all" },
+    { name = "Contain", css = "contain" },
+]
+
+[[enum]]
+name = "Resize"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/resize"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Both", css = "both" },
+    { name = "Horizontal", css = "horizontal" },
+    { name = "Vertical", css = "vertical" },
+    { name = "Block", css = "block" },
+    { name = "Inline", css = "inline" },
+]
+
+[[enum]]
+name = "Appearance"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/appearance"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Auto", css = "auto" },
+    { name = "Button", css = "button" },
+    { name = "Textfield", css = "textfield" },
+    { name = "Menulist", css = "menulist" },
+]
+
+[[enum]]
+name = "ScrollBehavior"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-behavior"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Smooth", css = "smooth" },
+]
+
+[[enum]]
+name = "OverscrollBehavior"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Contain", css = "contain" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "ScrollbarWidth"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-width"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Thin", css = "thin" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "ScrollSnapAxis"
+repr = "u8"
+default = "Both"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-type"
+variants = [
+    { name = "X", css = "x" },
+    { name = "Y", css = "y" },
+    { name = "Block", css = "block" },
+    { name = "Inline", css = "inline" },
+    { name = "Both", css = "both" },
+]
+
+[[enum]]
+name = "ScrollSnapStrictness"
+repr = "u8"
+default = "Proximity"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-type"
+variants = [
+    { name = "Mandatory", css = "mandatory" },
+    { name = "Proximity", css = "proximity" },
+]
+
+[[enum]]
+name = "ScrollSnapAlign"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-align"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Start", css = "start" },
+    { name = "End", css = "end" },
+    { name = "Center", css = "center" },
+]
+
+[[enum]]
+name = "ScrollSnapStop"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-stop"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Always", css = "always" },
+]
+
+[[enum]]
+name = "ContentVisibility"
+repr = "u8"
+default = "Visible"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility"
+variants = [
+    { name = "Visible", css = "visible" },
+    { name = "Auto", css = "auto" },
+    { name = "Hidden", css = "hidden" },
+]
+
+[[enum]]
+name = "ColorScheme"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Light", css = "light" },
+    { name = "Dark", css = "dark" },
+    { name = "LightDark", css = "light dark" },
+]
+
+
+[[enum]]
+name = "TableLayout"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/table-layout"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Fixed", css = "fixed" },
+]
+
+[[enum]]
+name = "BorderCollapse"
+repr = "u8"
+default = "Separate"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-collapse"
+variants = [
+    { name = "Separate", css = "separate" },
+    { name = "Collapse", css = "collapse" },
+]
+
+[[enum]]
+name = "EmptyCells"
+repr = "u8"
+default = "Show"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/empty-cells"
+variants = [
+    { name = "Show", css = "show" },
+    { name = "Hide", css = "hide" },
+]
+
+[[enum]]
+name = "CaptionSide"
+repr = "u8"
+default = "Top"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/caption-side"
+variants = [
+    { name = "Top", css = "top" },
+    { name = "Bottom", css = "bottom" },
+]
+
+
+[[enum]]
+name = "ListStylePosition"
+repr = "u8"
+default = "Outside"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-position"
+variants = [
+    { name = "Inside", css = "inside" },
+    { name = "Outside", css = "outside" },
+]
+
+[[enum]]
+name = "ListStyleType"
+repr = "u8"
+default = "Disc"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type"
+variants = [
+    { name = "Disc", css = "disc" },
+    { name = "Circle", css = "circle" },
+    { name = "Square", css = "square" },
+    { name = "Decimal", css = "decimal" },
+    { name = "DecimalLeadingZero", css = "decimal-leading-zero" },
+    { name = "LowerRoman", css = "lower-roman" },
+    { name = "UpperRoman", css = "upper-roman" },
+    { name = "LowerGreek", css = "lower-greek" },
+    { name = "LowerLatin", css = "lower-latin" },
+    { name = "UpperLatin", css = "upper-latin" },
+    { name = "LowerAlpha", css = "lower-alpha" },
+    { name = "UpperAlpha", css = "upper-alpha" },
+    { name = "None", css = "none" },
+]
+
+
+[[enum]]
+name = "BreakBefore"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/break-before"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Avoid", css = "avoid" },
+    { name = "AvoidPage", css = "avoid-page" },
+    { name = "Page", css = "page" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "Recto", css = "recto" },
+    { name = "Verso", css = "verso" },
+    { name = "AvoidColumn", css = "avoid-column" },
+    { name = "Column", css = "column" },
+]
+
+[[enum]]
+name = "BreakAfter"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/break-after"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Avoid", css = "avoid" },
+    { name = "AvoidPage", css = "avoid-page" },
+    { name = "Page", css = "page" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "Recto", css = "recto" },
+    { name = "Verso", css = "verso" },
+    { name = "AvoidColumn", css = "avoid-column" },
+    { name = "Column", css = "column" },
+]
+
+[[enum]]
+name = "BreakInside"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/break-inside"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Avoid", css = "avoid" },
+    { name = "AvoidPage", css = "avoid-page" },
+    { name = "AvoidColumn", css = "avoid-column" },
+]
+
+
+[[enum]]
+name = "ColumnFill"
+repr = "u8"
+default = "Balance"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-fill"
+variants = [
+    { name = "Balance", css = "balance" },
+    { name = "Auto", css = "auto" },
+]
+
+[[enum]]
+name = "ColumnSpan"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/column-span"
+variants = [
+    { name = "None", css = "none" },
+    { name = "All", css = "all" },
+]
+
+
+[[enum]]
+name = "PrintColorAdjust"
+repr = "u8"
+default = "Economy"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/print-color-adjust"
+variants = [
+    { name = "Economy", css = "economy" },
+    { name = "Exact", css = "exact" },
+]
+
+
+[[bitflags]]
+name = "TextDecorationLine"
+repr = "u8"
+flags = [
+    { name = "UNDERLINE", css = "underline", bit = 0 },
+    { name = "OVERLINE", css = "overline", bit = 1 },
+    { name = "LINE_THROUGH", css = "line-through", bit = 2 },
+    { name = "SPELLING_ERROR", css = "spelling-error", bit = 3 },
+    { name = "GRAMMAR_ERROR", css = "grammar-error", bit = 4 },
+]
+
+[[bitflags]]
+name = "Contain"
+repr = "u8"
+flags = [
+    { name = "SIZE", css = "size", bit = 0 },
+    { name = "LAYOUT", css = "layout", bit = 1 },
+    { name = "STYLE", css = "style", bit = 2 },
+    { name = "PAINT", css = "paint", bit = 3 },
+    { name = "INLINE_SIZE", css = "inline-size", bit = 4 },
+]
+
+[[bitflags]]
+name = "TouchAction"
+repr = "u8"
+flags = [
+    { name = "PAN_X", css = "pan-x", bit = 0 },
+    { name = "PAN_Y", css = "pan-y", bit = 1 },
+    { name = "PINCH_ZOOM", css = "pinch-zoom", bit = 2 },
+]
+
+[[bitflags]]
+name = "FontVariantCaps"
+repr = "u8"
+flags = [
+    { name = "SMALL_CAPS", css = "small-caps", bit = 0 },
+    { name = "ALL_SMALL_CAPS", css = "all-small-caps", bit = 1 },
+    { name = "PETITE_CAPS", css = "petite-caps", bit = 2 },
+    { name = "ALL_PETITE_CAPS", css = "all-petite-caps", bit = 3 },
+    { name = "UNICASE", css = "unicase", bit = 4 },
+    { name = "TITLING_CAPS", css = "titling-caps", bit = 5 },
+]
+
+[[bitflags]]
+name = "FontVariantLigatures"
+repr = "u16"
+default = ["COMMON", "CONTEXTUAL"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-ligatures"
+flags = [
+    { name = "COMMON", css = "common-ligatures", bit = 0 },
+    { name = "NO_COMMON", css = "no-common-ligatures", bit = 1 },
+    { name = "DISCRETIONARY", css = "discretionary-ligatures", bit = 2 },
+    { name = "NO_DISCRETIONARY", css = "no-discretionary-ligatures", bit = 3 },
+    { name = "HISTORICAL", css = "historical-ligatures", bit = 4 },
+    { name = "NO_HISTORICAL", css = "no-historical-ligatures", bit = 5 },
+    { name = "CONTEXTUAL", css = "contextual", bit = 6 },
+    { name = "NO_CONTEXTUAL", css = "no-contextual", bit = 7 },
+]
+
+[[bitflags]]
+name = "FontVariantNumeric"
+repr = "u8"
+flags = [
+    { name = "LINING_NUMS", css = "lining-nums", bit = 0 },
+    { name = "OLDSTYLE_NUMS", css = "oldstyle-nums", bit = 1 },
+    { name = "PROPORTIONAL_NUMS", css = "proportional-nums", bit = 2 },
+    { name = "TABULAR_NUMS", css = "tabular-nums", bit = 3 },
+    { name = "DIAGONAL_FRACTIONS", css = "diagonal-fractions", bit = 4 },
+    { name = "STACKED_FRACTIONS", css = "stacked-fractions", bit = 5 },
+    { name = "ORDINAL", css = "ordinal", bit = 6 },
+    { name = "SLASHED_ZERO", css = "slashed-zero", bit = 7 },
+]
+
+[[enum]]
+name = "FontKerning"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-kerning"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Normal", css = "normal" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "FontOpticalSizing"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-optical-sizing"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "TextRendering"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-rendering"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "OptimizeSpeed", css = "optimizeSpeed" },
+    { name = "OptimizeLegibility", css = "optimizeLegibility" },
+    { name = "GeometricPrecision", css = "geometricPrecision" },
+]
+
+[[enum]]
+name = "TextUnderlinePosition"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-underline-position"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Under", css = "under" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+]
+
+[[enum]]
+name = "TextOrientation"
+repr = "u8"
+default = "Mixed"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-orientation"
+variants = [
+    { name = "Mixed", css = "mixed" },
+    { name = "Upright", css = "upright" },
+    { name = "Sideways", css = "sideways" },
+]
+
+[[enum]]
+name = "OverflowAnchor"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "ContainerType"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/container-type"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Size", css = "size" },
+    { name = "InlineSize", css = "inline-size" },
+]
+
+[[enum]]
+name = "ForcedColorAdjust"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/forced-color-adjust"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "LineBreak"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/line-break"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Loose", css = "loose" },
+    { name = "Normal", css = "normal" },
+    { name = "Strict", css = "strict" },
+    { name = "Anywhere", css = "anywhere" },
+]
+
+[[enum]]
+name = "RubyPosition"
+repr = "u8"
+default = "AlternateOver"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-position"
+variants = [
+    { name = "Over", css = "over" },
+    { name = "Under", css = "under" },
+    { name = "AlternateOver", css = "alternate over" },
+    { name = "AlternateUnder", css = "alternate under" },
+]
+
+[[enum]]
+name = "TextEmphasisPosition"
+repr = "u8"
+default = "Over"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis"
+variants = [
+    { name = "Over", css = "over" },
+    { name = "Under", css = "under" },
+]
+
+[[enum]]
+name = "TextEmphasisShape"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis-style"
+variants = [
+    { name = "None", css = "none" },
+    { name = "Dot", css = "dot" },
+    { name = "Circle", css = "circle" },
+    { name = "DoubleCircle", css = "double-circle" },
+    { name = "Triangle", css = "triangle" },
+    { name = "Sesame", css = "sesame" },
+]
+
+[[enum]]
+name = "TextEmphasisFill"
+repr = "u8"
+default = "Filled"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis-style"
+variants = [
+    { name = "Filled", css = "filled" },
+    { name = "Open", css = "open" },
+]
+
+[[enum]]
+name = "BoxDecorationBreak"
+repr = "u8"
+default = "Slice"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/box-decoration-break"
+variants = [
+    { name = "Slice", css = "slice" },
+    { name = "Clone", css = "clone" },
+]
+
+[[enum]]
+name = "MathStyle"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/math-style"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Compact", css = "compact" },
+]
+
+[[enum]]
+name = "FontVariantPosition"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-position"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Sub", css = "sub" },
+    { name = "Super", css = "super" },
+]
+
+[[enum]]
+name = "FontVariantEastAsian"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-east-asian"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Jis78", css = "jis78" },
+    { name = "Jis83", css = "jis83" },
+    { name = "Jis90", css = "jis90" },
+    { name = "Jis04", css = "jis04" },
+    { name = "Simplified", css = "simplified" },
+    { name = "Traditional", css = "traditional" },
+    { name = "FullWidth", css = "full-width" },
+    { name = "ProportionalWidth", css = "proportional-width" },
+    { name = "Ruby", css = "ruby" },
+]
+
+[[enum]]
+name = "FontVariantAlternates"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-alternates"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "HistoricalForms", css = "historical-forms" },
+]
+
+[[enum]]
+name = "AutoOrNone"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis-weight"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "TextJustify"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-justify"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+    { name = "InterWord", css = "inter-word" },
+    { name = "InterCharacter", css = "inter-character" },
+]
+
+[[enum]]
+name = "TextCombineUpright"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-combine-upright"
+variants = [
+    { name = "None", css = "none" },
+    { name = "All", css = "all" },
+]
+
+[[enum]]
+name = "FillRule"
+repr = "u8"
+default = "Nonzero"
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule"
+variants = [
+    { name = "Nonzero", css = "nonzero" },
+    { name = "Evenodd", css = "evenodd" },
+]
+
+[[enum]]
+name = "StrokeLinecap"
+repr = "u8"
+default = "Butt"
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-linecap"
+variants = [
+    { name = "Butt", css = "butt" },
+    { name = "Round", css = "round" },
+    { name = "Square", css = "square" },
+]
+
+[[enum]]
+name = "StrokeLinejoin"
+repr = "u8"
+default = "Miter"
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-linejoin"
+variants = [
+    { name = "Miter", css = "miter" },
+    { name = "Round", css = "round" },
+    { name = "Bevel", css = "bevel" },
+]
+
+[[enum]]
+name = "ColorInterpolation"
+repr = "u8"
+default = "SRGB"
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/color-interpolation"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "SRGB", css = "sRGB" },
+    { name = "LinearRGB", css = "linearRGB" },
+]
+
+[[enum]]
+name = "DominantBaseline"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/dominant-baseline"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "TextBottom", css = "text-bottom" },
+    { name = "Alphabetic", css = "alphabetic" },
+    { name = "Ideographic", css = "ideographic" },
+    { name = "Middle", css = "middle" },
+    { name = "Central", css = "central" },
+    { name = "Mathematical", css = "mathematical" },
+    { name = "Hanging", css = "hanging" },
+    { name = "TextTop", css = "text-top" },
+]
+
+[[enum]]
+name = "AlignmentBaseline"
+repr = "u8"
+default = "Baseline"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/alignment-baseline"
+variants = [
+    { name = "Baseline", css = "baseline" },
+    { name = "TextBottom", css = "text-bottom" },
+    { name = "Alphabetic", css = "alphabetic" },
+    { name = "Ideographic", css = "ideographic" },
+    { name = "Middle", css = "middle" },
+    { name = "Central", css = "central" },
+    { name = "Mathematical", css = "mathematical" },
+    { name = "TextTop", css = "text-top" },
+]
+
+[[enum]]
+name = "TextAnchor"
+repr = "u8"
+default = "Start"
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/text-anchor"
+variants = [
+    { name = "Start", css = "start" },
+    { name = "Middle", css = "middle" },
+    { name = "End", css = "end" },
+]
+
+[[enum]]
+name = "ShapeRendering"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/shape-rendering"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "OptimizeSpeed", css = "optimizeSpeed" },
+    { name = "CrispEdges", css = "crispEdges" },
+    { name = "GeometricPrecision", css = "geometricPrecision" },
+]
+
+[[enum]]
+name = "VectorEffect"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/vector-effect"
+variants = [
+    { name = "None", css = "none" },
+    { name = "NonScalingStroke", css = "non-scaling-stroke" },
+]
+
+[[enum]]
+name = "MaskMode"
+repr = "u8"
+default = "MatchSource"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-mode"
+variants = [
+    { name = "Alpha", css = "alpha" },
+    { name = "Luminance", css = "luminance" },
+    { name = "MatchSource", css = "match-source" },
+]
+
+[[enum]]
+name = "MaskClip"
+repr = "u8"
+default = "BorderBox"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-clip"
+variants = [
+    { name = "ContentBox", css = "content-box" },
+    { name = "PaddingBox", css = "padding-box" },
+    { name = "BorderBox", css = "border-box" },
+    { name = "FillBox", css = "fill-box" },
+    { name = "StrokeBox", css = "stroke-box" },
+    { name = "ViewBox", css = "view-box" },
+    { name = "NoClip", css = "no-clip" },
+]
+
+[[enum]]
+name = "MaskComposite"
+repr = "u8"
+default = "Add"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-composite"
+variants = [
+    { name = "Add", css = "add" },
+    { name = "Subtract", css = "subtract" },
+    { name = "Intersect", css = "intersect" },
+    { name = "Exclude", css = "exclude" },
+]
+
+[[enum]]
+name = "MaskType"
+repr = "u8"
+default = "Luminance"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-type"
+variants = [
+    { name = "Luminance", css = "luminance" },
+    { name = "Alpha", css = "alpha" },
+]
+
+# =========================================================================
+# Keyword + data enums (generated with fallback data variants)
+# =========================================================================
+
+[[enum]]
+name = "FontSize"
+default = "Medium"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-size"
+variants = [
+    { name = "XxSmall", css = "xx-small" },
+    { name = "XSmall", css = "x-small" },
+    { name = "Small", css = "small" },
+    { name = "Medium", css = "medium" },
+    { name = "Large", css = "large" },
+    { name = "XLarge", css = "x-large" },
+    { name = "XxLarge", css = "xx-large" },
+    { name = "XxxLarge", css = "xxx-large" },
+    { name = "Smaller", css = "smaller" },
+    { name = "Larger", css = "larger" },
+    { name = "Math", css = "math" },
+    { name = "LengthPercentage", type = "specified::LengthPercentage" },
+]
+
+[[enum]]
+name = "LineHeight"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/line-height"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Number", type = "f32" },
+    { name = "LengthPercentage", type = "specified::LengthPercentage" },
+]
+
+# =========================================================================
+# List wrappers — struct Name(pub Box<[Inner]>)
+# =========================================================================
+
+[[list]]
+name = "DurationList"
+inner = "std::time::Duration"
+default_inner = "std::time::Duration::ZERO"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-duration"
+
+[[list]]
+name = "TimingFunctionList"
+inner = "TimingFunction"
+default_inner = "TimingFunction::Ease"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-timing-function"
+
+[[list]]
+name = "AnimationDirectionList"
+inner = "AnimationDirection"
+default_inner = "AnimationDirection::Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-direction"
+
+[[list]]
+name = "AnimationFillModeList"
+inner = "AnimationFillMode"
+default_inner = "AnimationFillMode::None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-fill-mode"
+
+[[list]]
+name = "AnimationPlayStateList"
+inner = "AnimationPlayState"
+default_inner = "AnimationPlayState::Running"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-play-state"
+
+[[list]]
+name = "AnimationIterationCountList"
+inner = "IterationCount"
+default_inner = "IterationCount::Finite(1.0)"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-iteration-count"
+
+[[enum]]
+name = "TransitionBehavior"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-behavior"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "AllowDiscrete", css = "allow-discrete" },
+]
+
+[[enum]]
+name = "IterationCount"
+default = "Finite(1.0)"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-iteration-count"
+variants = [
+    { name = "Infinite", css = "infinite" },
+    { name = "Finite", type = "f32" },
+]
+
+[[list]]
+name = "TransitionBehaviorList"
+inner = "TransitionBehavior"
+default_inner = "TransitionBehavior::Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-behavior"

@@ -1,0 +1,236 @@
+[[property]]
+css = "margin-top"
+field = "margin_top"
+type = "generics::Margin<specified::LengthPercentage>"
+initial = "generics::Margin::LengthPercentage(specified::LengthPercentage::default())"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-top"
+
+[[property]]
+css = "margin-right"
+field = "margin_right"
+type = "generics::Margin<specified::LengthPercentage>"
+initial = "generics::Margin::LengthPercentage(specified::LengthPercentage::default())"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-right"
+
+[[property]]
+css = "margin-bottom"
+field = "margin_bottom"
+type = "generics::Margin<specified::LengthPercentage>"
+initial = "generics::Margin::LengthPercentage(specified::LengthPercentage::default())"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-bottom"
+
+[[property]]
+css = "margin-left"
+field = "margin_left"
+type = "generics::Margin<specified::LengthPercentage>"
+initial = "generics::Margin::LengthPercentage(specified::LengthPercentage::default())"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-left"
+
+[[property]]
+css = "padding-top"
+field = "padding_top"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-top"
+
+[[property]]
+css = "padding-right"
+field = "padding_right"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-right"
+
+[[property]]
+css = "padding-bottom"
+field = "padding_bottom"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-bottom"
+
+[[property]]
+css = "padding-left"
+field = "padding_left"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-left"
+
+[[property]]
+css = "border-top-width"
+field = "border_top_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(3.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top-width"
+
+[[property]]
+css = "border-right-width"
+field = "border_right_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(3.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-right-width"
+
+[[property]]
+css = "border-bottom-width"
+field = "border_bottom_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(3.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom-width"
+
+[[property]]
+css = "border-left-width"
+field = "border_left_width"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(3.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-left-width"
+
+[[shorthand]]
+css = "margin"
+longhands = ["margin-top", "margin-right", "margin-bottom", "margin-left"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin"
+
+[[shorthand]]
+css = "padding"
+longhands = ["padding-top", "padding-right", "padding-bottom", "padding-left"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding"
+
+[[shorthand]]
+css = "border-width"
+longhands = ["border-top-width", "border-right-width", "border-bottom-width", "border-left-width"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-width"
+
+[[shorthand]]
+css = "margin-inline"
+longhands = ["margin-inline-start", "margin-inline-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline"
+
+[[shorthand]]
+css = "margin-block"
+longhands = ["margin-block-start", "margin-block-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-block"
+
+[[shorthand]]
+css = "padding-inline"
+longhands = ["padding-inline-start", "padding-inline-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-inline"
+
+[[shorthand]]
+css = "padding-block"
+longhands = ["padding-block-start", "padding-block-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-block"
+
+[[shorthand]]
+css = "border-inline-width"
+longhands = ["border-inline-start-width", "border-inline-end-width"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-width"
+
+[[shorthand]]
+css = "border-block-width"
+longhands = ["border-block-start-width", "border-block-end-width"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-width"
+
+[[logical]]
+css = "margin-inline-start"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "margin-left", horizontal_rtl = "margin-right", vertical_ltr = "margin-top", vertical_rtl = "margin-bottom" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-start"
+
+[[logical]]
+css = "margin-inline-end"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "margin-right", horizontal_rtl = "margin-left", vertical_ltr = "margin-bottom", vertical_rtl = "margin-top" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-end"
+
+[[logical]]
+css = "margin-block-start"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "margin-top", horizontal_rtl = "margin-top", vertical_ltr = "margin-left", vertical_rtl = "margin-right" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-block-start"
+
+[[logical]]
+css = "margin-block-end"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "margin-bottom", horizontal_rtl = "margin-bottom", vertical_ltr = "margin-right", vertical_rtl = "margin-left" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-block-end"
+
+[[logical]]
+css = "padding-inline-start"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "padding-left", horizontal_rtl = "padding-right", vertical_ltr = "padding-top", vertical_rtl = "padding-bottom" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-inline-start"
+
+[[logical]]
+css = "padding-inline-end"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "padding-right", horizontal_rtl = "padding-left", vertical_ltr = "padding-bottom", vertical_rtl = "padding-top" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-inline-end"
+
+[[logical]]
+css = "padding-block-start"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "padding-top", horizontal_rtl = "padding-top", vertical_ltr = "padding-left", vertical_rtl = "padding-right" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-block-start"
+
+[[logical]]
+css = "padding-block-end"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "padding-bottom", horizontal_rtl = "padding-bottom", vertical_ltr = "padding-right", vertical_rtl = "padding-left" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-block-end"
+
+[[logical]]
+css = "border-inline-start-width"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "border-left-width", horizontal_rtl = "border-right-width", vertical_ltr = "border-top-width", vertical_rtl = "border-bottom-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-start-width"
+
+[[logical]]
+css = "border-inline-end-width"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "border-right-width", horizontal_rtl = "border-left-width", vertical_ltr = "border-bottom-width", vertical_rtl = "border-top-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-inline-end-width"
+
+[[logical]]
+css = "border-block-start-width"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "border-top-width", horizontal_rtl = "border-top-width", vertical_ltr = "border-left-width", vertical_rtl = "border-right-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-start-width"
+
+[[logical]]
+css = "border-block-end-width"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "border-bottom-width", horizontal_rtl = "border-bottom-width", vertical_ltr = "border-right-width", vertical_rtl = "border-left-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-block-end-width"

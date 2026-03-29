@@ -1,0 +1,333 @@
+[[property]]
+css = "cursor"
+field = "cursor"
+type = "Cursor"
+initial = "Cursor::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/cursor"
+
+[[property]]
+css = "pointer-events"
+field = "pointer_events"
+type = "PointerEvents"
+initial = "PointerEvents::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events"
+
+[[property]]
+css = "user-select"
+field = "user_select"
+type = "UserSelect"
+initial = "UserSelect::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/user-select"
+
+[[property]]
+css = "resize"
+field = "resize"
+type = "Resize"
+initial = "Resize::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/resize"
+
+[[property]]
+css = "appearance"
+field = "appearance"
+type = "Appearance"
+initial = "Appearance::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/appearance"
+
+[[property]]
+css = "touch-action"
+field = "touch_action"
+type = "TouchActionValue"
+initial = "TouchActionValue::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action"
+
+[[property]]
+css = "caret-color"
+field = "caret_color"
+type = "AutoOr<Color>"
+initial = "AutoOr::Auto"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/caret-color"
+
+[[property]]
+css = "accent-color"
+field = "accent_color"
+type = "AutoOr<Color>"
+initial = "AutoOr::Auto"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color"
+
+[[property]]
+css = "color-scheme"
+field = "color_scheme"
+type = "ColorScheme"
+initial = "ColorScheme::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme"
+
+[[property]]
+css = "forced-color-adjust"
+field = "forced_color_adjust"
+type = "ForcedColorAdjust"
+initial = "ForcedColorAdjust::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/forced-color-adjust"
+
+[[property]]
+css = "scroll-behavior"
+field = "scroll_behavior"
+type = "ScrollBehavior"
+initial = "ScrollBehavior::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-behavior"
+
+[[property]]
+css = "overscroll-behavior-x"
+field = "overscroll_behavior_x"
+type = "OverscrollBehavior"
+initial = "OverscrollBehavior::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior-x"
+
+[[property]]
+css = "overscroll-behavior-y"
+field = "overscroll_behavior_y"
+type = "OverscrollBehavior"
+initial = "OverscrollBehavior::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior-y"
+
+[[property]]
+css = "overflow-anchor"
+field = "overflow_anchor"
+type = "OverflowAnchor"
+initial = "OverflowAnchor::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor"
+
+[[property]]
+css = "scrollbar-width"
+field = "scrollbar_width"
+type = "ScrollbarWidth"
+initial = "ScrollbarWidth::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-width"
+
+[[property]]
+css = "scrollbar-color"
+field = "scrollbar_color"
+type = "ScrollbarColor"
+initial = "ScrollbarColor::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color"
+
+[[property]]
+css = "scroll-snap-type"
+field = "scroll_snap_type"
+type = "ScrollSnapType"
+initial = "ScrollSnapType::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-type"
+
+[[property]]
+css = "scroll-snap-align"
+field = "scroll_snap_align"
+type = "ScrollSnapAlign"
+initial = "ScrollSnapAlign::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-align"
+
+[[property]]
+css = "scroll-snap-stop"
+field = "scroll_snap_stop"
+type = "ScrollSnapStop"
+initial = "ScrollSnapStop::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-stop"
+
+[[property]]
+css = "scroll-padding-top"
+field = "scroll_padding_top"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-top"
+
+[[property]]
+css = "scroll-padding-right"
+field = "scroll_padding_right"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-right"
+
+[[property]]
+css = "scroll-padding-bottom"
+field = "scroll_padding_bottom"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-bottom"
+
+[[property]]
+css = "scroll-padding-left"
+field = "scroll_padding_left"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-left"
+
+[[property]]
+css = "scroll-margin-top"
+field = "scroll_margin_top"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-top"
+
+[[property]]
+css = "scroll-margin-right"
+field = "scroll_margin_right"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-right"
+
+[[property]]
+css = "scroll-margin-bottom"
+field = "scroll_margin_bottom"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-bottom"
+
+[[property]]
+css = "scroll-margin-left"
+field = "scroll_margin_left"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-left"
+
+[[shorthand]]
+css = "overscroll-behavior"
+longhands = ["overscroll-behavior-x", "overscroll-behavior-y"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior"
+
+[[shorthand]]
+css = "scroll-padding"
+longhands = ["scroll-padding-top", "scroll-padding-right", "scroll-padding-bottom", "scroll-padding-left"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding"
+
+[[shorthand]]
+css = "scroll-margin"
+longhands = ["scroll-margin-top", "scroll-margin-right", "scroll-margin-bottom", "scroll-margin-left"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin"
+
+[[shorthand]]
+css = "scroll-padding-inline"
+longhands = ["scroll-padding-inline-start", "scroll-padding-inline-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-inline"
+
+[[shorthand]]
+css = "scroll-padding-block"
+longhands = ["scroll-padding-block-start", "scroll-padding-block-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-block"
+
+[[shorthand]]
+css = "scroll-margin-inline"
+longhands = ["scroll-margin-inline-start", "scroll-margin-inline-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-inline"
+
+[[shorthand]]
+css = "scroll-margin-block"
+longhands = ["scroll-margin-block-start", "scroll-margin-block-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-block"
+
+[[logical]]
+css = "scroll-padding-inline-start"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "scroll-padding-left", horizontal_rtl = "scroll-padding-right", vertical_ltr = "scroll-padding-top", vertical_rtl = "scroll-padding-bottom" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-inline-start"
+
+[[logical]]
+css = "scroll-padding-inline-end"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "scroll-padding-right", horizontal_rtl = "scroll-padding-left", vertical_ltr = "scroll-padding-bottom", vertical_rtl = "scroll-padding-top" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-inline-end"
+
+[[logical]]
+css = "scroll-padding-block-start"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "scroll-padding-top", horizontal_rtl = "scroll-padding-top", vertical_ltr = "scroll-padding-left", vertical_rtl = "scroll-padding-right" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-block-start"
+
+[[logical]]
+css = "scroll-padding-block-end"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "scroll-padding-bottom", horizontal_rtl = "scroll-padding-bottom", vertical_ltr = "scroll-padding-right", vertical_rtl = "scroll-padding-left" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-block-end"
+
+[[logical]]
+css = "scroll-margin-inline-start"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "scroll-margin-left", horizontal_rtl = "scroll-margin-right", vertical_ltr = "scroll-margin-top", vertical_rtl = "scroll-margin-bottom" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-inline-start"
+
+[[logical]]
+css = "scroll-margin-inline-end"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "scroll-margin-right", horizontal_rtl = "scroll-margin-left", vertical_ltr = "scroll-margin-bottom", vertical_rtl = "scroll-margin-top" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-inline-end"
+
+[[logical]]
+css = "scroll-margin-block-start"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "scroll-margin-top", horizontal_rtl = "scroll-margin-top", vertical_ltr = "scroll-margin-left", vertical_rtl = "scroll-margin-right" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-block-start"
+
+[[logical]]
+css = "scroll-margin-block-end"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "scroll-margin-bottom", horizontal_rtl = "scroll-margin-bottom", vertical_ltr = "scroll-margin-right", vertical_rtl = "scroll-margin-left" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-block-end"

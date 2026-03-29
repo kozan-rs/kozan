@@ -1,0 +1,126 @@
+[[property]]
+css = "transition-property"
+field = "transition_property"
+type = "TransitionPropertyList"
+initial = "TransitionPropertyList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-property"
+
+[[property]]
+css = "transition-duration"
+field = "transition_duration"
+type = "DurationList"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-duration"
+
+[[property]]
+css = "transition-timing-function"
+field = "transition_timing_function"
+type = "TimingFunctionList"
+initial = "TimingFunctionList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-timing-function"
+
+[[property]]
+css = "transition-delay"
+field = "transition_delay"
+type = "DurationList"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-delay"
+
+[[property]]
+css = "transition-behavior"
+field = "transition_behavior"
+type = "TransitionBehaviorList"
+initial = "TransitionBehaviorList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-behavior"
+
+[[property]]
+css = "animation-name"
+field = "animation_name"
+type = "AnimationNameList"
+initial = "AnimationNameList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-name"
+
+[[property]]
+css = "animation-duration"
+field = "animation_duration"
+type = "DurationList"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-duration"
+
+[[property]]
+css = "animation-timing-function"
+field = "animation_timing_function"
+type = "TimingFunctionList"
+initial = "TimingFunctionList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function"
+
+[[property]]
+css = "animation-delay"
+field = "animation_delay"
+type = "DurationList"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-delay"
+
+[[property]]
+css = "animation-iteration-count"
+field = "animation_iteration_count"
+type = "AnimationIterationCountList"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-iteration-count"
+
+[[property]]
+css = "animation-direction"
+field = "animation_direction"
+type = "AnimationDirectionList"
+initial = "AnimationDirectionList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-direction"
+
+[[property]]
+css = "animation-fill-mode"
+field = "animation_fill_mode"
+type = "AnimationFillModeList"
+initial = "AnimationFillModeList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-fill-mode"
+
+[[property]]
+css = "animation-play-state"
+field = "animation_play_state"
+type = "AnimationPlayStateList"
+initial = "AnimationPlayStateList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-play-state"
+
+[[shorthand]]
+css = "transition"
+longhands = ["transition-property", "transition-duration", "transition-timing-function", "transition-delay", "transition-behavior"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition"
+
+[[shorthand]]
+css = "animation"
+longhands = ["animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-iteration-count", "animation-direction", "animation-fill-mode", "animation-play-state"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation"

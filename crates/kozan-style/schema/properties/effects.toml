@@ -1,0 +1,148 @@
+[[property]]
+css = "filter"
+field = "filter"
+type = "FilterList"
+initial = "FilterList::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/filter"
+
+[[property]]
+css = "backdrop-filter"
+field = "backdrop_filter"
+type = "FilterList"
+initial = "FilterList::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter"
+
+[[property]]
+css = "clip-path"
+field = "clip_path"
+type = "ClipPath"
+initial = "ClipPath::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path"
+
+[[property]]
+css = "mask-image"
+field = "mask_image"
+type = "ImageList"
+initial = "ImageList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image"
+
+[[property]]
+css = "mask-mode"
+field = "mask_mode"
+type = "MaskMode"
+initial = "MaskMode::MatchSource"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-mode"
+
+[[property]]
+css = "mask-repeat"
+field = "mask_repeat"
+type = "BackgroundRepeat"
+initial = "BackgroundRepeat::Repeat"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-repeat"
+
+[[property]]
+css = "mask-position"
+field = "mask_position"
+type = "Position2D"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-position"
+
+[[property]]
+css = "mask-clip"
+field = "mask_clip"
+type = "MaskClip"
+initial = "MaskClip::BorderBox"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-clip"
+
+[[property]]
+css = "mask-origin"
+field = "mask_origin"
+type = "BackgroundOrigin"
+initial = "BackgroundOrigin::BorderBox"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-origin"
+
+[[property]]
+css = "mask-size"
+field = "mask_size"
+type = "BackgroundSize"
+initial = "BackgroundSize::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-size"
+
+[[property]]
+css = "mask-composite"
+field = "mask_composite"
+type = "MaskComposite"
+initial = "MaskComposite::Add"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-composite"
+
+[[property]]
+css = "mask-type"
+field = "mask_type"
+type = "MaskType"
+initial = "MaskType::Luminance"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-type"
+
+[[property]]
+css = "will-change"
+field = "will_change"
+type = "WillChange"
+initial = "WillChange::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/will-change"
+
+[[property]]
+css = "shape-outside"
+field = "shape_outside"
+type = "ShapeOutside"
+initial = "ShapeOutside::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/shape-outside"
+
+[[property]]
+css = "shape-margin"
+field = "shape_margin"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/shape-margin"
+
+[[property]]
+css = "shape-image-threshold"
+field = "shape_image_threshold"
+type = "f32"
+initial = "0.0_f32"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/shape-image-threshold"
+
+[[shorthand]]
+css = "mask"
+longhands = ["mask-image", "mask-mode", "mask-repeat", "mask-position", "mask-clip", "mask-origin", "mask-size", "mask-composite"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask"

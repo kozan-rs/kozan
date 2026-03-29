@@ -1,0 +1,53 @@
+[[property]]
+css = "transform"
+field = "transform"
+type = "TransformList"
+initial = "TransformList::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transform"
+
+[[property]]
+css = "transform-origin"
+field = "transform_origin"
+type = "TransformOrigin"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transform-origin"
+
+[[property]]
+css = "transform-style"
+field = "transform_style"
+type = "TransformStyle"
+initial = "TransformStyle::Flat"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transform-style"
+
+[[property]]
+css = "perspective"
+field = "perspective"
+type = "NoneOr<specified::LengthPercentage>"
+initial = "NoneOr::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/perspective"
+
+[[property]]
+css = "perspective-origin"
+field = "perspective_origin"
+type = "Position2D"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/perspective-origin"
+
+[[property]]
+css = "backface-visibility"
+field = "backface_visibility"
+type = "BackfaceVisibility"
+initial = "BackfaceVisibility::Visible"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/backface-visibility"

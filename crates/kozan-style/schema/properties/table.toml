@@ -1,0 +1,44 @@
+[[property]]
+css = "table-layout"
+field = "table_layout"
+type = "TableLayout"
+initial = "TableLayout::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/table-layout"
+
+[[property]]
+css = "border-collapse"
+field = "border_collapse"
+type = "BorderCollapse"
+initial = "BorderCollapse::Separate"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-collapse"
+
+[[property]]
+css = "border-spacing"
+field = "border_spacing"
+type = "BorderSpacing"
+initial = "Default::default()"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/border-spacing"
+
+[[property]]
+css = "empty-cells"
+field = "empty_cells"
+type = "EmptyCells"
+initial = "EmptyCells::Show"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/empty-cells"
+
+[[property]]
+css = "caption-side"
+field = "caption_side"
+type = "CaptionSide"
+initial = "CaptionSide::Top"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/caption-side"

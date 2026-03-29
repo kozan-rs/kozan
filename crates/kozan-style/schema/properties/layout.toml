@@ -1,0 +1,369 @@
+[[property]]
+css = "display"
+field = "display"
+type = "Display"
+initial = "Display::Inline"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/display"
+
+[[property]]
+css = "position"
+field = "position"
+type = "Position"
+initial = "Position::Static"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/position"
+
+[[property]]
+css = "box-sizing"
+field = "box_sizing"
+type = "BoxSizing"
+initial = "BoxSizing::ContentBox"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing"
+
+[[property]]
+css = "overflow-x"
+field = "overflow_x"
+type = "Overflow"
+initial = "Overflow::Visible"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-x"
+
+[[property]]
+css = "overflow-y"
+field = "overflow_y"
+type = "Overflow"
+initial = "Overflow::Visible"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-y"
+
+[[property]]
+css = "float"
+field = "float"
+type = "Float"
+initial = "Float::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/float"
+
+[[property]]
+css = "clear"
+field = "clear"
+type = "Clear"
+initial = "Clear::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/clear"
+
+[[property]]
+css = "visibility"
+field = "visibility"
+type = "Visibility"
+initial = "Visibility::Visible"
+inherited = true
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/visibility"
+
+[[property]]
+css = "z-index"
+field = "z_index"
+type = "AutoOr<i32>"
+initial = "AutoOr::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/z-index"
+
+[[property]]
+css = "width"
+field = "width"
+type = "generics::Size<specified::LengthPercentage>"
+initial = "generics::Size::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/width"
+
+[[property]]
+css = "height"
+field = "height"
+type = "generics::Size<specified::LengthPercentage>"
+initial = "generics::Size::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/height"
+
+[[property]]
+css = "min-width"
+field = "min_width"
+type = "generics::Size<specified::LengthPercentage>"
+initial = "generics::Size::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/min-width"
+
+[[property]]
+css = "min-height"
+field = "min_height"
+type = "generics::Size<specified::LengthPercentage>"
+initial = "generics::Size::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/min-height"
+
+[[property]]
+css = "max-width"
+field = "max_width"
+type = "generics::MaxSize<specified::LengthPercentage>"
+initial = "generics::MaxSize::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/max-width"
+
+[[property]]
+css = "max-height"
+field = "max_height"
+type = "generics::MaxSize<specified::LengthPercentage>"
+initial = "generics::MaxSize::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/max-height"
+
+[[property]]
+css = "aspect-ratio"
+field = "aspect_ratio"
+type = "AutoOr<f32>"
+initial = "AutoOr::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio"
+
+[[property]]
+css = "top"
+field = "top"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/top"
+
+[[property]]
+css = "right"
+field = "right"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/right"
+
+[[property]]
+css = "bottom"
+field = "bottom"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/bottom"
+
+[[property]]
+css = "left"
+field = "left"
+type = "generics::LengthPercentageOrAuto<specified::LengthPercentage>"
+initial = "generics::LengthPercentageOrAuto::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/left"
+
+[[property]]
+css = "contain"
+field = "contain"
+type = "Contain"
+initial = "Contain::EMPTY"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain"
+
+[[property]]
+css = "content-visibility"
+field = "content_visibility"
+type = "ContentVisibility"
+initial = "ContentVisibility::Visible"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility"
+
+[[property]]
+css = "container-type"
+field = "container_type"
+type = "ContainerType"
+initial = "ContainerType::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/container-type"
+
+[[property]]
+css = "container-name"
+field = "container_name"
+type = "Ident"
+initial = "Default::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/container-name"
+
+[[property]]
+css = "isolation"
+field = "isolation"
+type = "Isolation"
+initial = "Isolation::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/isolation"
+
+[[property]]
+css = "object-fit"
+field = "object_fit"
+type = "ObjectFit"
+initial = "ObjectFit::Fill"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit"
+
+[[property]]
+css = "object-position"
+field = "object_position"
+type = "Position2D"
+initial = "Default::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/object-position"
+
+[[property]]
+css = "overflow-clip-margin"
+field = "overflow_clip_margin"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::from(specified::length::px(0.0))"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-clip-margin"
+
+[[property]]
+css = "contain-intrinsic-width"
+field = "contain_intrinsic_width"
+type = "ContainIntrinsicSize"
+initial = "ContainIntrinsicSize::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-width"
+
+[[property]]
+css = "contain-intrinsic-height"
+field = "contain_intrinsic_height"
+type = "ContainIntrinsicSize"
+initial = "ContainIntrinsicSize::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-height"
+
+[[shorthand]]
+css = "contain-intrinsic-size"
+longhands = ["contain-intrinsic-width", "contain-intrinsic-height"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-size"
+
+[[shorthand]]
+css = "overflow"
+longhands = ["overflow-x", "overflow-y"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow"
+
+[[shorthand]]
+css = "inset"
+longhands = ["top", "right", "bottom", "left"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset"
+
+[[shorthand]]
+css = "inset-inline"
+longhands = ["inset-inline-start", "inset-inline-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline"
+
+[[shorthand]]
+css = "inset-block"
+longhands = ["inset-block-start", "inset-block-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset-block"
+
+[[shorthand]]
+css = "container"
+longhands = ["container-type", "container-name"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/container"
+
+[[logical]]
+css = "inset-inline-start"
+axis = "inline"
+edge = "start"
+physical = { horizontal_ltr = "left", horizontal_rtl = "right", vertical_ltr = "top", vertical_rtl = "bottom" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline-start"
+
+[[logical]]
+css = "inset-inline-end"
+axis = "inline"
+edge = "end"
+physical = { horizontal_ltr = "right", horizontal_rtl = "left", vertical_ltr = "bottom", vertical_rtl = "top" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline-end"
+
+[[logical]]
+css = "inset-block-start"
+axis = "block"
+edge = "start"
+physical = { horizontal_ltr = "top", horizontal_rtl = "top", vertical_ltr = "left", vertical_rtl = "right" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset-block-start"
+
+[[logical]]
+css = "inset-block-end"
+axis = "block"
+edge = "end"
+physical = { horizontal_ltr = "bottom", horizontal_rtl = "bottom", vertical_ltr = "right", vertical_rtl = "left" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inset-block-end"
+
+[[logical]]
+css = "inline-size"
+axis = "inline"
+edge = "size"
+physical = { horizontal_ltr = "width", horizontal_rtl = "width", vertical_ltr = "height", vertical_rtl = "height" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/inline-size"
+
+[[logical]]
+css = "block-size"
+axis = "block"
+edge = "size"
+physical = { horizontal_ltr = "height", horizontal_rtl = "height", vertical_ltr = "width", vertical_rtl = "width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/block-size"
+
+[[logical]]
+css = "min-inline-size"
+axis = "inline"
+edge = "min-size"
+physical = { horizontal_ltr = "min-width", horizontal_rtl = "min-width", vertical_ltr = "min-height", vertical_rtl = "min-height" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/min-inline-size"
+
+[[logical]]
+css = "min-block-size"
+axis = "block"
+edge = "min-size"
+physical = { horizontal_ltr = "min-height", horizontal_rtl = "min-height", vertical_ltr = "min-width", vertical_rtl = "min-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/min-block-size"
+
+[[logical]]
+css = "max-inline-size"
+axis = "inline"
+edge = "max-size"
+physical = { horizontal_ltr = "max-width", horizontal_rtl = "max-width", vertical_ltr = "max-height", vertical_rtl = "max-height" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/max-inline-size"
+
+[[logical]]
+css = "max-block-size"
+axis = "block"
+edge = "max-size"
+physical = { horizontal_ltr = "max-height", horizontal_rtl = "max-height", vertical_ltr = "max-width", vertical_rtl = "max-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/max-block-size"

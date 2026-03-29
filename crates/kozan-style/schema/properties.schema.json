@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Kozan Style Properties Schema",
+  "description": "Defines CSS properties, shorthands, and logical mappings for kozan-style codegen",
+  "type": "object",
+  "properties": {
+    "property": {
+      "type": "array",
+      "description": "CSS longhand properties — each becomes a field in the group's ComputedStyle struct",
+      "items": {
+        "type": "object",
+        "required": ["css", "field", "type", "initial", "inherited"],
+        "additionalProperties": false,
+        "properties": {
+          "css": {
+            "type": "string",
+            "description": "CSS property name in kebab-case",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "field": {
+            "type": "string",
+            "description": "Rust field name in snake_case",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "type": {
+            "type": "string",
+            "description": "Value type: enum name (Display), primitive (f32), or hand-written (specified::LengthPercentage, Color, generics::Size<LP>)"
+          },
+          "initial": {
+            "type": "string",
+            "description": "CSS initial value as Rust expression fragment (e.g. \"Auto\", \"0.0\", \"Transparent\")"
+          },
+          "inherited": {
+            "type": "boolean",
+            "description": "Whether child elements inherit this property from their parent"
+          },
+          "animatable": {
+            "type": "boolean",
+            "description": "Whether this property can be animated/transitioned",
+            "default": false
+          },
+          "spec": {
+            "type": "string",
+            "description": "MDN or W3C spec URL",
+            "pattern": "^https://"
+          }
+        }
+      }
+    },
+    "shorthand": {
+      "type": "array",
+      "description": "CSS shorthand properties — expand to multiple longhands. Generates PropertyId variant + expansion table.",
+      "items": {
+        "type": "object",
+        "required": ["css", "longhands"],
+        "additionalProperties": false,
+        "properties": {
+          "css": {
+            "type": "string",
+            "description": "CSS shorthand name in kebab-case",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "longhands": {
+            "type": "array",
+            "description": "CSS names (kebab-case) of the longhand properties this expands to. Can reference logical property css names.",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "minItems": 2
+          },
+          "spec": {
+            "type": "string",
+            "description": "MDN or W3C spec URL",
+            "pattern": "^https://"
+          }
+        }
+      }
+    },
+    "logical": {
+      "type": "array",
+      "description": "CSS logical properties — generates PropertyId variant + writing-mode resolution table. No struct field (resolves to physical at cascade time).",
+      "items": {
+        "type": "object",
+        "required": ["css", "axis", "edge", "physical"],
+        "additionalProperties": false,
+        "properties": {
+          "css": {
+            "type": "string",
+            "description": "CSS logical property name in kebab-case",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "axis": {
+            "type": "string",
+            "description": "Logical axis this property operates on",
+            "enum": ["inline", "block"]
+          },
+          "edge": {
+            "type": "string",
+            "description": "Which edge of the axis",
+            "enum": ["start", "end", "size", "min-size", "max-size"]
+          },
+          "physical": {
+            "type": "object",
+            "description": "Maps (writing-mode + direction) → physical property css name",
+            "required": ["horizontal_ltr", "horizontal_rtl", "vertical_ltr", "vertical_rtl"],
+            "additionalProperties": false,
+            "properties": {
+              "horizontal_ltr": {
+                "type": "string",
+                "description": "Physical property in horizontal-tb + ltr",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "horizontal_rtl": {
+                "type": "string",
+                "description": "Physical property in horizontal-tb + rtl",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "vertical_ltr": {
+                "type": "string",
+                "description": "Physical property in vertical-rl/lr + ltr",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "vertical_rtl": {
+                "type": "string",
+                "description": "Physical property in vertical-rl/lr + rtl",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              }
+            }
+          },
+          "spec": {
+            "type": "string",
+            "description": "MDN or W3C spec URL",
+            "pattern": "^https://"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

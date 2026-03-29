@@ -1,0 +1,114 @@
+[[property]]
+css = "grid-template-columns"
+field = "grid_template_columns"
+type = "TrackList"
+initial = "TrackList::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns"
+
+[[property]]
+css = "grid-template-rows"
+field = "grid_template_rows"
+type = "TrackList"
+initial = "TrackList::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows"
+
+[[property]]
+css = "grid-template-areas"
+field = "grid_template_areas"
+type = "GridTemplateAreas"
+initial = "GridTemplateAreas::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas"
+
+[[property]]
+css = "grid-auto-columns"
+field = "grid_auto_columns"
+type = "TrackSize"
+initial = "TrackSize::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns"
+
+[[property]]
+css = "grid-auto-rows"
+field = "grid_auto_rows"
+type = "TrackSize"
+initial = "TrackSize::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows"
+
+[[property]]
+css = "grid-auto-flow"
+field = "grid_auto_flow"
+type = "GridAutoFlow"
+initial = "GridAutoFlow::Row"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow"
+
+[[property]]
+css = "grid-column-start"
+field = "grid_column_start"
+type = "GridLine"
+initial = "GridLine::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-start"
+
+[[property]]
+css = "grid-column-end"
+field = "grid_column_end"
+type = "GridLine"
+initial = "GridLine::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-end"
+
+[[property]]
+css = "grid-row-start"
+field = "grid_row_start"
+type = "GridLine"
+initial = "GridLine::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start"
+
+[[property]]
+css = "grid-row-end"
+field = "grid_row_end"
+type = "GridLine"
+initial = "GridLine::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-end"
+
+[[shorthand]]
+css = "grid-template"
+longhands = ["grid-template-columns", "grid-template-rows", "grid-template-areas"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template"
+
+[[shorthand]]
+css = "grid"
+longhands = ["grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid"
+
+[[shorthand]]
+css = "grid-column"
+longhands = ["grid-column-start", "grid-column-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column"
+
+[[shorthand]]
+css = "grid-row"
+longhands = ["grid-row-start", "grid-row-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row"
+
+[[shorthand]]
+css = "grid-area"
+longhands = ["grid-row-start", "grid-column-start", "grid-row-end", "grid-column-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-area"
