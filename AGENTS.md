@@ -15,10 +15,9 @@ Kozan is a cross-platform UI platform — what Chrome is to the web, but for nat
 ### Crate Map
 
 ```
-kozan-primitives     ← Types: geometry, color, units, generational arena. Zero deps.
 kozan-tree           ← Generic arena-based tree. Parent/child/sibling. No DOM semantics.
 kozan-dom            ← Elements, attributes, event system. DOM tree only. NO style/layout/paint.
-kozan-style          ← ComputedStyle, cascade, Stylo integration. NO layout dependency.
+kozan-style          ← Own CSS types (generated from TOML). Cow zero-copy. NO Stylo. NO layout dependency.
 kozan-layout         ← Layout computation, Taffy integration. NO DOM dependency.
 kozan-event          ← Event dispatch, hit testing. Platform-agnostic.
 kozan-pipeline       ← Phase orchestrator: DOM → Style → Layout → Render.
@@ -61,8 +60,8 @@ primitives → tree → dom → style → layout → pipeline
 | `Tree` | Parent/child/sibling links. Generic over node type. | tree |
 | `Document` | DOM tree ONLY. Nodes, elements, text. No style/layout/paint. | dom |
 | `Element` | Tag + attributes + children. No computed style. | dom |
-| `StyleEngine` | Owns Stylo data. Computes styles. Separate struct. | style |
-| `ComputedStyle` | Wraps Stylo's `ComputedValues`. No bulk conversion. | style |
+| `StyleEngine` | Cascade + inheritance. Separate struct. | style |
+| `ComputedStyle` | Own types (generated from TOML). Cow zero-copy. | style |
 | `LayoutEngine` | Owns Taffy. Computes layout. Separate struct. | layout |
 | `LayoutResult` | Position + size output. Owned by LayoutEngine. | layout |
 | `Painter` | Walks layout results → produces `DisplayItem` list. | paint |
@@ -126,7 +125,8 @@ Window (OS window = container)
 - **Coupling.** Style must not depend on layout. Layout must not depend on DOM. Paint must not depend on Document.
 - **Hardcoded values.** Never hardcode sizes, colors, spacing. Everything flows from style/CSS/font systems.
 - **Paint on Element.** Paint and measure logic belongs on LayoutResult/Fragment, NOT on Element/Node.
-- **Bulk conversion.** ComputedStyle wraps Stylo's ComputedValues directly. No copying into Kozan types.
+- **Stylo dependency.** No Stylo. Own style types generated from TOML. CSS parsing via lightningcss (optional, pure Rust).
+- **String allocations.** Use `Cow<'a, str>` (`CStr<'a>`) and `Cow<'a, [T]>` (`CSlice<'a, T>`) for zero-copy. No `String`/`Vec` in style types.
 - **TaffyTree.** Use Taffy's `LayoutPartialTree` low-level API, not the high-level `TaffyTree`.
 - **Shortcuts.** No "make it work now, fix later." Bad architecture compounds. A codebase with compiler errors but perfect architecture > working code with bad architecture.
 - **Large files.** No file over 400 lines. If it's bigger, it has mixed concerns — split it.
@@ -159,6 +159,40 @@ Window (OS window = container)
 
 Each phase reads only the output of the previous phase. No reaching back.
 ViewPipeline enforces ordering — you cannot layout before style, cannot render before layout.
+
+## kozan-style Architecture
+
+Style types are generated from TOML schema at build time via `build.rs`.
+
+### Schema → Codegen Pipeline
+
+```
+schema/types.toml           → 112 enums + bitflags (repr(u8), FromStr, Display, TryFrom, as_css)
+schema/properties/*.toml    → 17 group structs, ComputedStyle, PropertyId (377 variants)
+build.rs                    → reads TOML, generates Rust via CodeWriter
+```
+
+### Key Decisions
+
+- **Own types, not Stylo.** CSS property types defined in TOML, generated as Rust enums/structs. CSS parsing via lightningcss (optional crate, pure Rust, all CSS properties).
+- **`initial` field is exact Rust.** TOML `initial = "Dimension::Auto"` pastes directly. No hardcoded mapping in generator.
+- **`type` field includes lifetime.** TOML `type = "FontFamily<'a>"` — generator checks `contains("'a")` to add lifetime to struct.
+- **Cow everywhere.** `CStr<'a>` for strings, `CSlice<'a, T>` for slices. Zero-copy from parsed CSS. Static defaults use `Cow::Borrowed`.
+- **`impl<'a> Default`** for lifetime types — works for any lifetime because `Cow::Owned` is lifetime-agnostic.
+- **ComputedStyle<'a>** borrows inherited values from parent. `inherit()` uses `.clone()` on Cow (preserves borrow, zero alloc).
+- **Logical properties** resolved at cascade time (runtime), not stored in ComputedStyle. TOML defines full writing-mode × direction mapping.
+- **PropertyId** covers physical + logical + shorthands. `as_css()`, `is_inherited()`, `is_animatable()`, `longhands()`, `resolve_logical()` all generated.
+- **Marker types** (`Auto`, `CssNone`, `Normal`) with `From` impls on every enum that has the matching variant. `auto()` converts to any auto-accepting type.
+
+### Three Layers of Style Values
+
+```
+1. Declarations (kozan-css)     — what user wrote: "margin-inline-start: calc(50% - 20px)"
+2. ComputedStyle (kozan-style)  — resolved physical values: margin_left = Calc(50% - 20px)
+3. Used values (layout)         — final px: margin_left = 180.0
+```
+
+CSS-wide keywords (`inherit`, `initial`, `unset`, `revert`) resolved during cascade using TOML `initial` + `inherited` fields.
 
 ## Coding Standards
 
@@ -233,3 +267,35 @@ Test behavior, not stubs. Names describe scenarios: `capture_fires_before_bubble
 10. No AI-debt comments.
 11. No file over 400 lines.
 12. No struct that owns more than one subsystem.
+
+## Commit Convention
+
+Follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) strictly.
+
+Format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`, `build`, `style`, `revert`.
+Scopes: crate name without `kozan-` prefix — `style`, `css`, `cascade`, `layout`, `dom`, `platform`, `devtools`, `canvas`.
+
+Breaking changes use `!` after scope: `feat(style)!: redesign color type`.
+Footer `BREAKING CHANGE: <description>` is also valid.
+
+Body and footer separated by blank lines. Body explains WHY, not WHAT.
+
+```
+feat(style): add 14 color spaces and color-mix support
+
+Stylo-inspired AbsoluteColor stores components + color_space enum.
+Colors stay in original space until paint. Animation interpolates
+in the same space (oklab conversion planned).
+
+Refs: #42
+```

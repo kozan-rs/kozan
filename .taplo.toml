@@ -1,0 +1,7 @@
+[[rule]]
+include = ["crates/kozan-style/schema/types.toml"]
+schema = { path = "crates/kozan-style/schema/types.schema.json" }
+
+[[rule]]
+include = ["crates/kozan-style/schema/properties/*.toml"]
+schema = { path = "crates/kozan-style/schema/properties.schema.json" }

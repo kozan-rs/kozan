@@ -10,6 +10,33 @@ license = "Apache-2.0"
 authors = ["Youssef Khalil <me@darky.dev>"]
 repository = "https://github.com/kozan-rs/kozan"
 
+[workspace.dependencies]
+kozan-css = { version = "0.1", path = "crates/kozan-css" }
+kozan-style = { version = "0.1", path = "crates/kozan-style" }
+kozan-style-macros = { version = "0.1", path = "crates/kozan-style-macros" }
+kozan-atom = { version = "0.1", path = "crates/kozan-atom" }
+kozan-selector = { version = "0.1", path = "crates/kozan-selector" }
+kozan-build-utils = { version = "0.1", path = "crates/kozan-build-utils" }
+triomphe = "0.1.15"
+cssparser = "0.37.0"
+smallvec = "1.15.1"
+bitflags = "2.11.0"
+lightningcss = "1.0.0-alpha.71"
+criterion = { version = "0.5", features = ["html_reports"] }
+selectors = "0.36.1"
+cssparser_0_36 = { package = "cssparser", version = "0.36" }
+string_cache = "0.8"
+precomputed-hash = "0.1.1"
+stylo = { package = "stylo", version = "0.14.0" }
+servo_arc = "0.4"
+url = "2"
+
+[profile.dev]
+opt-level = 0
+
+[profile.dev.package."*"]
+opt-level = 2
+
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
@@ -40,12 +67,3 @@ unused_self = "allow"
 
 [workspace.lints.rust]
 unsafe_code = "deny"
-
-[workspace.dependencies]
-kozan-style = { version = "0.1", path = "crates/kozan-style" }
-
-[profile.dev]
-opt-level = 0
-
-[profile.dev.package."*"]
-opt-level = 2
