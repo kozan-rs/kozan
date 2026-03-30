@@ -1,0 +1,17 @@
+[package]
+name = "kozan-cascade"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+kozan-atom = { workspace = true }
+kozan-selector = { workspace = true }
+kozan-css = { workspace = true }
+kozan-style = { workspace = true }
+smallvec = { workspace = true }
+triomphe = { workspace = true }
+bitflags = { workspace = true }
+
+[lints]
+workspace = true
