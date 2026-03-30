@@ -97,11 +97,9 @@ mod tests {
         fn as_shadow_host(mut self) -> Self { self.shadow_host = true; self }
         fn in_shadow_of(mut self, host: El) -> Self { self.shadow_host_of = Some(Box::new(host)); self }
         fn slotted(mut self) -> Self { self.in_slot = true; self }
-        fn in_slot_of(mut self, slot: El) -> Self { self.assigned_slot_el = Some(Box::new(slot)); self.in_slot = true; self }
         fn part(mut self, name: &str) -> Self { self.parts.push(Atom::from(name)); self }
         fn custom_state(mut self, name: &str) -> Self { self.custom_states.push(Atom::from(name)); self }
         fn column(mut self, col: El) -> Self { self.column_el = Some(Box::new(col)); self }
-        fn ns(mut self, namespace: &str) -> Self { self.ns = Some(Atom::from(namespace)); self }
     }
 
     impl Element for El {

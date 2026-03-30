@@ -702,12 +702,6 @@ fn entries(css: &str) -> Vec<(PropertyDeclaration, Importance)> {
     parse_inline(css).entries().to_vec()
 }
 
-/// Assert that a shorthand expands to exactly `n` longhands.
-fn assert_longhand_count(css: &str, n: usize) {
-    let e = entries(css);
-    assert_eq!(e.len(), n, "expected {n} longhands from `{css}`, got {} → {e:?}", e.len());
-}
-
 /// Check a specific longhand by index matches a pattern.
 macro_rules! assert_decl {
     ($entries:expr, $idx:expr, $pat:pat) => {
@@ -1199,7 +1193,7 @@ fn background_size_multi_layer() {
 
 #[test]
 fn shorthand_background_single_image() {
-    use kozan_style::{ImageList, PositionComponentList, BackgroundRepeatList};
+    use kozan_style::{ImageList, PositionComponentList};
     let e = entries("background: url(foo.png) no-repeat center");
     let image = e.iter().find_map(|(d, _)| {
         if let PropertyDeclaration::BackgroundImage(Declared::Value(v)) = d { Some(v.clone()) } else { None }

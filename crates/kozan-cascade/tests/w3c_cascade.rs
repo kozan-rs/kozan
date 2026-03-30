@@ -13,7 +13,7 @@
 
 use kozan_atom::Atom;
 use kozan_cascade::cascade::{self, ApplicableDeclaration};
-use kozan_cascade::custom_properties::{CustomPropertyMap, EnvironmentValues};
+use kozan_cascade::custom_properties::EnvironmentValues;
 use kozan_cascade::device::Device;
 use kozan_cascade::layer::UNLAYERED;
 use kozan_cascade::origin::{CascadeLevel, CascadeOrigin, Importance};
@@ -23,7 +23,7 @@ use kozan_css::parse_stylesheet;
 use kozan_selector::element::Element;
 use kozan_selector::opaque::OpaqueElement;
 use kozan_selector::pseudo_class::ElementState;
-use kozan_style::{ComputeContext, ComputedStyle, DeclarationBlock};
+use kozan_style::{ComputeContext, DeclarationBlock};
 
 fn level(origin: CascadeOrigin, important: bool, layer: u16) -> CascadeLevel {
     let imp = if important {

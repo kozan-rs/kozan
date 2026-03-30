@@ -818,7 +818,7 @@ fn bench_per_element_sharing_cache(c: &mut Criterion) {
 
     // Pre-populate cache with all bench elements' styles.
     let mut cache = SharingCache::new();
-    for (i, el) in elements.iter().enumerate() {
+    for (_i, el) in elements.iter().enumerate() {
         let key = SharingKey::new(
             el.tag.clone(),
             el.id.clone(),

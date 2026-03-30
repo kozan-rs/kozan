@@ -718,10 +718,6 @@ mod tests {
             self.classes.push(Atom::from(class));
             self
         }
-        fn with_id(mut self, id: &str) -> Self {
-            self.id = Some(Atom::from(id));
-            self
-        }
     }
 
     impl kozan_selector::element::Element for TestEl {

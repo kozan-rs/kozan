@@ -38,7 +38,7 @@ fn main() {
     }
     let start = Instant::now();
     for _ in 0..ITERS {
-        std::hint::black_box(lightningcss::stylesheet::StyleSheet::parse(
+        let _ = std::hint::black_box(lightningcss::stylesheet::StyleSheet::parse(
             std::hint::black_box(TAILWIND_CSS),
             lightningcss::stylesheet::ParserOptions::default(),
         ));
@@ -73,7 +73,7 @@ fn main() {
     let start = Instant::now();
     for _ in 0..ITERS {
         for sel in &selectors {
-            std::hint::black_box(kozan_selector::parser::parse(std::hint::black_box(sel)));
+            let _ = std::hint::black_box(kozan_selector::parser::parse(std::hint::black_box(sel)));
         }
     }
     let sel_per = start.elapsed() / ITERS;
@@ -83,13 +83,11 @@ fn main() {
     // -----------------------------------------------------------------------
     let decl_blocks: Vec<String> = {
         let mut blocks = Vec::new();
-        let mut depth = 0i32;
         let mut buf = String::new();
         let mut in_block = false;
         for ch in TAILWIND_CSS.chars() {
             match ch {
                 '{' => {
-                    depth += 1;
                     in_block = true;
                     buf.clear();
                     continue;
@@ -102,7 +100,6 @@ fn main() {
                         }
                         in_block = false;
                     }
-                    depth -= 1;
                     continue;
                 }
                 _ => {}
@@ -150,7 +147,7 @@ fn main() {
     let start = Instant::now();
     for _ in 0..(ITERS * 100) {
         for name in &prop_names {
-            std::hint::black_box(name.parse::<kozan_style::PropertyId>());
+            let _ = std::hint::black_box(name.parse::<kozan_style::PropertyId>());
         }
     }
     let prop_dispatch_per = start.elapsed() / (ITERS * 100);

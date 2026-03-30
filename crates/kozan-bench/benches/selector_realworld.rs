@@ -21,6 +21,7 @@ use kozan_atom::Atom;
 use kozan_cascade::cascade::{self, ApplicableDeclaration};
 use kozan_cascade::device::Device;
 use kozan_cascade::origin::CascadeOrigin;
+use kozan_cascade::resolver::ResolvedStyle;
 use kozan_cascade::sharing_cache::{hash_matched, MatchedPropertiesCache, SharingCache, SharingKey};
 use kozan_cascade::stylist::Stylist;
 use kozan_css::parse_stylesheet;
@@ -359,6 +360,9 @@ fn full_pipeline(stylist: &Stylist, targets: &[TreeElement]) -> u32 {
                 rule_index: entry.data,
                 specificity: entry.specificity.value(),
                 source_order: entry.source_order,
+                origin: CascadeOrigin::Author,
+                layer_order: 0,
+                scope_depth: 0,
             })
             .collect();
         cascade::sort(&mut decls, rules);
@@ -918,6 +922,9 @@ fn bench_realworld(c: &mut Criterion) {
                         rule_index: entry.data,
                         specificity: entry.specificity.value(),
                         source_order: entry.source_order,
+                        origin: CascadeOrigin::Author,
+                        layer_order: 0,
+                        scope_depth: 0,
                     })
                     .collect();
 
@@ -933,8 +940,12 @@ fn bench_realworld(c: &mut Criterion) {
                 cascade::sort(&mut decls, rules);
                 let mut applied = 0u32;
                 cascade::cascade_apply(&decls, rules, |_, _, _| applied += 1);
-                mpc.insert(h, applied);
-                sharing.insert(key, applied);
+                let dummy_style = Arc::new(ResolvedStyle {
+                    style: kozan_style::ComputedStyle::default(),
+                    custom_properties: kozan_cascade::CustomPropertyMap::new(),
+                });
+                mpc.insert(h, dummy_style.clone());
+                sharing.insert(key, dummy_style);
                 total += applied;
             }
             black_box(total)

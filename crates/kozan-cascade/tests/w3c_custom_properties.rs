@@ -19,7 +19,7 @@ use kozan_css::parse_stylesheet;
 use kozan_selector::element::Element;
 use kozan_selector::opaque::OpaqueElement;
 use kozan_selector::pseudo_class::ElementState;
-use kozan_style::{ComputeContext, ComputedStyle, PropertyId};
+use kozan_style::{ComputeContext, PropertyId};
 
 // ═══════════════════════════════════════════════════
 // TEST ELEMENT
