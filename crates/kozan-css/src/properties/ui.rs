@@ -1,11 +1,30 @@
-//! CSS UI property parsers — `scroll-snap-type`, `scrollbar-color`, `touch-action`, `will-change`.
+//! CSS UI property parsers — `scroll-snap-type`, `scrollbar-color`, `scrollbar-gutter`, `touch-action`, `will-change`.
 
 use cssparser::Parser;
 use kozan_style::{
-    Atom, Color, ScrollSnapType, ScrollbarColor, TouchActionValue, WillChange,
-    ScrollSnapAxis, ScrollSnapStrictness,
+    Atom, Color, ScrollSnapType, ScrollbarColor, ScrollbarGutter, TouchActionValue, WillChange,
+    ScrollSnapAxis, ScrollSnapStrictness, Zoom,
 };
 use crate::Error;
+
+impl crate::Parse for ScrollbarGutter {
+    /// `auto | stable [both-edges]?`
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        let ident = input.expect_ident_cloned()?;
+        match ident.as_ref() {
+            "auto" => Ok(ScrollbarGutter::Auto),
+            "stable" => {
+                // Optionally followed by `both-edges`.
+                if input.try_parse(|i| i.expect_ident_matching("both-edges")).is_ok() {
+                    Ok(ScrollbarGutter::StableBothEdges)
+                } else {
+                    Ok(ScrollbarGutter::Stable)
+                }
+            }
+            _ => Err(input.new_custom_error(crate::CustomError::InvalidValue)),
+        }
+    }
+}
 
 impl crate::Parse for ScrollSnapType {
     /// `none | <axis> [mandatory | proximity]?`
@@ -46,6 +65,24 @@ impl crate::Parse for TouchActionValue {
         }
         let flags = <kozan_style::TouchAction as crate::Parse>::parse(input)?;
         Ok(TouchActionValue::Flags(flags))
+    }
+}
+
+impl crate::Parse for Zoom {
+    /// `normal | reset | <number> | <percentage>`
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        if let Ok(ident) = input.try_parse(|i| i.expect_ident_cloned()) {
+            return match ident.as_ref() {
+                "normal" => Ok(Zoom::Normal),
+                "reset" => Ok(Zoom::Reset),
+                _ => Err(input.new_custom_error(crate::CustomError::InvalidValue)),
+            };
+        }
+        if let Ok(pct) = input.try_parse(|i| i.expect_percentage()) {
+            return Ok(Zoom::Number(pct));
+        }
+        let num = input.expect_number()?;
+        Ok(Zoom::Number(num))
     }
 }
 

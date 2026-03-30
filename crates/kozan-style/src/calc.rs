@@ -71,6 +71,36 @@ impl<L> CalcNode<L> {
         }
     }
 
+    /// Transform every leaf by reference — does NOT clone the tree first.
+    ///
+    /// Prefer this over `node.clone().map_leaves(f)` when `node` is behind
+    /// a shared reference: avoids allocating a full tree copy just to discard
+    /// it after the transform.
+    pub fn map_leaves_ref<M>(&self, f: &impl Fn(&L) -> M) -> CalcNode<M> {
+        match self {
+            Self::Leaf(l) => CalcNode::Leaf(f(l)),
+            Self::Negate(a) => CalcNode::Negate(Box::new(a.map_leaves_ref(f))),
+            Self::Invert(a) => CalcNode::Invert(Box::new(a.map_leaves_ref(f))),
+            Self::Sum(args) => CalcNode::Sum(
+                args.iter().map(|a| a.map_leaves_ref(f)).collect()
+            ),
+            Self::Product(args) => CalcNode::Product(
+                args.iter().map(|a| a.map_leaves_ref(f)).collect()
+            ),
+            Self::MinMax(args, op) => CalcNode::MinMax(
+                args.iter().map(|a| a.map_leaves_ref(f)).collect(),
+                *op,
+            ),
+            Self::Clamp { min, center, max } => CalcNode::Clamp {
+                min: Box::new(min.map_leaves_ref(f)),
+                center: Box::new(center.map_leaves_ref(f)),
+                max: Box::new(max.map_leaves_ref(f)),
+            },
+            Self::Abs(a) => CalcNode::Abs(Box::new(a.map_leaves_ref(f))),
+            Self::Sign(a) => CalcNode::Sign(Box::new(a.map_leaves_ref(f))),
+        }
+    }
+
     /// Transform every leaf, potentially returning a different node (not just a leaf).
     pub fn flat_map_leaves<M>(self, f: &impl Fn(L) -> CalcNode<M>) -> CalcNode<M> {
         match self {

@@ -30,10 +30,12 @@ pub(crate) fn parse_shorthand<'i>(
     input: &mut Parser<'i, '_>,
 ) -> Option<Result<Decls, Error<'i>>> {
     // 0. Hand-written overrides for generated shorthands that need special syntax.
+    //    - All: only CSS-wide keywords, expands to ALL longhands except direction/unicode-bidi
     //    - BorderRadius: needs `/` syntax for elliptical corners (generated box4 is wrong)
     //    - FontSynthesis: keyword-toggle syntax (`weight style`), not value list (`auto auto`)
     //    - Marker: single value only, not 1-3 values (generated triple3 is too permissive)
     match id {
+        PropertyId::All => return Some(parse_all(input)),
         PropertyId::BorderRadius => return Some(parse_border_radius(input)),
         PropertyId::FontSynthesis => return Some(parse_font_synthesis(input)),
         PropertyId::Marker => return Some(parse_marker(input)),
@@ -88,6 +90,7 @@ pub(crate) fn parse_shorthand<'i>(
         PropertyId::TextDecoration => parse_text_decoration(input),
         PropertyId::TextEmphasis => parse_text_emphasis(input),
         PropertyId::WhiteSpace => parse_white_space(input),
+        PropertyId::TextWrap => parse_text_wrap(input),
 
         // Multi-column
         PropertyId::Columns => parse_columns(input),
@@ -101,8 +104,7 @@ pub(crate) fn parse_shorthand<'i>(
         // Place
         PropertyId::PlaceContent => parse_place_content(input),
 
-        // Font sub-shorthands
-        PropertyId::FontSynthesis => parse_font_synthesis(input),
+        // Font sub-shorthands (FontSynthesis handled in override section above)
         PropertyId::FontVariant => parse_font_variant(input),
 
         // List
@@ -115,8 +117,7 @@ pub(crate) fn parse_shorthand<'i>(
         // Background
         PropertyId::Background => parse_background(input),
 
-        // SVG marker
-        PropertyId::Marker => parse_marker(input),
+        // SVG marker handled in override section above
 
         // Border image
         PropertyId::BorderImage => parse_border_image(input),
@@ -130,6 +131,45 @@ pub(crate) fn parse_shorthand<'i>(
 
         _ => return None,
     })
+}
+
+// Hand-written: `all` shorthand
+
+/// `all` shorthand — only accepts CSS-wide keywords.
+///
+/// CSS Cascading Level 5 §3.2: `all` resets every property except `direction`,
+/// `unicode-bidi`, and custom properties (`--*`).
+///
+/// `all: initial` → all longhands = initial
+/// `all: inherit` → all longhands = inherit
+/// `all: unset`   → all longhands = unset
+/// `all: revert`  → all longhands = revert
+/// `all: revert-layer` → all longhands = revert-layer
+fn parse_all<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
+    use kozan_style::CssWideKeyword;
+    use kozan_style_macros::css_match;
+
+    let location = input.current_source_location();
+    let ident = input.expect_ident()?;
+    let kw: CssWideKeyword = css_match! { &**ident,
+        "initial" => CssWideKeyword::Initial,
+        "inherit" => CssWideKeyword::Inherit,
+        "unset" => CssWideKeyword::Unset,
+        "revert" => CssWideKeyword::Revert,
+        "revert-layer" => CssWideKeyword::RevertLayer,
+        _ => return Err(location.new_custom_error(crate::CustomError::InvalidValue)),
+    };
+
+    let longhands = kozan_style::PropertyId::all_longhands();
+    let mut decls = SmallVec::with_capacity(longhands.len());
+
+    for &prop_id in longhands {
+        if let Some(decl) = PD::from_keyword(prop_id, kw) {
+            decls.push(decl);
+        }
+    }
+
+    Ok(decls)
 }
 
 // Generic helpers — called by generated code
@@ -587,6 +627,49 @@ fn parse_white_space<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>>
     ])
 }
 
+// Hand-written: text-wrap
+
+/// `text-wrap` shorthand — CSS Text Level 4.
+///
+/// Single-keyword form:
+/// - `wrap | nowrap` → sets `text-wrap-mode`; `text-wrap-style` → initial (auto).
+/// - `balance | stable | pretty` → `text-wrap-mode: wrap`; sets `text-wrap-style`.
+///
+/// Two-keyword form (any order): `<mode> <style>` or `<style> <mode>`.
+fn parse_text_wrap<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
+    use kozan_style::{TextWrapMode, TextWrapStyle};
+
+    let mut mode: Option<TextWrapMode> = None;
+    let mut style: Option<TextWrapStyle> = None;
+
+    for _ in 0..2 {
+        if mode.is_none() {
+            if let Ok(v) = input.try_parse(TextWrapMode::parse) {
+                mode = Some(v);
+                continue;
+            }
+        }
+        if style.is_none() {
+            if let Ok(v) = input.try_parse(TextWrapStyle::parse) {
+                // style keyword implies wrap mode.
+                style = Some(v);
+                if mode.is_none() { mode = Some(TextWrapMode::Wrap); }
+                continue;
+            }
+        }
+        break;
+    }
+
+    if mode.is_none() && style.is_none() {
+        return Err(input.new_custom_error(crate::CustomError::InvalidValue));
+    }
+
+    Ok(smallvec::smallvec![
+        PD::TextWrapMode(mode.map_or(Declared::Initial, Declared::Value)),
+        PD::TextWrapStyle(style.map_or(Declared::Initial, Declared::Value)),
+    ])
+}
+
 // Hand-written: multi-column
 
 /// `columns` shorthand — width + count, any order.
@@ -1036,9 +1119,9 @@ fn parse_transition<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> 
 fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
     use kozan_style::{
         AnimationNameList, AnimationDirectionList, AnimationFillModeList,
-        AnimationIterationCountList, AnimationPlayStateList,
+        AnimationIterationCountList, AnimationPlayStateList, AnimationCompositionList,
         DurationList, TimingFunctionList, TimingFunction,
-        AnimationDirection, AnimationFillMode, AnimationPlayState,
+        AnimationDirection, AnimationFillMode, AnimationPlayState, AnimationComposition,
         IterationCount, Atom,
     };
     use std::time::Duration;
@@ -1054,6 +1137,7 @@ fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
             PD::AnimationDirection(Declared::Initial),
             PD::AnimationFillMode(Declared::Initial),
             PD::AnimationPlayState(Declared::Initial),
+            PD::AnimationComposition(Declared::Initial),
         ]);
     }
 
@@ -1065,6 +1149,7 @@ fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
     let mut directions = Vec::new();
     let mut fill_modes = Vec::new();
     let mut play_states = Vec::new();
+    let mut compositions = Vec::new();
 
     loop {
         let mut name: Option<Atom> = None;
@@ -1075,9 +1160,10 @@ fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
         let mut direction = None;
         let mut fill_mode = None;
         let mut play_state = None;
+        let mut composition = None;
         let mut found_any = false;
 
-        for _ in 0..8 {
+        for _ in 0..9 {
             // Timing function (keyword + function forms)
             if timing.is_none() {
                 if let Ok(v) = input.try_parse(<kozan_style::TimingFunction as crate::Parse>::parse) {
@@ -1125,6 +1211,12 @@ fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
                     fill_mode = Some(v); found_any = true; continue;
                 }
             }
+            // Composition
+            if composition.is_none() {
+                if let Ok(v) = input.try_parse(AnimationComposition::parse) {
+                    composition = Some(v); found_any = true; continue;
+                }
+            }
             // Animation name — ident (not a keyword above) or quoted string
             if name.is_none() {
                 if let Ok(n) = input.try_parse(|i| -> Result<Atom, crate::Error> {
@@ -1152,6 +1244,7 @@ fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
         directions.push(direction.unwrap_or(AnimationDirection::Normal));
         fill_modes.push(fill_mode.unwrap_or(AnimationFillMode::None));
         play_states.push(play_state.unwrap_or(AnimationPlayState::Running));
+        compositions.push(composition.unwrap_or(AnimationComposition::Replace));
 
         if input.try_parse(|i| i.expect_comma()).is_err() { break; }
     }
@@ -1175,6 +1268,7 @@ fn parse_animation<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
         PD::AnimationDirection(Declared::Value(AnimationDirectionList(directions.into()))),
         PD::AnimationFillMode(Declared::Value(AnimationFillModeList(fill_modes.into()))),
         PD::AnimationPlayState(Declared::Value(AnimationPlayStateList(play_states.into()))),
+        PD::AnimationComposition(Declared::Value(AnimationCompositionList(compositions.into()))),
     ])
 }
 
@@ -1196,77 +1290,117 @@ fn parse_background<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> 
     type BgClip = kozan_style::BackgroundClip;
     type BgOrigin = kozan_style::BackgroundOrigin;
 
-    let mut color = None;
-    let mut image = None;
-    let mut pos_x = None;
-    let mut pos_y = None;
-    let mut size = None;
-    let mut repeat = None;
-    let mut attachment = None;
-    let mut clip = None;
-    let mut origin = None;
+    // Per-layer accumulators. Per CSS Backgrounds Level 3 §3:
+    // background = [ <bg-layer> , ]* <final-bg-layer>
+    // Color is only valid in the final layer.
+    let mut color: Option<CssColor> = None;
+    let mut images: Vec<Img> = Vec::new();
+    let mut pos_x_list: Vec<PosComp> = Vec::new();
+    let mut pos_y_list: Vec<PosComp> = Vec::new();
+    let mut size_list: Vec<BgSize> = Vec::new();
+    let mut repeat_list: Vec<BgRepeat> = Vec::new();
+    let mut attach_list: Vec<BgAttach> = Vec::new();
+    let mut clip_list: Vec<BgClip> = Vec::new();
+    let mut origin_list: Vec<BgOrigin> = Vec::new();
 
-    for _ in 0..9 {
-        // Position — two-component, must come before color (keyword overlap)
-        if pos_x.is_none() {
-            if let Ok((x, y)) = input.try_parse(|i| {
-                let x = PosComp::parse(i)?;
-                let y = i.try_parse(PosComp::parse).unwrap_or(PosComp::Center);
-                Ok::<_, crate::Error>((x, y))
-            }) {
-                pos_x = Some(x);
-                pos_y = Some(y);
-                if input.try_parse(|i| i.expect_delim('/')).is_ok() {
-                    size = Some(BgSize::parse(input)?);
+    // Parse layers. Non-final layers are comma-separated and cannot have color.
+    // We parse each layer, then look for a comma — if found, the next is another
+    // layer. If not, we're done.
+    loop {
+        // Parse one layer's components.
+        let mut layer_img = None;
+        let mut layer_pos_x = None;
+        let mut layer_pos_y = None;
+        let mut layer_size = None;
+        let mut layer_repeat = None;
+        let mut layer_attach = None;
+        let mut layer_clip = None;
+        let mut layer_origin = None;
+        let mut layer_color = None;
+
+        for _ in 0..9 {
+            // Position — try two-component; must precede color (keyword overlap)
+            if layer_pos_x.is_none() {
+                if let Ok((x, y)) = input.try_parse(|i| {
+                    let x = PosComp::parse(i)?;
+                    let y = i.try_parse(PosComp::parse).unwrap_or(PosComp::Center);
+                    Ok::<_, crate::Error>((x, y))
+                }) {
+                    layer_pos_x = Some(x);
+                    layer_pos_y = Some(y);
+                    if input.try_parse(|i| i.expect_delim('/')).is_ok() {
+                        layer_size = Some(BgSize::parse(input)?);
+                    }
+                    continue;
                 }
-                continue;
             }
-        }
-        // Image (url(...) or gradient)
-        if image.is_none() {
-            if let Ok(v) = input.try_parse(Img::parse) { image = Some(v); continue; }
-        }
-        // Repeat
-        if repeat.is_none() {
-            if let Ok(v) = input.try_parse(BgRepeat::parse) { repeat = Some(v); continue; }
-        }
-        // Attachment
-        if attachment.is_none() {
-            if let Ok(v) = input.try_parse(BgAttach::parse) { attachment = Some(v); continue; }
-        }
-        // Origin (+ optional clip)
-        if origin.is_none() {
-            if let Ok(v) = input.try_parse(BgOrigin::parse) {
-                origin = Some(v);
-                clip = input.try_parse(BgClip::parse).ok();
-                continue;
+            if layer_img.is_none() {
+                if let Ok(v) = input.try_parse(Img::parse) { layer_img = Some(v); continue; }
             }
+            if layer_repeat.is_none() {
+                if let Ok(v) = input.try_parse(BgRepeat::parse) { layer_repeat = Some(v); continue; }
+            }
+            if layer_attach.is_none() {
+                if let Ok(v) = input.try_parse(BgAttach::parse) { layer_attach = Some(v); continue; }
+            }
+            if layer_origin.is_none() {
+                if let Ok(v) = input.try_parse(BgOrigin::parse) {
+                    layer_origin = Some(v);
+                    layer_clip = input.try_parse(BgClip::parse).ok();
+                    continue;
+                }
+            }
+            // Color only allowed in the final layer.
+            if layer_color.is_none() && color.is_none() {
+                if let Ok(v) = input.try_parse(CssColor::parse) { layer_color = Some(v); continue; }
+            }
+            break;
         }
-        // Color (only in final/single layer)
-        if color.is_none() {
-            if let Ok(v) = input.try_parse(CssColor::parse) { color = Some(v); continue; }
+
+        // Require at least one component per layer.
+        let layer_has_content = layer_img.is_some() || layer_pos_x.is_some()
+            || layer_repeat.is_some() || layer_attach.is_some()
+            || layer_origin.is_some() || layer_color.is_some();
+        if !layer_has_content && images.is_empty() {
+            return Err(input.new_custom_error(crate::CustomError::InvalidValue));
         }
-        break;
+
+        // Commit layer.
+        images.push(layer_img.unwrap_or(Img::None));
+        pos_x_list.push(layer_pos_x.unwrap_or_default());
+        pos_y_list.push(layer_pos_y.unwrap_or_default());
+        size_list.push(layer_size.unwrap_or_default());
+        repeat_list.push(layer_repeat.unwrap_or(BgRepeat::Repeat));
+        attach_list.push(layer_attach.unwrap_or(BgAttach::Scroll));
+        clip_list.push(layer_clip.unwrap_or(BgClip::BorderBox));
+        origin_list.push(layer_origin.unwrap_or(BgOrigin::PaddingBox));
+        color = layer_color;
+
+        // More layers?
+        if input.try_parse(|i| i.expect_comma()).is_err() { break; }
     }
 
-    if color.is_none() && image.is_none() && pos_x.is_none()
-       && repeat.is_none() && attachment.is_none() && origin.is_none()
-    {
+    if images.is_empty() {
         return Err(input.new_custom_error(crate::CustomError::InvalidValue));
     }
 
+    let all_none = images.iter().all(|img| matches!(img, Img::None));
+    let image_decl = if all_none {
+        Declared::Initial
+    } else {
+        Declared::Value(ImgList::Images(images.into_boxed_slice()))
+    };
+
     Ok(smallvec::smallvec![
         PD::BackgroundColor(color.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundImage(image.map_or(Declared::Initial, |img| {
-            Declared::Value(ImgList::Images(Box::from([img])))
-        })),
-        PD::BackgroundPositionX(pos_x.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundPositionY(pos_y.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundSize(size.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundRepeat(repeat.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundAttachment(attachment.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundClip(clip.map_or(Declared::Initial, Declared::Value)),
-        PD::BackgroundOrigin(origin.map_or(Declared::Initial, Declared::Value)),
+        PD::BackgroundImage(image_decl),
+        PD::BackgroundPositionX(Declared::Value(kozan_style::PositionComponentList(pos_x_list.into_boxed_slice()))),
+        PD::BackgroundPositionY(Declared::Value(kozan_style::PositionComponentList(pos_y_list.into_boxed_slice()))),
+        PD::BackgroundSize(Declared::Value(kozan_style::BackgroundSizeList(size_list.into_boxed_slice()))),
+        PD::BackgroundRepeat(Declared::Value(kozan_style::BackgroundRepeatList(repeat_list.into_boxed_slice()))),
+        PD::BackgroundAttachment(Declared::Value(kozan_style::BackgroundAttachmentList(attach_list.into_boxed_slice()))),
+        PD::BackgroundClip(Declared::Value(kozan_style::BackgroundClipList(clip_list.into_boxed_slice()))),
+        PD::BackgroundOrigin(Declared::Value(kozan_style::BackgroundOriginList(origin_list.into_boxed_slice()))),
     ])
 }
 
@@ -1355,65 +1489,96 @@ fn parse_mask<'i>(input: &mut Parser<'i, '_>) -> Result<Decls, Error<'i>> {
     type MSize = kozan_style::BackgroundSize;
     type MComp = kozan_style::MaskComposite;
 
-    let mut image = None;
-    let mut mode = None;
-    let mut repeat = None;
-    let mut position = None;
-    let mut size = None;
-    let mut clip = None;
-    let mut origin = None;
-    let mut composite = None;
+    let mut images: Vec<Img> = Vec::new();
+    let mut mode_list: Vec<MMode> = Vec::new();
+    let mut repeat_list: Vec<MRepeat> = Vec::new();
+    let mut pos_list: Vec<Pos> = Vec::new();
+    let mut size_list: Vec<MSize> = Vec::new();
+    let mut clip_list: Vec<MClip> = Vec::new();
+    let mut origin_list: Vec<MOrigin> = Vec::new();
+    let mut composite_list: Vec<MComp> = Vec::new();
 
-    for _ in 0..8 {
-        // Position (must come early — keyword overlap)
-        if position.is_none() {
-            if let Ok(v) = input.try_parse(Pos::parse) {
-                position = Some(v);
-                if input.try_parse(|i| i.expect_delim('/')).is_ok() {
-                    size = input.try_parse(MSize::parse).ok();
+    loop {
+        let mut layer_img = None;
+        let mut layer_mode = None;
+        let mut layer_repeat = None;
+        let mut layer_pos = None;
+        let mut layer_size = None;
+        let mut layer_clip = None;
+        let mut layer_origin = None;
+        let mut layer_composite = None;
+
+        for _ in 0..8 {
+            if layer_pos.is_none() {
+                if let Ok(v) = input.try_parse(Pos::parse) {
+                    layer_pos = Some(v);
+                    if input.try_parse(|i| i.expect_delim('/')).is_ok() {
+                        layer_size = input.try_parse(MSize::parse).ok();
+                    }
+                    continue;
                 }
-                continue;
             }
-        }
-        if image.is_none() {
-            if let Ok(v) = input.try_parse(Img::parse) { image = Some(v); continue; }
-        }
-        if mode.is_none() {
-            if let Ok(v) = input.try_parse(MMode::parse) { mode = Some(v); continue; }
-        }
-        if repeat.is_none() {
-            if let Ok(v) = input.try_parse(MRepeat::parse) { repeat = Some(v); continue; }
-        }
-        if composite.is_none() {
-            if let Ok(v) = input.try_parse(MComp::parse) { composite = Some(v); continue; }
-        }
-        if origin.is_none() {
-            if let Ok(v) = input.try_parse(MOrigin::parse) {
-                origin = Some(v);
-                clip = input.try_parse(MClip::parse).ok();
-                continue;
+            if layer_img.is_none() {
+                if let Ok(v) = input.try_parse(Img::parse) { layer_img = Some(v); continue; }
             }
+            if layer_mode.is_none() {
+                if let Ok(v) = input.try_parse(MMode::parse) { layer_mode = Some(v); continue; }
+            }
+            if layer_repeat.is_none() {
+                if let Ok(v) = input.try_parse(MRepeat::parse) { layer_repeat = Some(v); continue; }
+            }
+            if layer_composite.is_none() {
+                if let Ok(v) = input.try_parse(MComp::parse) { layer_composite = Some(v); continue; }
+            }
+            if layer_origin.is_none() {
+                if let Ok(v) = input.try_parse(MOrigin::parse) {
+                    layer_origin = Some(v);
+                    layer_clip = input.try_parse(MClip::parse).ok();
+                    continue;
+                }
+            }
+            break;
         }
-        break;
+
+        let layer_has_content = layer_img.is_some() || layer_mode.is_some()
+            || layer_repeat.is_some() || layer_pos.is_some()
+            || layer_clip.is_some() || layer_origin.is_some() || layer_composite.is_some();
+        if !layer_has_content && images.is_empty() {
+            return Err(input.new_custom_error(crate::CustomError::InvalidValue));
+        }
+
+        images.push(layer_img.unwrap_or(Img::None));
+        mode_list.push(layer_mode.unwrap_or(MMode::MatchSource));
+        repeat_list.push(layer_repeat.unwrap_or(MRepeat::Repeat));
+        pos_list.push(layer_pos.unwrap_or_default());
+        size_list.push(layer_size.unwrap_or_default());
+        clip_list.push(layer_clip.unwrap_or(MClip::BorderBox));
+        origin_list.push(layer_origin.unwrap_or(MOrigin::BorderBox));
+        composite_list.push(layer_composite.unwrap_or(MComp::Add));
+
+        if input.try_parse(|i| i.expect_comma()).is_err() { break; }
     }
 
-    if image.is_none() && mode.is_none() && repeat.is_none()
-       && position.is_none() && clip.is_none() && origin.is_none() && composite.is_none()
-    {
+    if images.is_empty() {
         return Err(input.new_custom_error(crate::CustomError::InvalidValue));
     }
 
+    let all_none = images.iter().all(|img| matches!(img, Img::None));
+    let image_decl = if all_none {
+        Declared::Initial
+    } else {
+        Declared::Value(ImgList::Images(images.into_boxed_slice()))
+    };
+
     Ok(smallvec::smallvec![
-        PD::MaskImage(image.map_or(Declared::Initial, |img| {
-            Declared::Value(ImgList::Images(Box::from([img])))
-        })),
-        PD::MaskMode(mode.map_or(Declared::Initial, Declared::Value)),
-        PD::MaskRepeat(repeat.map_or(Declared::Initial, Declared::Value)),
-        PD::MaskPosition(position.map_or(Declared::Initial, Declared::Value)),
-        PD::MaskClip(clip.map_or(Declared::Initial, Declared::Value)),
-        PD::MaskOrigin(origin.map_or(Declared::Initial, Declared::Value)),
-        PD::MaskSize(size.map_or(Declared::Initial, Declared::Value)),
-        PD::MaskComposite(composite.map_or(Declared::Initial, Declared::Value)),
+        PD::MaskImage(image_decl),
+        PD::MaskMode(Declared::Value(kozan_style::MaskModeList(mode_list.into_boxed_slice()))),
+        PD::MaskRepeat(Declared::Value(kozan_style::BackgroundRepeatList(repeat_list.into_boxed_slice()))),
+        PD::MaskPosition(Declared::Value(kozan_style::Position2DList(pos_list.into_boxed_slice()))),
+        PD::MaskClip(Declared::Value(kozan_style::MaskClipList(clip_list.into_boxed_slice()))),
+        PD::MaskOrigin(Declared::Value(kozan_style::BackgroundOriginList(origin_list.into_boxed_slice()))),
+        PD::MaskSize(Declared::Value(kozan_style::BackgroundSizeList(size_list.into_boxed_slice()))),
+        PD::MaskComposite(Declared::Value(kozan_style::MaskCompositeList(composite_list.into_boxed_slice()))),
     ])
 }
 

@@ -18,6 +18,7 @@
 //! `:not(.foo)` from `:is(.foo)` without separate methods.
 
 use kozan_atom::Atom;
+use smallvec::SmallVec;
 
 use crate::types::*;
 
@@ -39,8 +40,12 @@ bitflags! {
         const WHERE = 1 << 2;
         /// Inside `:nth-child(... of <selector-list>)`.
         const NTH_OF = 1 << 3;
-        /// Inside `:has(...)`.
+        /// Inside `:has(...)` with descendant/child traversal.
         const HAS = 1 << 4;
+        /// Inside `:has(...)` with sibling traversal (`+` or `~`).
+        /// Distinct from `HAS` so invalidation visitors can populate separate
+        /// sibling-invalidation maps (preceding siblings need restyle, not ancestors).
+        const HAS_SIBLING = 1 << 5;
     }
 }
 
@@ -200,14 +205,31 @@ fn visit_component(component: &Component, visitor: &mut impl SelectorVisitor) ->
             }
         }
         Component::Has(rel_list) => {
-            let dummy_list = SelectorList(
-                rel_list.0.iter().map(|r| r.selector.clone()).collect(),
-            );
-            if visitor.visit_selector_list(SelectorListKind::HAS, &dummy_list) {
-                visit_selector_list(&dummy_list, visitor)
-            } else {
-                true
+            // Split relative selectors by traversal direction so invalidation
+            // visitors can distinguish ancestor-invalidation (subtree/children)
+            // from sibling-invalidation (+ or ~).
+            let subtree: SmallVec<[_; 4]> = rel_list.0.iter()
+                .filter(|r| !matches!(r.traversal, HasTraversal::NextSibling | HasTraversal::Siblings))
+                .map(|r| r.selector.clone())
+                .collect();
+            let sibling: SmallVec<[_; 4]> = rel_list.0.iter()
+                .filter(|r| matches!(r.traversal, HasTraversal::NextSibling | HasTraversal::Siblings))
+                .map(|r| r.selector.clone())
+                .collect();
+
+            if !subtree.is_empty() {
+                let list = SelectorList(subtree);
+                if visitor.visit_selector_list(SelectorListKind::HAS, &list) {
+                    visit_selector_list(&list, visitor);
+                }
             }
+            if !sibling.is_empty() {
+                let list = SelectorList(sibling);
+                if visitor.visit_selector_list(SelectorListKind::HAS_SIBLING, &list) {
+                    visit_selector_list(&list, visitor);
+                }
+            }
+            true
         }
         Component::NthChild(nth) | Component::NthLastChild(nth) => {
             if let Some(ref of_sel) = nth.of_selector {

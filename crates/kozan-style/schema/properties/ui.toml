@@ -44,6 +44,15 @@ animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/appearance"
 
 [[property]]
+css = "field-sizing"
+field = "field_sizing"
+type = "FieldSizing"
+initial = "FieldSizing::Fixed"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/field-sizing"
+
+[[property]]
 css = "touch-action"
 field = "touch_action"
 type = "TouchActionValue"
@@ -141,6 +150,15 @@ initial = "ScrollbarColor::Auto"
 inherited = false
 animatable = true
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color"
+
+[[property]]
+css = "scrollbar-gutter"
+field = "scrollbar_gutter"
+type = "ScrollbarGutter"
+initial = "ScrollbarGutter::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-gutter"
 
 [[property]]
 css = "scroll-snap-type"
@@ -331,3 +349,30 @@ axis = "block"
 edge = "end"
 physical = { horizontal_ltr = "scroll-margin-bottom", horizontal_rtl = "scroll-margin-bottom", vertical_ltr = "scroll-margin-right", vertical_rtl = "scroll-margin-left" }
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-block-end"
+
+[[property]]
+css = "view-transition-name"
+field = "view_transition_name"
+type = "NoneOr<Atom>"
+initial = "NoneOr::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/view-transition-name"
+
+[[property]]
+css = "zoom"
+field = "zoom"
+type = "Zoom"
+initial = "Zoom::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/zoom"
+
+# The `all` shorthand resets every property except direction, unicode-bidi,
+# and custom properties. Longhands listed here are a placeholder — the actual
+# expansion is handled dynamically by PropertyId::all_longhands() and the
+# hand-written parse_all() in shorthand.rs.
+[[shorthand]]
+css = "all"
+longhands = ["display"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/all"

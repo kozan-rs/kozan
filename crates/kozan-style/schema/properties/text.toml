@@ -332,6 +332,15 @@ animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap-mode"
 
 [[property]]
+css = "text-wrap-style"
+field = "text_wrap_style"
+type = "TextWrapStyle"
+initial = "TextWrapStyle::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap-style"
+
+[[property]]
 css = "word-break"
 field = "word_break"
 type = "WordBreak"
@@ -431,6 +440,51 @@ animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-position"
 
 [[property]]
+css = "math-style"
+field = "math_style"
+type = "MathStyle"
+initial = "MathStyle::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/math-style"
+
+[[property]]
+css = "math-shift"
+field = "math_shift"
+type = "MathShift"
+initial = "MathShift::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/math-shift"
+
+[[property]]
+css = "ruby-align"
+field = "ruby_align"
+type = "RubyAlign"
+initial = "RubyAlign::SpaceAround"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-align"
+
+[[property]]
+css = "ruby-merge"
+field = "ruby_merge"
+type = "RubyMerge"
+initial = "RubyMerge::Separate"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-merge"
+
+[[property]]
+css = "text-box-trim"
+field = "text_box_trim"
+type = "TextBoxTrim"
+initial = "TextBoxTrim::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-box-trim"
+
+[[property]]
 css = "font-size-adjust"
 field = "font_size_adjust"
 type = "NoneOr<f32>"
@@ -484,9 +538,108 @@ inherited = true
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-combine-upright"
 
+[[property]]
+css = "font-synthesis-position"
+field = "font_synthesis_position"
+type = "AutoOrNone"
+initial = "AutoOrNone::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis-position"
+
+[[property]]
+css = "font-variant-emoji"
+field = "font_variant_emoji"
+type = "FontVariantEmoji"
+initial = "FontVariantEmoji::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-emoji"
+
+[[property]]
+css = "text-decoration-skip-ink"
+field = "text_decoration_skip_ink"
+type = "TextDecorationSkipInk"
+initial = "TextDecorationSkipInk::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-skip-ink"
+
+[[property]]
+css = "text-spacing-trim"
+field = "text_spacing_trim"
+type = "TextSpacingTrim"
+initial = "TextSpacingTrim::Normal"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-spacing-trim"
+
+[[property]]
+css = "initial-letter-align"
+field = "initial_letter_align"
+type = "InitialLetterAlign"
+initial = "InitialLetterAlign::Alphabetic"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/initial-letter-align"
+
+[[property]]
+css = "font-palette"
+field = "font_palette"
+type = "FontPalette"
+initial = "FontPalette::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-palette"
+
+[[property]]
+css = "initial-letter"
+field = "initial_letter"
+type = "InitialLetter"
+initial = "InitialLetter::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/initial-letter"
+
+[[property]]
+css = "hyphenate-character"
+field = "hyphenate_character"
+type = "HyphenateCharacter"
+initial = "HyphenateCharacter::Auto"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/hyphenate-character"
+
+[[property]]
+css = "hyphenate-limit-chars"
+field = "hyphenate_limit_chars"
+type = "HyphenateLimitChars"
+initial = "HyphenateLimitChars::default()"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/hyphenate-limit-chars"
+
+[[property]]
+css = "hanging-punctuation"
+field = "hanging_punctuation"
+type = "HangingPunctuation"
+initial = "HangingPunctuation::EMPTY"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/hanging-punctuation"
+
+[[property]]
+css = "white-space-trim"
+field = "white_space_trim"
+type = "WhiteSpaceTrim"
+initial = "WhiteSpaceTrim::EMPTY"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/white-space-trim"
+
 [[shorthand]]
 css = "font-synthesis"
-longhands = ["font-synthesis-weight", "font-synthesis-style", "font-synthesis-small-caps"]
+longhands = ["font-synthesis-weight", "font-synthesis-style", "font-synthesis-small-caps", "font-synthesis-position"]
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-synthesis"
 
 [[shorthand]]
@@ -508,6 +661,11 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration"
 css = "text-emphasis"
 longhands = ["text-emphasis-style", "text-emphasis-color"]
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-emphasis"
+
+[[shorthand]]
+css = "text-wrap"
+longhands = ["text-wrap-mode", "text-wrap-style"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap"
 
 [[shorthand]]
 css = "white-space"

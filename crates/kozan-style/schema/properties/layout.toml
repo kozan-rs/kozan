@@ -197,6 +197,33 @@ animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility"
 
 [[property]]
+css = "interpolate-size"
+field = "interpolate_size"
+type = "InterpolateSize"
+initial = "InterpolateSize::NumericOnly"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/interpolate-size"
+
+[[property]]
+css = "line-clamp"
+field = "line_clamp"
+type = "NoneOr<u32>"
+initial = "NoneOr::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/line-clamp"
+
+[[property]]
+css = "reading-flow"
+field = "reading_flow"
+type = "ReadingFlow"
+initial = "ReadingFlow::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/reading-flow"
+
+[[property]]
 css = "container-type"
 field = "container_type"
 type = "ContainerType"
@@ -367,3 +394,54 @@ axis = "block"
 edge = "max-size"
 physical = { horizontal_ltr = "max-height", horizontal_rtl = "max-height", vertical_ltr = "max-width", vertical_rtl = "max-width" }
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/max-block-size"
+
+[[property]]
+css = "page-break-before"
+field = "page_break_before"
+type = "PageBreak"
+initial = "PageBreak::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before"
+
+[[property]]
+css = "page-break-after"
+field = "page_break_after"
+type = "PageBreak"
+initial = "PageBreak::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-after"
+
+[[property]]
+css = "page-break-inside"
+field = "page_break_inside"
+type = "PageBreakInside"
+initial = "PageBreakInside::Auto"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-inside"
+
+[[shorthand]]
+css = "contain-intrinsic-inline"
+longhands = ["contain-intrinsic-inline-size"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-inline-size"
+
+[[shorthand]]
+css = "contain-intrinsic-block"
+longhands = ["contain-intrinsic-block-size"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-block-size"
+
+[[logical]]
+css = "contain-intrinsic-inline-size"
+axis = "inline"
+edge = "size"
+physical = { horizontal_ltr = "contain-intrinsic-width", horizontal_rtl = "contain-intrinsic-width", vertical_ltr = "contain-intrinsic-height", vertical_rtl = "contain-intrinsic-height" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-inline-size"
+
+[[logical]]
+css = "contain-intrinsic-block-size"
+axis = "block"
+edge = "size"
+physical = { horizontal_ltr = "contain-intrinsic-height", horizontal_rtl = "contain-intrinsic-height", vertical_ltr = "contain-intrinsic-width", vertical_rtl = "contain-intrinsic-width" }
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-block-size"

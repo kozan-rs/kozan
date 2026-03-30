@@ -42,6 +42,9 @@ pub struct ComputeContext<'a> {
     pub inherited_color: crate::AbsoluteColor,
     /// Active color scheme (light/dark) — affects system color resolution.
     pub color_scheme: crate::ColorScheme,
+    /// Whether the inline axis is horizontal (true for horizontal-tb, false for vertical-*).
+    /// Used by `vi`/`vb`/`svi`/`svb`/`lvi`/`lvb`/`dvi`/`dvb` and `cqi`/`cqb` viewport units.
+    pub horizontal_writing_mode: bool,
 }
 
 /// Viewport dimensions for a specific viewport variant.
@@ -92,6 +95,7 @@ impl Default for ComputeContext<'_> {
             current_color: crate::AbsoluteColor::BLACK,
             inherited_color: crate::AbsoluteColor::BLACK,
             color_scheme: crate::ColorScheme::Light,
+            horizontal_writing_mode: true,
         }
     }
 }

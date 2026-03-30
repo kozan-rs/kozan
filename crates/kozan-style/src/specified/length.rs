@@ -118,13 +118,28 @@ pub enum FontRelativeLength {
 
 impl FontRelativeLength {
     /// Resolves to computed px using font-size and font metrics from context.
+    /// Resolves font-relative lengths to computed px.
+    ///
+    /// When real font metrics are unavailable (e.g., before font load), the
+    /// CSS Values Level 4 spec defines these fallback values:
+    ///
+    /// > If the computed value of `font-size` is used as a fallback for `ch`,
+    /// > `ex`, or other font-relative units when the font is unavailable, the
+    /// > fallback value is 0.5 × font-size for `ch`/`ex`, 0.7 × font-size for
+    /// > `cap`, and 1 × font-size for `ic`.
+    ///
+    /// Spec: CSS Values and Units Level 4 § 6.1 — Relative lengths
+    /// <https://www.w3.org/TR/css-values-4/#font-relative-lengths>
     pub fn to_computed_value(self, ctx: &ComputeContext) -> computed::Length {
         let px = match self {
             Self::Em(v) => v * ctx.font_size,
             Self::Rem(v) => v * ctx.root_font_size,
+            // Fallback: 0.5 × font-size (spec §6.1)
             Self::Ch(v) => v * ctx.font_metrics.map_or(ctx.font_size * 0.5, |m| m.zero_advance),
             Self::Ex(v) => v * ctx.font_metrics.map_or(ctx.font_size * 0.5, |m| m.x_height),
+            // Fallback: 0.7 × font-size (spec §6.1)
             Self::Cap(v) => v * ctx.font_metrics.map_or(ctx.font_size * 0.7, |m| m.cap_height),
+            // Fallback: 1 × font-size (spec §6.1)
             Self::Ic(v) => v * ctx.font_metrics.map_or(ctx.font_size, |m| m.ic_width),
             Self::Lh(v) => v * ctx.line_height,
             Self::Rlh(v) => v * ctx.root_line_height,
@@ -161,32 +176,35 @@ impl ViewportPercentageLength {
             Self::Vh(v) => (ctx.viewport_height, v),
             Self::Vmin(v) => (ctx.viewport_width.min(ctx.viewport_height), v),
             Self::Vmax(v) => (ctx.viewport_width.max(ctx.viewport_height), v),
-            Self::Vi(v) => (ctx.viewport_width, v), // TODO: writing-mode
-            Self::Vb(v) => (ctx.viewport_height, v), // TODO: writing-mode
+            // vi/vb: inline/block axis depends on writing-mode.
+            // horizontal-tb: inline=width, block=height
+            // vertical-*:    inline=height, block=width
+            Self::Vi(v) => (if ctx.horizontal_writing_mode { ctx.viewport_width } else { ctx.viewport_height }, v),
+            Self::Vb(v) => (if ctx.horizontal_writing_mode { ctx.viewport_height } else { ctx.viewport_width }, v),
 
             // Small viewport
             Self::Svw(v) => (ctx.small_viewport.width, v),
             Self::Svh(v) => (ctx.small_viewport.height, v),
             Self::Svmin(v) => (ctx.small_viewport.width.min(ctx.small_viewport.height), v),
             Self::Svmax(v) => (ctx.small_viewport.width.max(ctx.small_viewport.height), v),
-            Self::Svi(v) => (ctx.small_viewport.width, v),
-            Self::Svb(v) => (ctx.small_viewport.height, v),
+            Self::Svi(v) => (if ctx.horizontal_writing_mode { ctx.small_viewport.width } else { ctx.small_viewport.height }, v),
+            Self::Svb(v) => (if ctx.horizontal_writing_mode { ctx.small_viewport.height } else { ctx.small_viewport.width }, v),
 
             // Large viewport
             Self::Lvw(v) => (ctx.large_viewport.width, v),
             Self::Lvh(v) => (ctx.large_viewport.height, v),
             Self::Lvmin(v) => (ctx.large_viewport.width.min(ctx.large_viewport.height), v),
             Self::Lvmax(v) => (ctx.large_viewport.width.max(ctx.large_viewport.height), v),
-            Self::Lvi(v) => (ctx.large_viewport.width, v),
-            Self::Lvb(v) => (ctx.large_viewport.height, v),
+            Self::Lvi(v) => (if ctx.horizontal_writing_mode { ctx.large_viewport.width } else { ctx.large_viewport.height }, v),
+            Self::Lvb(v) => (if ctx.horizontal_writing_mode { ctx.large_viewport.height } else { ctx.large_viewport.width }, v),
 
             // Dynamic viewport
             Self::Dvw(v) => (ctx.dynamic_viewport.width, v),
             Self::Dvh(v) => (ctx.dynamic_viewport.height, v),
             Self::Dvmin(v) => (ctx.dynamic_viewport.width.min(ctx.dynamic_viewport.height), v),
             Self::Dvmax(v) => (ctx.dynamic_viewport.width.max(ctx.dynamic_viewport.height), v),
-            Self::Dvi(v) => (ctx.dynamic_viewport.width, v),
-            Self::Dvb(v) => (ctx.dynamic_viewport.height, v),
+            Self::Dvi(v) => (if ctx.horizontal_writing_mode { ctx.dynamic_viewport.width } else { ctx.dynamic_viewport.height }, v),
+            Self::Dvb(v) => (if ctx.horizontal_writing_mode { ctx.dynamic_viewport.height } else { ctx.dynamic_viewport.width }, v),
         };
 
         computed::Length::new(size * factor / 100.0)

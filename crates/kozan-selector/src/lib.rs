@@ -55,7 +55,7 @@ pub use specificity::Specificity;
 pub use types::{
     Combinator, Component, Direction, KeySelector, NamespaceConstraint, NthData,
     HasTraversal, RelativeSelector, RelativeSelectorList, Selector, SelectorDeps, SelectorHints,
-    SelectorList,
+    SelectorList, ensure_nesting,
 };
 pub use visitor::{SelectorListKind, SelectorVisitor};
 

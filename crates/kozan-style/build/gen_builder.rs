@@ -27,6 +27,17 @@ fn gen_importance(w: &mut CodeWriter) {
     });
 }
 
+use std::collections::HashMap;
+
+/// Build a cached lookup table: CSS name → type string.
+/// Called once per generator function, replacing O(n) linear scans with O(1) lookups.
+fn build_type_cache<'a>(groups: &'a [PropertyGroup]) -> HashMap<&'a str, &'a str> {
+    groups.iter()
+        .flat_map(|g| &g.properties)
+        .map(|p| (p.css.as_str(), p.ty.as_str()))
+        .collect()
+}
+
 /// Look up the type of a physical property by its CSS name.
 fn find_physical_type<'a>(groups: &'a [PropertyGroup], css_name: &str) -> Option<&'a str> {
     groups.iter()
@@ -36,6 +47,10 @@ fn find_physical_type<'a>(groups: &'a [PropertyGroup], css_name: &str) -> Option
 }
 
 fn gen_property_declaration(w: &mut CodeWriter, groups: &[PropertyGroup], lt: &str) {
+    // Pre-build CSS name → type lookup. Replaces O(n) linear scans in the
+    // logical property loops with O(1) HashMap lookups (build-time only).
+    let type_cache = build_type_cache(groups);
+
     w.doc("CSS property declaration — key + typed value in one enum.");
     w.derive(&["Clone", "Debug", "PartialEq"]);
     w.block(&format!("pub enum PropertyDeclaration{lt}"), |w| {
@@ -46,10 +61,18 @@ fn gen_property_declaration(w: &mut CodeWriter, groups: &[PropertyGroup], lt: &s
             }
             // Logical properties — same type as their physical counterpart
             for logical in &group.logicals {
-                let physical_type = find_physical_type(groups, &logical.physical.horizontal_ltr);
-                if let Some(ty) = physical_type {
-                    w.maybe_doc_link("MDN", &logical.spec);
-                    w.line(&format!("{}(Declared<{}>),", to_pascal(&logical.css), ty));
+                let physical_type = type_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
+                match physical_type {
+                    Some(ty) => {
+                        w.maybe_doc_link("MDN", &logical.spec);
+                        w.line(&format!("{}(Declared<{}>),", to_pascal(&logical.css), ty));
+                    }
+                    None => {
+                        panic!(
+                            "Logical property `{}` references physical `{}` which doesn't exist in any property group",
+                            logical.css, logical.physical.horizontal_ltr,
+                        );
+                    }
                 }
             }
         }
@@ -69,7 +92,7 @@ fn gen_property_declaration(w: &mut CodeWriter, groups: &[PropertyGroup], lt: &s
                             w.arm(&format!("Self::{p}(_)"), &format!("PropertyId::{p}"));
                         }
                         for logical in &group.logicals {
-                            let physical_type = find_physical_type(groups, &logical.physical.horizontal_ltr);
+                            let physical_type = type_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
                             if physical_type.is_some() {
                                 let p = to_pascal(&logical.css);
                                 w.arm(&format!("Self::{p}(_)"), &format!("PropertyId::{p}"));
@@ -77,6 +100,132 @@ fn gen_property_declaration(w: &mut CodeWriter, groups: &[PropertyGroup], lt: &s
                         }
                     }
                     w.arm("Self::Custom { .. }", "PropertyId::Custom");
+                });
+            });
+            w.blank();
+
+            // has_variables() — returns true if inner Declared is WithVariables.
+            w.doc("Returns `true` if this declaration contains unresolved `var()`/`env()`/`attr()`.");
+            w.line("#[inline]");
+            w.fn_block("has_variables(&self) -> bool", |w| {
+                w.match_block("self", |w| {
+                    for group in groups {
+                        for prop in &group.properties {
+                            let p = to_pascal(&prop.css);
+                            w.arm(&format!("Self::{p}(Declared::WithVariables(_))"), "true");
+                        }
+                        for logical in &group.logicals {
+                            let physical_type = type_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
+                            if physical_type.is_some() {
+                                let p = to_pascal(&logical.css);
+                                w.arm(&format!("Self::{p}(Declared::WithVariables(_))"), "true");
+                            }
+                        }
+                    }
+                    w.arm("_", "false");
+                });
+            });
+            w.blank();
+
+            // unparsed_css() — extracts raw CSS text from WithVariables declarations.
+            w.doc("Returns the raw CSS text if this declaration contains unresolved substitutions.");
+            w.line("#[inline]");
+            w.fn_block("unparsed_css(&self) -> Option<&UnparsedValue>", |w| {
+                w.match_block("self", |w| {
+                    for group in groups {
+                        for prop in &group.properties {
+                            let p = to_pascal(&prop.css);
+                            w.arm(&format!("Self::{p}(Declared::WithVariables(u))"), "Some(u)");
+                        }
+                        for logical in &group.logicals {
+                            let physical_type = type_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
+                            if physical_type.is_some() {
+                                let p = to_pascal(&logical.css);
+                                w.arm(&format!("Self::{p}(Declared::WithVariables(u))"), "Some(u)");
+                            }
+                        }
+                    }
+                    w.arm("_", "None");
+                });
+            });
+            w.blank();
+
+            // is_revert() — returns true if inner Declared is Revert.
+            w.doc("Returns `true` if this declaration is the `revert` CSS-wide keyword.");
+            w.line("#[inline]");
+            w.fn_block("is_revert(&self) -> bool", |w| {
+                w.match_block("self", |w| {
+                    for group in groups {
+                        for prop in &group.properties {
+                            let p = to_pascal(&prop.css);
+                            w.arm(&format!("Self::{p}(Declared::Revert)"), "true");
+                        }
+                        for logical in &group.logicals {
+                            let physical_type = type_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
+                            if physical_type.is_some() {
+                                let p = to_pascal(&logical.css);
+                                w.arm(&format!("Self::{p}(Declared::Revert)"), "true");
+                            }
+                        }
+                    }
+                    w.arm("_", "false");
+                });
+            });
+            w.blank();
+
+            // is_revert_layer() — returns true if inner Declared is RevertLayer.
+            w.doc("Returns `true` if this declaration is the `revert-layer` CSS-wide keyword.");
+            w.line("#[inline]");
+            w.fn_block("is_revert_layer(&self) -> bool", |w| {
+                w.match_block("self", |w| {
+                    for group in groups {
+                        for prop in &group.properties {
+                            let p = to_pascal(&prop.css);
+                            w.arm(&format!("Self::{p}(Declared::RevertLayer)"), "true");
+                        }
+                        for logical in &group.logicals {
+                            let physical_type = type_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
+                            if physical_type.is_some() {
+                                let p = to_pascal(&logical.css);
+                                w.arm(&format!("Self::{p}(Declared::RevertLayer)"), "true");
+                            }
+                        }
+                    }
+                    w.arm("_", "false");
+                });
+            });
+            w.blank();
+
+            // from_keyword() — create a declaration from a PropertyId and CssWideKeyword.
+            // Used by the `all` shorthand to expand a keyword to every longhand.
+            w.doc("Create a declaration from a property ID and a [`CssWideKeyword`].");
+            w.doc("Returns `None` for `Custom`, shorthand, or logical property IDs.");
+            w.fn_block("from_keyword(id: PropertyId, kw: CssWideKeyword) -> Option<Self>", |w| {
+                // Generate a macro that maps CssWideKeyword → Declared for any variant.
+                // Exhaustive match — no wildcard — so adding a new keyword variant is a
+                // compile error, not a silent bug.
+                w.line("macro_rules! kw_to_decl {");
+                w.line("    ($variant:path) => {");
+                w.line("        Some(match kw {");
+                w.line("            CssWideKeyword::Initial => $variant(Declared::Initial),");
+                w.line("            CssWideKeyword::Inherit => $variant(Declared::Inherit),");
+                w.line("            CssWideKeyword::Unset => $variant(Declared::Unset),");
+                w.line("            CssWideKeyword::Revert => $variant(Declared::Revert),");
+                w.line("            CssWideKeyword::RevertLayer => $variant(Declared::RevertLayer),");
+                w.line("        })");
+                w.line("    };");
+                w.line("}");
+                w.match_block("id", |w| {
+                    for group in groups {
+                        for prop in &group.properties {
+                            let p = to_pascal(&prop.css);
+                            w.arm(
+                                &format!("PropertyId::{p}"),
+                                &format!("kw_to_decl!(Self::{p})"),
+                            );
+                        }
+                    }
+                    w.arm("_", "None");
                 });
             });
         });
@@ -269,14 +418,4 @@ fn gen_style_setter_trait(w: &mut CodeWriter, groups: &[PropertyGroup], lt: &str
     });
 }
 
-fn to_pascal(css: &str) -> String {
-    css.split('-')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                Some(c) => c.to_uppercase().to_string() + chars.as_str(),
-                None => String::new(),
-            }
-        })
-        .collect()
-}
+use kozan_build_utils::to_pascal;

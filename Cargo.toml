@@ -17,6 +17,7 @@ kozan-style-macros = { version = "0.1", path = "crates/kozan-style-macros" }
 kozan-atom = { version = "0.1", path = "crates/kozan-atom" }
 kozan-selector = { version = "0.1", path = "crates/kozan-selector" }
 kozan-build-utils = { version = "0.1", path = "crates/kozan-build-utils" }
+kozan-cascade = { version = "0.1", path = "crates/kozan-cascade" }
 triomphe = "0.1.15"
 cssparser = "0.37.0"
 smallvec = "1.15.1"

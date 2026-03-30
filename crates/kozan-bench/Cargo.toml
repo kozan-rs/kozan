@@ -10,7 +10,10 @@ kozan-css = { workspace = true }
 kozan-style = { workspace = true }
 kozan-style-macros = { workspace = true }
 kozan-selector = { workspace = true }
+kozan-cascade = { workspace = true }
+triomphe = { workspace = true }
 kozan-atom = { workspace = true }
+smallvec = { workspace = true }
 cssparser = { workspace = true }
 criterion = { workspace = true }
 lightningcss = { workspace = true }
@@ -21,6 +24,8 @@ precomputed-hash = { workspace = true }
 stylo = { workspace = true }
 servo_arc = { workspace = true }
 url = { workspace = true }
+euclid = "0.22"
+style_traits = { version = "0.14.0", package = "stylo_traits", features = ["servo"] }
 
 [[bench]]
 name = "parse_inline"
@@ -40,6 +45,14 @@ harness = false
 
 [[bench]]
 name = "profile_gaps"
+harness = false
+
+[[bench]]
+name = "cascade"
+harness = false
+
+[[bench]]
+name = "selector_realworld"
 harness = false
 
 [lints]

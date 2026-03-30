@@ -126,6 +126,27 @@ pub trait Element: Sized + Clone {
         None
     }
 
+    // -- Lifecycle --
+    // These methods have default implementations suitable for most DOMs.
+    // Override when needed for specific CSS features.
+
+    /// Whether this element was just inserted into the DOM and has not yet
+    /// been styled or laid out.
+    ///
+    /// Used by `@starting-style` (CSS Transitions Level 2): rules inside
+    /// `@starting-style { }` only apply to elements on their first style
+    /// resolution after insertion. After the first restyle, the element is
+    /// no longer "newly inserted" and starting-style rules are skipped.
+    ///
+    /// The DOM implementation should:
+    /// 1. Return `true` on the first `resolve()` call after `appendChild()`
+    /// 2. Return `false` on all subsequent calls
+    ///
+    /// Default: `false` (safe — starting-style rules are skipped).
+    fn is_newly_inserted(&self) -> bool {
+        false
+    }
+
     // -- Shadow DOM support --
     // These methods have default implementations that return false/empty,
     // so DOM implementations without Shadow DOM support work out of the box.

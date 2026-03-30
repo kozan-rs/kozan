@@ -5,6 +5,7 @@ use kozan_style::DeclarationBlock;
 use smallvec::SmallVec;
 
 /// `@keyframes name { ... }` — defines named animation keyframes.
+#[derive(Clone, Debug)]
 pub struct KeyframesRule {
     /// The animation name (e.g. `fadeIn`, `slide-up`).
     pub name: Atom,
@@ -13,6 +14,7 @@ pub struct KeyframesRule {
 }
 
 /// A single keyframe block: `0%, 50% { declarations }`.
+#[derive(Clone, Debug)]
 pub struct KeyframeBlock {
     /// One or more keyframe selectors (percentages or from/to).
     pub selectors: SmallVec<[KeyframeSelector; 2]>,

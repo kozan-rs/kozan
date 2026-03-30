@@ -19,7 +19,7 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-image"
 [[property]]
 css = "background-position-x"
 field = "background_position_x"
-type = "PositionComponent"
+type = "PositionComponentList"
 initial = "Default::default()"
 inherited = false
 animatable = true
@@ -28,7 +28,7 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-position-x"
 [[property]]
 css = "background-position-y"
 field = "background_position_y"
-type = "PositionComponent"
+type = "PositionComponentList"
 initial = "Default::default()"
 inherited = false
 animatable = true
@@ -37,8 +37,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-position-y"
 [[property]]
 css = "background-size"
 field = "background_size"
-type = "BackgroundSize"
-initial = "BackgroundSize::Auto"
+type = "BackgroundSizeList"
+initial = "Default::default()"
 inherited = false
 animatable = true
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"
@@ -46,8 +46,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"
 [[property]]
 css = "background-repeat"
 field = "background_repeat"
-type = "BackgroundRepeat"
-initial = "BackgroundRepeat::Repeat"
+type = "BackgroundRepeatList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"
@@ -55,8 +55,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"
 [[property]]
 css = "background-attachment"
 field = "background_attachment"
-type = "BackgroundAttachment"
-initial = "BackgroundAttachment::Scroll"
+type = "BackgroundAttachmentList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-attachment"
@@ -64,8 +64,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-attachment"
 [[property]]
 css = "background-clip"
 field = "background_clip"
-type = "BackgroundClip"
-initial = "BackgroundClip::BorderBox"
+type = "BackgroundClipList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-clip"
@@ -73,8 +73,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-clip"
 [[property]]
 css = "background-origin"
 field = "background_origin"
-type = "BackgroundOrigin"
-initial = "BackgroundOrigin::PaddingBox"
+type = "BackgroundOriginList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"

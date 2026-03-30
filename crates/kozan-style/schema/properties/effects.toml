@@ -37,8 +37,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image"
 [[property]]
 css = "mask-mode"
 field = "mask_mode"
-type = "MaskMode"
-initial = "MaskMode::MatchSource"
+type = "MaskModeList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-mode"
@@ -46,8 +46,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-mode"
 [[property]]
 css = "mask-repeat"
 field = "mask_repeat"
-type = "BackgroundRepeat"
-initial = "BackgroundRepeat::Repeat"
+type = "BackgroundRepeatList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-repeat"
@@ -55,7 +55,7 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-repeat"
 [[property]]
 css = "mask-position"
 field = "mask_position"
-type = "Position2D"
+type = "Position2DList"
 initial = "Default::default()"
 inherited = false
 animatable = true
@@ -64,8 +64,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-position"
 [[property]]
 css = "mask-clip"
 field = "mask_clip"
-type = "MaskClip"
-initial = "MaskClip::BorderBox"
+type = "MaskClipList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-clip"
@@ -73,8 +73,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-clip"
 [[property]]
 css = "mask-origin"
 field = "mask_origin"
-type = "BackgroundOrigin"
-initial = "BackgroundOrigin::BorderBox"
+type = "BackgroundOriginList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-origin"
@@ -82,8 +82,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-origin"
 [[property]]
 css = "mask-size"
 field = "mask_size"
-type = "BackgroundSize"
-initial = "BackgroundSize::Auto"
+type = "BackgroundSizeList"
+initial = "Default::default()"
 inherited = false
 animatable = true
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-size"
@@ -91,8 +91,8 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-size"
 [[property]]
 css = "mask-composite"
 field = "mask_composite"
-type = "MaskComposite"
-initial = "MaskComposite::Add"
+type = "MaskCompositeList"
+initial = "Default::default()"
 inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-composite"
@@ -141,6 +141,65 @@ initial = "0.0_f32"
 inherited = false
 animatable = true
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/shape-image-threshold"
+
+[[property]]
+css = "image-orientation"
+field = "image_orientation"
+type = "ImageOrientation"
+initial = "ImageOrientation::FromImage"
+inherited = true
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/image-orientation"
+
+[[property]]
+css = "offset-path"
+field = "offset_path"
+type = "OffsetPath"
+initial = "OffsetPath::None"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/offset-path"
+
+[[property]]
+css = "offset-distance"
+field = "offset_distance"
+type = "specified::LengthPercentage"
+initial = "specified::LengthPercentage::default()"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/offset-distance"
+
+[[property]]
+css = "offset-rotate"
+field = "offset_rotate"
+type = "OffsetRotate"
+initial = "OffsetRotate::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/offset-rotate"
+
+[[property]]
+css = "offset-anchor"
+field = "offset_anchor"
+type = "AutoOr<Position2D>"
+initial = "AutoOr::Auto"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/offset-anchor"
+
+[[property]]
+css = "offset-position"
+field = "offset_position"
+type = "OffsetPosition"
+initial = "OffsetPosition::Normal"
+inherited = false
+animatable = true
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/offset-position"
+
+[[shorthand]]
+css = "offset"
+longhands = ["offset-path", "offset-distance", "offset-rotate", "offset-anchor", "offset-position"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/offset"
 
 [[shorthand]]
 css = "mask"

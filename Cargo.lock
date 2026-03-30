@@ -839,7 +839,9 @@ dependencies = [
  "criterion",
  "cssparser 0.36.0",
  "cssparser 0.37.0",
+ "euclid",
  "kozan-atom",
+ "kozan-cascade",
  "kozan-css",
  "kozan-selector",
  "kozan-style",
@@ -848,8 +850,11 @@ dependencies = [
  "precomputed-hash",
  "selectors",
  "servo_arc",
+ "smallvec",
  "string_cache 0.8.9",
  "stylo",
+ "stylo_traits",
+ "triomphe",
  "url",
 ]
 
@@ -859,6 +864,19 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "toml",
+]
+
+[[package]]
+name = "kozan-cascade"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "kozan-atom",
+ "kozan-css",
+ "kozan-selector",
+ "kozan-style",
+ "smallvec",
+ "triomphe",
 ]
 
 [[package]]

@@ -163,7 +163,7 @@ impl<'i> AtRuleParser<'i> for SheetParser {
                 Ok(CssRule::Media(Box::new(MediaRule { queries, rules })))
             }
             AtRulePrelude::Keyframes(name) => {
-                let keyframes = parse_keyframe_blocks(input)?;
+                let keyframes = parse_keyframe_blocks(input, self.may_have_substitutions)?;
                 Ok(CssRule::Keyframes(Box::new(KeyframesRule {
                     name,
                     keyframes,
@@ -194,7 +194,7 @@ impl<'i> AtRuleParser<'i> for SheetParser {
                 Ok(CssRule::FontFace(Box::new(FontFaceRule { declarations, descriptors })))
             }
             AtRulePrelude::Page(selectors) => {
-                let declarations = parse_declaration_block(input);
+                let declarations = parse_declaration_block(input, self.may_have_substitutions);
                 Ok(CssRule::Page(Box::new(PageRule {
                     selectors,
                     declarations,
@@ -258,7 +258,7 @@ impl<'i> QualifiedRuleParser<'i> for SheetParser {
         let (declarations, nested_rules) = parse_style_block_with_hint(input, self.may_have_substitutions);
         Ok(CssRule::Style(Box::new(StyleRule {
             selectors,
-            declarations,
+            declarations: triomphe::Arc::new(declarations),
             rules: if nested_rules.is_empty() {
                 empty_rules()
             } else {
@@ -275,7 +275,7 @@ fn parse_nested_rules_with_hint<'i>(
     may_have_substitutions: bool,
 ) -> Result<RuleList, cssparser::ParseError<'i, crate::CustomError>> {
     let mut parser = SheetParser { may_have_substitutions };
-    let mut rules = Vec::with_capacity(32);
+    let mut rules = Vec::new();
     let iter = cssparser::RuleBodyParser::new(input, &mut parser);
     for result in iter {
         match result {
@@ -283,7 +283,11 @@ fn parse_nested_rules_with_hint<'i>(
             Err(_) => {} // Skip invalid rules
         }
     }
-    Ok(rules_from_vec(rules))
+    if rules.is_empty() {
+        Ok(empty_rules())
+    } else {
+        Ok(rules_from_vec(rules))
+    }
 }
 
 // For nested rule parsing, SheetParser must implement RuleBodyItemParser
@@ -348,6 +352,23 @@ impl<'i> DeclarationParser<'i> for StyleBlockParser {
             )]));
         }
 
+        // CSS-wide keywords — peek first token to avoid try_parse overhead on miss.
+        {
+            let state = input.state();
+            if let Ok(token) = input.next() {
+                if let cssparser::Token::Ident(ref ident) = *token {
+                    if let Some(kw) = crate::declaration::match_css_wide_keyword(ident) {
+                        let decls = crate::declaration::apply_keyword_to_longhands(id, &kw);
+                        let important = input.try_parse(cssparser::parse_important).is_ok();
+                        return Ok(StyleBlockItem::Declaration(
+                            decls.into_iter().map(|d| (d, important)).collect(),
+                        ));
+                    }
+                }
+                input.reset(&state);
+            }
+        }
+
         if self.may_have_substitutions {
             if let Some(unparsed) = crate::var::scan_for_substitutions(input) {
                 let important = input.try_parse(cssparser::parse_important).is_ok();
@@ -357,13 +378,16 @@ impl<'i> DeclarationParser<'i> for StyleBlockParser {
             }
         }
 
-        if let Ok(decls) = input.try_parse(|i| crate::declaration::parse_css_wide_keyword(i, id)) {
+        // Shorthand value parsing (generated same-type + hand-written mixed-type).
+        if let Some(result) = crate::shorthand::parse_shorthand(id, input) {
+            let decls = result?;
             let important = input.try_parse(cssparser::parse_important).is_ok();
             return Ok(StyleBlockItem::Declaration(
-                decls.into_iter().map(|d: PropertyDeclaration| (d, important)).collect(),
+                decls.into_iter().map(|d| (d, important)).collect(),
             ));
         }
 
+        // Typed parse via generated dispatch (longhands only).
         let decl = crate::properties::parse_property_value(id, input)?;
         let important = input.try_parse(cssparser::parse_important).is_ok();
         Ok(StyleBlockItem::Declaration(smallvec![(decl, important)]))
@@ -413,8 +437,12 @@ impl<'i> QualifiedRuleParser<'i> for StyleBlockParser {
         &mut self,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::Prelude, cssparser::ParseError<'i, Self::Error>> {
-        kozan_selector::parser::parse_selector_list(input)
-            .map_err(|_| input.new_custom_error(crate::CustomError::InvalidSelector))
+        let mut selectors = kozan_selector::parser::parse_selector_list(input)
+            .map_err(|_| input.new_custom_error(crate::CustomError::InvalidSelector))?;
+        // CSS Nesting Level 1: selectors inside a style block that don't
+        // contain `&` get an implicit `& ` prepended (descendant combinator).
+        kozan_selector::ensure_nesting(&mut selectors);
+        Ok(selectors)
     }
 
     fn parse_block<'t>(
@@ -426,7 +454,7 @@ impl<'i> QualifiedRuleParser<'i> for StyleBlockParser {
         let (declarations, nested_rules) = parse_style_block_with_hint(input, self.may_have_substitutions);
         Ok(StyleBlockItem::Rule(CssRule::Style(Box::new(StyleRule {
             selectors,
-            declarations,
+            declarations: triomphe::Arc::new(declarations),
             rules: if nested_rules.is_empty() {
                 empty_rules()
             } else {
@@ -469,10 +497,10 @@ fn parse_style_block_with_hint(input: &mut Parser<'_, '_>, may_have_substitution
     (block, nested_rules)
 }
 
-/// Parse a declaration block (for @font-face, @page — no nested rules).
-fn parse_declaration_block(input: &mut Parser<'_, '_>) -> DeclarationBlock {
+/// Parse a declaration block (for @font-face, @page, keyframes — no nested rules).
+fn parse_declaration_block(input: &mut Parser<'_, '_>, may_have_substitutions: bool) -> DeclarationBlock {
     let mut decl_parser = crate::declaration::DeclParser {
-        may_have_substitutions: true, // Conservative
+        may_have_substitutions,
     };
     let mut block = DeclarationBlock::new();
     let iter = cssparser::RuleBodyParser::new(input, &mut decl_parser);
@@ -979,43 +1007,51 @@ fn parse_media_feature_value<'i>(
 fn parse_length_unit<'i>(
     unit: &str,
 ) -> Result<LengthUnit, cssparser::ParseError<'i, crate::CustomError>> {
-    // Use manual matching for the small set of media query length units.
-    let b = unit.as_bytes();
-    match b.len() {
-        2 => {
-            if (b[0] | 0x20) == b'p' && (b[1] | 0x20) == b'x' { return Ok(LengthUnit::Px); }
-            if (b[0] | 0x20) == b'e' && (b[1] | 0x20) == b'm' { return Ok(LengthUnit::Em); }
-            if (b[0] | 0x20) == b'v' && (b[1] | 0x20) == b'w' { return Ok(LengthUnit::Vw); }
-            if (b[0] | 0x20) == b'v' && (b[1] | 0x20) == b'h' { return Ok(LengthUnit::Vh); }
-        }
-        3 => {
-            if (b[0] | 0x20) == b'r' && (b[1] | 0x20) == b'e' && (b[2] | 0x20) == b'm' {
-                return Ok(LengthUnit::Rem);
-            }
-        }
-        4 => {
-            if (b[0] | 0x20) == b'v' && (b[1] | 0x20) == b'm' && (b[2] | 0x20) == b'i' && (b[3] | 0x20) == b'n' {
-                return Ok(LengthUnit::Vmin);
-            }
-            if (b[0] | 0x20) == b'v' && (b[1] | 0x20) == b'm' && (b[2] | 0x20) == b'a' && (b[3] | 0x20) == b'x' {
-                return Ok(LengthUnit::Vmax);
-            }
-        }
-        _ => {}
-    }
-    // For media queries, unsupported units → treat as 0px
-    Ok(LengthUnit::Px)
+    use kozan_style_macros::css_match;
+    Ok(css_match! { unit,
+        "px" => LengthUnit::Px,
+        "cm" => LengthUnit::Cm,
+        "mm" => LengthUnit::Mm,
+        "in" => LengthUnit::In,
+        "pt" => LengthUnit::Pt,
+        "pc" => LengthUnit::Pc,
+        "em" => LengthUnit::Em,
+        "rem" => LengthUnit::Rem,
+        "ch" => LengthUnit::Ch,
+        "ex" => LengthUnit::Ex,
+        "vw" => LengthUnit::Vw,
+        "vh" => LengthUnit::Vh,
+        "vmin" => LengthUnit::Vmin,
+        "vmax" => LengthUnit::Vmax,
+        "vi" => LengthUnit::Vi,
+        "vb" => LengthUnit::Vb,
+        "svw" => LengthUnit::Svw,
+        "svh" => LengthUnit::Svh,
+        "lvw" => LengthUnit::Lvw,
+        "lvh" => LengthUnit::Lvh,
+        "dvw" => LengthUnit::Dvw,
+        "dvh" => LengthUnit::Dvh,
+        "cqw" => LengthUnit::Cqw,
+        "cqh" => LengthUnit::Cqh,
+        "cqi" => LengthUnit::Cqi,
+        "cqb" => LengthUnit::Cqb,
+        _ => return Err(cssparser::ParseError {
+            kind: cssparser::ParseErrorKind::Custom(crate::CustomError::InvalidValue),
+            location: cssparser::SourceLocation { line: 0, column: 0 },
+        }),
+    })
 }
 
 // @keyframes block parsing
 
 fn parse_keyframe_blocks<'i>(
     input: &mut Parser<'i, '_>,
+    may_have_substitutions: bool,
 ) -> Result<Box<[KeyframeBlock]>, cssparser::ParseError<'i, crate::CustomError>> {
     let mut blocks = Vec::new();
 
     while !input.is_exhausted() {
-        if let Ok(block) = input.try_parse(|i| parse_one_keyframe_block(i)) {
+        if let Ok(block) = input.try_parse(|i| parse_one_keyframe_block(i, may_have_substitutions)) {
             blocks.push(block);
         }
     }
@@ -1025,6 +1061,7 @@ fn parse_keyframe_blocks<'i>(
 
 fn parse_one_keyframe_block<'i>(
     input: &mut Parser<'i, '_>,
+    may_have_substitutions: bool,
 ) -> Result<KeyframeBlock, cssparser::ParseError<'i, crate::CustomError>> {
     // Parse keyframe selectors: from, to, or percentages
     let mut selectors = SmallVec::new();
@@ -1036,7 +1073,7 @@ fn parse_one_keyframe_block<'i>(
     // Parse the declaration block
     input.expect_curly_bracket_block()?;
     let declarations = input.parse_nested_block(|i| {
-        Ok::<_, cssparser::ParseError<'i, crate::CustomError>>(parse_declaration_block(i))
+        Ok::<_, cssparser::ParseError<'i, crate::CustomError>>(parse_declaration_block(i, may_have_substitutions))
     })?;
 
     Ok(KeyframeBlock {

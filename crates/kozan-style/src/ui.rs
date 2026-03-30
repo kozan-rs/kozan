@@ -38,6 +38,20 @@ impl Default for ScrollbarColor {
     fn default() -> Self { Self::Auto }
 }
 
+/// CSS `scrollbar-gutter` — `auto | stable [both-edges]?`.
+///
+/// CSS Scrollbars Level 1 §6.2
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToComputedValue)]
+pub enum ScrollbarGutter {
+    Auto,
+    Stable,
+    StableBothEdges,
+}
+
+impl Default for ScrollbarGutter {
+    fn default() -> Self { Self::Auto }
+}
+
 /// CSS `scroll-snap-type`.
 #[derive(Clone, Debug, PartialEq, ToComputedValue)]
 pub enum ScrollSnapType {
@@ -50,4 +64,16 @@ pub enum ScrollSnapType {
 
 impl Default for ScrollSnapType {
     fn default() -> Self { Self::None }
+}
+
+/// CSS `zoom` — `normal | reset | <number> | <percentage>`.
+#[derive(Clone, Copy, Debug, PartialEq, ToComputedValue)]
+pub enum Zoom {
+    Normal,
+    Reset,
+    Number(f32),
+}
+
+impl Default for Zoom {
+    fn default() -> Self { Self::Normal }
 }

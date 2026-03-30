@@ -49,17 +49,18 @@ impl crate::ToComputedValue for LengthPercentage {
                 computed::LengthPercentage::Percentage(*p)
             }
             Self::Calc(node) => {
-                // Resolve all relative units to px, keep percentages as-is
-                let computed_node = node.clone().map_leaves(&|leaf| {
+                // Resolve all relative units to px, keep percentages as-is.
+                // map_leaves_ref avoids cloning the calc tree before transforming.
+                let computed_node = node.map_leaves_ref(&|leaf| {
                     match leaf {
                         SpecifiedLeaf::Length(l) => {
                             computed::CalcLeaf::Length(l.to_computed_value(ctx))
                         }
                         SpecifiedLeaf::Percentage(p) => {
-                            computed::CalcLeaf::Percentage(p)
+                            computed::CalcLeaf::Percentage(*p)
                         }
                         SpecifiedLeaf::Number(n) => {
-                            computed::CalcLeaf::Number(n)
+                            computed::CalcLeaf::Number(*n)
                         }
                     }
                 });
@@ -78,17 +79,18 @@ impl crate::ToComputedValue for LengthPercentage {
                 Self::Percentage(*p)
             }
             computed::LengthPercentage::Calc(node) => {
-                // Convert computed calc back to specified (for animations)
-                let specified_node = node.clone().map_leaves(&|leaf| {
+                // Convert computed calc back to specified (for animations).
+                // map_leaves_ref avoids cloning the calc tree before transforming.
+                let specified_node = node.map_leaves_ref(&|leaf| {
                     match leaf {
                         computed::CalcLeaf::Length(l) => {
-                            SpecifiedLeaf::Length(super::Length::from_computed_value(&l))
+                            SpecifiedLeaf::Length(super::Length::from_computed_value(l))
                         }
                         computed::CalcLeaf::Percentage(p) => {
-                            SpecifiedLeaf::Percentage(p)
+                            SpecifiedLeaf::Percentage(*p)
                         }
                         computed::CalcLeaf::Number(n) => {
-                            SpecifiedLeaf::Number(n)
+                            SpecifiedLeaf::Number(*n)
                         }
                     }
                 });

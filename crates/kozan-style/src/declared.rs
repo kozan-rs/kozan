@@ -18,6 +18,20 @@
 //! style.color(Color::rgb(255, 0, 0))    // → Declared::Value
 //! ```
 
+/// CSS-wide keyword discriminant — shared between parsing (kozan-css) and
+/// code generation (kozan-style). Avoids magic numbers crossing crate boundaries.
+///
+/// Maps 1:1 to the keyword variants of `Declared<T>`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum CssWideKeyword {
+    Initial = 0,
+    Inherit = 1,
+    Unset = 2,
+    Revert = 3,
+    RevertLayer = 4,
+}
+
 /// What a CSS property holds before cascade resolution.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Declared<T> {

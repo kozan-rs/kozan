@@ -85,6 +85,7 @@ pub enum RangeOp {
 /// Lightweight value for media features — NOT full CSS property values.
 ///
 /// Media features only accept a small subset of CSS values.
+#[derive(Clone)]
 pub enum MediaFeatureValue {
     /// Length value with unit (e.g. `768px`, `48em`).
     Length(f32, LengthUnit),
@@ -101,11 +102,37 @@ pub enum MediaFeatureValue {
 /// Length units used in media features.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LengthUnit {
+    // Absolute
     Px,
+    Cm,
+    Mm,
+    In,
+    Pt,
+    Pc,
+    // Font-relative
     Em,
     Rem,
+    Ch,
+    Ex,
+    // Viewport (default)
     Vw,
     Vh,
     Vmin,
     Vmax,
+    Vi,
+    Vb,
+    // Viewport (small)
+    Svw,
+    Svh,
+    // Viewport (large)
+    Lvw,
+    Lvh,
+    // Viewport (dynamic)
+    Dvw,
+    Dvh,
+    // Container query
+    Cqw,
+    Cqh,
+    Cqi,
+    Cqb,
 }

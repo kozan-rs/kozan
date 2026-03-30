@@ -115,6 +115,87 @@ inherited = false
 animatable = false
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-play-state"
 
+[[property]]
+css = "animation-composition"
+field = "animation_composition"
+type = "AnimationCompositionList"
+initial = "AnimationCompositionList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-composition"
+
+[[property]]
+css = "animation-timeline"
+field = "animation_timeline"
+type = "AnimationTimelineList"
+initial = "AnimationTimelineList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline"
+
+[[property]]
+css = "animation-range-start"
+field = "animation_range_start"
+type = "AnimationRangeValue"
+initial = "AnimationRangeValue::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-range-start"
+
+[[property]]
+css = "animation-range-end"
+field = "animation_range_end"
+type = "AnimationRangeValue"
+initial = "AnimationRangeValue::Normal"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-range-end"
+
+[[property]]
+css = "scroll-timeline-name"
+field = "scroll_timeline_name"
+type = "ScrollTimelineNameList"
+initial = "ScrollTimelineNameList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-timeline-name"
+
+[[property]]
+css = "scroll-timeline-axis"
+field = "scroll_timeline_axis"
+type = "ScrollTimelineAxisList"
+initial = "ScrollTimelineAxisList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-timeline-axis"
+
+[[property]]
+css = "view-timeline-name"
+field = "view_timeline_name"
+type = "ViewTimelineNameList"
+initial = "ViewTimelineNameList::None"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/view-timeline-name"
+
+[[property]]
+css = "view-timeline-axis"
+field = "view_timeline_axis"
+type = "ViewTimelineAxisList"
+initial = "ViewTimelineAxisList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/view-timeline-axis"
+
+[[property]]
+css = "view-timeline-inset"
+field = "view_timeline_inset"
+type = "ViewTimelineInsetList"
+initial = "ViewTimelineInsetList::default()"
+inherited = false
+animatable = false
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/view-timeline-inset"
+
 [[shorthand]]
 css = "transition"
 longhands = ["transition-property", "transition-duration", "transition-timing-function", "transition-delay", "transition-behavior"]
@@ -122,5 +203,20 @@ spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition"
 
 [[shorthand]]
 css = "animation"
-longhands = ["animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-iteration-count", "animation-direction", "animation-fill-mode", "animation-play-state"]
+longhands = ["animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-iteration-count", "animation-direction", "animation-fill-mode", "animation-play-state", "animation-composition"]
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation"
+
+[[shorthand]]
+css = "animation-range"
+longhands = ["animation-range-start", "animation-range-end"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-range"
+
+[[shorthand]]
+css = "scroll-timeline"
+longhands = ["scroll-timeline-name", "scroll-timeline-axis"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-timeline"
+
+[[shorthand]]
+css = "view-timeline"
+longhands = ["view-timeline-name", "view-timeline-axis", "view-timeline-inset"]
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/view-timeline"

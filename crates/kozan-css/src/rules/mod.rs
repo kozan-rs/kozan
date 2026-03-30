@@ -7,7 +7,7 @@
 use kozan_atom::Atom;
 use kozan_selector::SelectorList;
 use kozan_style::DeclarationBlock;
-use triomphe::ThinArc;
+use triomphe::{Arc, ThinArc};
 
 pub mod media;
 pub mod keyframes;
@@ -98,8 +98,10 @@ pub enum CssRule {
 pub struct StyleRule {
     /// The selector list (e.g. `.container > .item, #main`).
     pub selectors: SelectorList,
-    /// Property declarations within this rule.
-    pub declarations: DeclarationBlock,
+    /// Property declarations within this rule. Arc-wrapped so that
+    /// stylist indexing clones a refcount (O(1)) instead of deep-cloning
+    /// the entire declaration vector.
+    pub declarations: Arc<DeclarationBlock>,
     /// Nested rules (CSS Nesting Level 1). Empty ThinArc if no nesting.
     pub rules: RuleList,
 }

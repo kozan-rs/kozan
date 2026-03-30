@@ -1,9 +1,15 @@
-//! CSS image and gradient parsers.
+//! CSS image and gradient parsers, plus background/mask layer list parsers.
 
 use cssparser::Parser;
 use kozan_style::{
     Atom, Color, Image, ImageList,
     LinearGradient, RadialGradient, ConicGradient, RadialShape, ColorStop,
+    PositionComponentList, BackgroundSizeList, BackgroundRepeatList,
+    BackgroundAttachmentList, BackgroundClipList, BackgroundOriginList,
+    MaskModeList, MaskClipList, MaskCompositeList, Position2DList,
+    BackgroundRepeat, BackgroundAttachment, BackgroundClip, BackgroundOrigin,
+    BackgroundSize, MaskMode, MaskClip, MaskComposite,
+    specified::LengthPercentage,
 };
 use kozan_style_macros::css_match;
 use crate::Error;
@@ -153,5 +159,135 @@ fn parse_angle<'i>(input: &mut Parser<'i, '_>) -> Result<f32, Error<'i>> {
             }
         }
         _ => Err(location.new_custom_error(crate::CustomError::InvalidValue)),
+    }
+}
+
+// ─── BackgroundSize parser ────────────────────────────────────────────────────
+
+impl crate::Parse for BackgroundSize {
+    /// `cover | contain | [ <length-percentage> | auto ]{1,2}`
+    ///
+    /// CSS Backgrounds Level 3 §3.9
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        // Keywords first.
+        if let Ok(kw) = input.try_parse(|i| i.expect_ident_cloned()) {
+            match kw.as_ref() {
+                "cover"   => return Ok(BackgroundSize::Cover),
+                "contain" => return Ok(BackgroundSize::Contain),
+                "auto"    => {
+                    // `auto [auto]?` — try optional second auto/length.
+                    let height = parse_bg_size_axis(input).ok().flatten();
+                    return Ok(BackgroundSize::Explicit { width: None, height });
+                }
+                _ => {} // fall through to try as length
+            }
+            return Err(input.new_custom_error(crate::CustomError::InvalidValue));
+        }
+        // Try as length-percentage for width.
+        if let Ok(w) = input.try_parse(<LengthPercentage as crate::Parse>::parse) {
+            let height = parse_bg_size_axis(input).ok().flatten();
+            return Ok(BackgroundSize::Explicit { width: Some(w), height });
+        }
+        Err(input.new_custom_error(crate::CustomError::InvalidValue))
+    }
+}
+
+/// Parse one axis of `<bg-size>`: `auto | <length-percentage>`.
+/// Returns `None` for `auto` (implicit in the `Option<LengthPercentage>`).
+fn parse_bg_size_axis<'i>(input: &mut Parser<'i, '_>) -> Result<Option<LengthPercentage>, Error<'i>> {
+    input.try_parse(|i| {
+        if i.try_parse(|i| i.expect_ident_matching("auto")).is_ok() {
+            return Ok(None);
+        }
+        <LengthPercentage as crate::Parse>::parse(i).map(Some)
+    })
+}
+
+// ─── Background / mask per-layer list parsers ─────────────────────────────────
+//
+// Each property is a comma-separated list of per-layer values.
+// CSS Backgrounds Level 3 §3, CSS Masking Level 1 §6.
+
+/// Generic helper: parse a comma-separated list of `T` into `Box<[T]>`.
+fn parse_comma_list<'i, T, F>(input: &mut Parser<'i, '_>, mut parse_one: F)
+    -> Result<Box<[T]>, crate::Error<'i>>
+where
+    F: FnMut(&mut Parser<'i, '_>) -> Result<T, crate::Error<'i>>,
+{
+    let first = parse_one(input)?;
+    let mut items = vec![first];
+    while input.try_parse(|i| i.expect_comma()).is_ok() {
+        items.push(parse_one(input)?);
+    }
+    Ok(items.into_boxed_slice())
+}
+
+impl crate::Parse for PositionComponentList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <kozan_style::PositionComponent as crate::Parse>::parse)
+            .map(PositionComponentList)
+    }
+}
+
+impl crate::Parse for BackgroundSizeList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <BackgroundSize as crate::Parse>::parse)
+            .map(BackgroundSizeList)
+    }
+}
+
+impl crate::Parse for BackgroundRepeatList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <BackgroundRepeat as crate::Parse>::parse)
+            .map(BackgroundRepeatList)
+    }
+}
+
+impl crate::Parse for BackgroundAttachmentList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <BackgroundAttachment as crate::Parse>::parse)
+            .map(BackgroundAttachmentList)
+    }
+}
+
+impl crate::Parse for BackgroundClipList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <BackgroundClip as crate::Parse>::parse)
+            .map(BackgroundClipList)
+    }
+}
+
+impl crate::Parse for BackgroundOriginList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <BackgroundOrigin as crate::Parse>::parse)
+            .map(BackgroundOriginList)
+    }
+}
+
+impl crate::Parse for MaskModeList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <MaskMode as crate::Parse>::parse)
+            .map(MaskModeList)
+    }
+}
+
+impl crate::Parse for MaskClipList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <MaskClip as crate::Parse>::parse)
+            .map(MaskClipList)
+    }
+}
+
+impl crate::Parse for MaskCompositeList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <MaskComposite as crate::Parse>::parse)
+            .map(MaskCompositeList)
+    }
+}
+
+impl crate::Parse for Position2DList {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, Error<'i>> {
+        parse_comma_list(input, <kozan_style::Position2D as crate::Parse>::parse)
+            .map(Position2DList)
     }
 }

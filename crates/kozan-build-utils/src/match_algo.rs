@@ -218,15 +218,14 @@ pub fn gen_bitflag_match(
     w: &mut CodeWriter,
     type_name: &str,
     arms: &[BitflagArm],
-    has_none: bool,
+    _has_none: bool,
     err_expr: &str,
 ) {
-    if has_none {
-        w.block(
-            "if input.try_parse(|i| i.expect_ident_matching(\"none\")).is_ok()",
-            |w| { w.line(&format!("return Ok({type_name}::EMPTY);")); },
-        );
-    }
+    // All bitflags types accept `none` → EMPTY (CSS spec: `none | [ flag1 || flag2 || ... ]`)
+    w.block(
+        "if input.try_parse(|i| i.expect_ident_matching(\"none\")).is_ok()",
+        |w| { w.line(&format!("return Ok({type_name}::EMPTY);")); },
+    );
 
     w.line(&format!("let mut result = {type_name}::EMPTY;"));
     w.line("let mut found = false;");

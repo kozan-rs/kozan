@@ -59,6 +59,23 @@ macro_rules! impl_to_computed_identity {
 
 impl_to_computed_identity!(f32, i32, u32, u16, u8, bool);
 
+/// Identity impl for Clone-only types (non-Copy).
+macro_rules! impl_to_computed_identity_clone {
+    ($($ty:ty),+ $(,)?) => {
+        $(
+            impl ToComputedValue for $ty {
+                type ComputedValue = Self;
+                #[inline]
+                fn to_computed_value(&self, _ctx: &ComputeContext) -> Self { self.clone() }
+                #[inline]
+                fn from_computed_value(computed: &Self) -> Self { computed.clone() }
+            }
+        )+
+    };
+}
+
+impl_to_computed_identity_clone!(crate::Atom, Box<str>);
+
 // All other types get ToComputedValue via #[derive(ToComputedValue)] on their definitions.
 
 // Discrete animation for bool

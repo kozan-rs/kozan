@@ -6,6 +6,7 @@ use super::RuleList;
 use super::media::{RangeOp, MediaFeatureValue};
 
 /// `@container [name] (condition) { rules }` — container size query.
+#[derive(Clone)]
 pub struct ContainerRule {
     /// Optional container name.
     pub name: Option<Atom>,
@@ -16,6 +17,7 @@ pub struct ContainerRule {
 }
 
 /// Boolean condition tree for container queries.
+#[derive(Clone)]
 pub enum ContainerCondition {
     /// A single container size feature test.
     Feature(ContainerSizeFeature),
@@ -28,6 +30,7 @@ pub enum ContainerCondition {
 }
 
 /// A single container size feature: `(width >= 768px)`.
+#[derive(Clone)]
 pub struct ContainerSizeFeature {
     /// Feature name (width, height, inline-size, block-size, etc.).
     pub name: Atom,

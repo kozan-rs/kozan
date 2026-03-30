@@ -27,6 +27,11 @@ impl CodeWriter {
         self.buf.push('\n');
     }
 
+    /// Write raw text without indentation. Used for macros.
+    pub fn raw(&mut self, s: &str) {
+        self.buf.push_str(s);
+    }
+
     pub fn doc(&mut self, text: &str) {
         self.line(&format!("/// {text}"));
     }

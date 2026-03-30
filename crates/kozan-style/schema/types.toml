@@ -296,10 +296,22 @@ variants = [
 name = "TextWrapMode"
 repr = "u8"
 default = "Wrap"
-spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap-mode"
 variants = [
     { name = "Wrap", css = "wrap" },
     { name = "Nowrap", css = "nowrap" },
+]
+
+[[enum]]
+name = "TextWrapStyle"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap-style"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Balance", css = "balance" },
+    { name = "Stable", css = "stable" },
+    { name = "Pretty", css = "pretty" },
 ]
 
 [[enum]]
@@ -497,16 +509,8 @@ variants = [
     { name = "ContentBox", css = "content-box" },
 ]
 
-[[enum]]
-name = "BackgroundSize"
-repr = "u8"
-default = "Auto"
-spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"
-variants = [
-    { name = "Auto", css = "auto" },
-    { name = "Cover", css = "cover" },
-    { name = "Contain", css = "contain" },
-]
+# BackgroundSize is hand-written in kozan-style/src/image.rs
+# (supports cover | contain | [<length-percentage> | auto]{1,2})
 
 [[enum]]
 name = "ObjectFit"
@@ -641,6 +645,17 @@ variants = [
     { name = "Paused", css = "paused" },
 ]
 
+[[enum]]
+name = "AnimationComposition"
+repr = "u8"
+default = "Replace"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-composition"
+variants = [
+    { name = "Replace", css = "replace" },
+    { name = "Add", css = "add" },
+    { name = "Accumulate", css = "accumulate" },
+]
+
 
 [[enum]]
 name = "Cursor"
@@ -745,6 +760,61 @@ variants = [
 ]
 
 [[enum]]
+name = "FieldSizing"
+repr = "u8"
+default = "Fixed"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/field-sizing"
+variants = [
+    { name = "Fixed", css = "fixed" },
+    { name = "Content", css = "content" },
+]
+
+[[enum]]
+name = "InterpolateSize"
+repr = "u8"
+default = "NumericOnly"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/interpolate-size"
+variants = [
+    { name = "NumericOnly", css = "numeric-only" },
+    { name = "AllowKeywords", css = "allow-keywords" },
+]
+
+[[enum]]
+name = "RubyAlign"
+repr = "u8"
+default = "SpaceAround"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-align"
+variants = [
+    { name = "Start", css = "start" },
+    { name = "Center", css = "center" },
+    { name = "SpaceBetween", css = "space-between" },
+    { name = "SpaceAround", css = "space-around" },
+]
+
+[[enum]]
+name = "RubyMerge"
+repr = "u8"
+default = "Separate"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/ruby-merge"
+variants = [
+    { name = "Separate", css = "separate" },
+    { name = "Merge", css = "merge" },
+    { name = "Auto", css = "auto" },
+]
+
+[[enum]]
+name = "TextBoxTrim"
+repr = "u8"
+default = "None"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-box-trim"
+variants = [
+    { name = "None", css = "none" },
+    { name = "TrimStart", css = "trim-start" },
+    { name = "TrimEnd", css = "trim-end" },
+    { name = "TrimBoth", css = "trim-both" },
+]
+
+[[enum]]
 name = "ScrollBehavior"
 repr = "u8"
 default = "Auto"
@@ -774,6 +844,30 @@ variants = [
     { name = "Auto", css = "auto" },
     { name = "Thin", css = "thin" },
     { name = "None", css = "none" },
+]
+
+[[enum]]
+name = "MathShift"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/math-shift"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Compact", css = "compact" },
+]
+
+[[enum]]
+name = "ReadingFlow"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/reading-flow"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "FlexVisual", css = "flex-visual" },
+    { name = "FlexFlow", css = "flex-flow" },
+    { name = "GridRows", css = "grid-rows" },
+    { name = "GridColumns", css = "grid-columns" },
+    { name = "GridOrder", css = "grid-order" },
 ]
 
 [[enum]]
@@ -1539,6 +1633,12 @@ inner = "IterationCount"
 default_inner = "IterationCount::Finite(1.0)"
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-iteration-count"
 
+[[list]]
+name = "AnimationCompositionList"
+inner = "AnimationComposition"
+default_inner = "AnimationComposition::Replace"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-composition"
+
 [[enum]]
 name = "TransitionBehavior"
 repr = "u8"
@@ -1563,3 +1663,96 @@ name = "TransitionBehaviorList"
 inner = "TransitionBehavior"
 default_inner = "TransitionBehavior::Normal"
 spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-behavior"
+
+[[enum]]
+name = "FontVariantEmoji"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-emoji"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "Text", css = "text" },
+    { name = "Emoji", css = "emoji" },
+    { name = "Unicode", css = "unicode" },
+]
+
+[[enum]]
+name = "TextDecorationSkipInk"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-skip-ink"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "None", css = "none" },
+    { name = "All", css = "all" },
+]
+
+[[enum]]
+name = "InitialLetterAlign"
+repr = "u8"
+default = "Alphabetic"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/initial-letter-align"
+variants = [
+    { name = "Alphabetic", css = "alphabetic" },
+    { name = "Auto", css = "auto" },
+    { name = "Hanging", css = "hanging" },
+    { name = "Ideographic", css = "ideographic" },
+]
+
+[[enum]]
+name = "TextSpacingTrim"
+repr = "u8"
+default = "Normal"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/text-spacing-trim"
+variants = [
+    { name = "Normal", css = "normal" },
+    { name = "TrimStart", css = "trim-start" },
+    { name = "SpaceFirst", css = "space-first" },
+    { name = "Auto", css = "auto" },
+]
+
+[[enum]]
+name = "PageBreak"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Always", css = "always" },
+    { name = "Avoid", css = "avoid" },
+    { name = "Left", css = "left" },
+    { name = "Right", css = "right" },
+    { name = "Recto", css = "recto" },
+    { name = "Verso", css = "verso" },
+]
+
+[[enum]]
+name = "PageBreakInside"
+repr = "u8"
+default = "Auto"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-inside"
+variants = [
+    { name = "Auto", css = "auto" },
+    { name = "Avoid", css = "avoid" },
+]
+
+[[bitflags]]
+name = "HangingPunctuation"
+repr = "u8"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/hanging-punctuation"
+flags = [
+    { name = "FIRST", css = "first", bit = 0 },
+    { name = "LAST", css = "last", bit = 1 },
+    { name = "FORCE_END", css = "force-end", bit = 2 },
+    { name = "ALLOW_END", css = "allow-end", bit = 3 },
+]
+
+[[bitflags]]
+name = "WhiteSpaceTrim"
+repr = "u8"
+spec = "https://developer.mozilla.org/en-US/docs/Web/CSS/white-space-trim"
+flags = [
+    { name = "DISCARD_BEFORE", css = "discard-before", bit = 0 },
+    { name = "DISCARD_AFTER", css = "discard-after", bit = 1 },
+    { name = "DISCARD_INNER", css = "discard-inner", bit = 2 },
+]

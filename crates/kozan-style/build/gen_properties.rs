@@ -30,6 +30,9 @@ pub fn generate(groups: &[PropertyGroup]) -> String {
     w.blank();
 
     gen_logical_resolution(&mut w, groups);
+    w.blank();
+
+    gen_apply_declaration(&mut w, groups);
 
     w.finish()
 }
@@ -249,11 +252,36 @@ fn gen_property_id_from_str(w: &mut CodeWriter, groups: &[PropertyGroup]) {
 
 fn gen_shorthand_expansion(w: &mut CodeWriter, groups: &[PropertyGroup]) {
     w.impl_block("PropertyId", |w| {
+        // all_longhands() — returns all physical longhand PropertyIds except
+        // direction and unicode-bidi (for the `all` CSS shorthand).
+        w.doc("All physical longhand property IDs, excluding `direction` and `unicode-bidi`.");
+        w.doc("Used by the `all` CSS shorthand (CSS Cascading Level 5 §3.2).");
+        w.fn_block("all_longhands() -> &'static [PropertyId]", |w| {
+            let mut ids = Vec::new();
+            for group in groups {
+                for prop in &group.properties {
+                    // CSS spec: `all` resets everything EXCEPT direction and unicode-bidi
+                    if prop.css == "direction" || prop.css == "unicode-bidi" {
+                        continue;
+                    }
+                    ids.push(format!("PropertyId::{}", to_pascal(&prop.css)));
+                }
+            }
+            w.line(&format!("&[{}]", ids.join(", ")));
+        });
+        w.blank();
+
         w.doc("If this is a shorthand, returns the longhands it expands to.");
-        w.const_fn_block("longhands(self) -> Option<&'static [PropertyId]>", |w| {
+        w.fn_block("longhands(self) -> Option<&'static [PropertyId]>", |w| {
             w.match_block("self", |w| {
                 for group in groups {
                     for short in &group.shorthands {
+                        // `all` shorthand expands to ALL longhands (except direction/unicode-bidi).
+                        // Use the dynamic all_longhands() instead of the TOML placeholder.
+                        if short.css == "all" {
+                            w.arm("Self::All", "Some(Self::all_longhands())");
+                            continue;
+                        }
                         let ids: Vec<String> = short.longhands.iter()
                             .map(|lh| format!("PropertyId::{}", to_pascal(lh)))
                             .collect();
@@ -322,14 +350,170 @@ fn gen_logical_resolution(w: &mut CodeWriter, groups: &[PropertyGroup]) {
     });
 }
 
-fn to_pascal(css: &str) -> String {
-    css.split('-')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                Some(c) => c.to_uppercase().to_string() + chars.as_str(),
-                None => String::new(),
-            }
-        })
-        .collect()
+/// Qualify ambiguous initial expressions with the property's specified type.
+///
+/// Handles:
+/// - `Default::default()` → `<Type as Default>::default()`
+/// - `generics::Foo::Bar` when type is `generics::Foo<X>` → `generics::Foo::<X>::Bar`
+fn qualify_initial(initial: &str, ty: &str) -> String {
+    if initial == "Default::default()" {
+        return format!("<{ty} as Default>::default()");
+    }
+
+    // If the type has generic params and the initial doesn't, inject them.
+    // e.g. type = "generics::LPOrNormal<specified::LP>", initial = "generics::LPOrNormal::Normal"
+    // → "generics::LPOrNormal::<specified::LP>::Normal"
+    if let Some(angle_start) = ty.find('<') {
+        let type_prefix = &ty[..angle_start]; // "generics::LPOrNormal"
+        let type_params = &ty[angle_start..];  // "<specified::LP>"
+        if initial.starts_with(type_prefix) && !initial.contains('<') {
+            let suffix = &initial[type_prefix.len()..]; // "::Normal"
+            return format!("{type_prefix}::{type_params}{suffix}");
+        }
+    }
+
+    initial.to_string()
 }
+
+/// Build a cached lookup: CSS name → (group_name, PropertyDef).
+/// Replaces O(n) linear scans with O(1) HashMap lookups (build-time only).
+fn build_prop_cache<'a>(groups: &'a [PropertyGroup]) -> std::collections::HashMap<&'a str, (&'a str, &'a kozan_build_utils::PropertyDef)> {
+    let mut map = std::collections::HashMap::new();
+    for group in groups {
+        for prop in &group.properties {
+            map.insert(prop.css.as_str(), (group.name.as_str(), prop));
+        }
+    }
+    map
+}
+
+fn gen_apply_declaration(w: &mut CodeWriter, groups: &[PropertyGroup]) {
+    // Pre-build CSS name → (group, property) cache for O(1) logical property lookups.
+    let prop_cache = build_prop_cache(groups);
+
+    // Generate the apply_prop! macro first.
+    // W3C CSS Cascading Level 5:
+    // - `revert`: Roll back to previous origin's value. When no previous origin
+    //   exists (typical: no user stylesheet), behaves like `unset`.
+    // - `revert-layer`: Roll back to previous layer's value. When in first layer
+    //   or unlayered, behaves like `unset`.
+    // - `unset`: `inherit` for inherited properties, `initial` for non-inherited.
+    //
+    // The macro treats Revert/RevertLayer as Unset. Full multi-origin rollback
+    // requires per-property origin tracking in the resolver (future work).
+    w.raw(r#"/// Internal macro for applying a Declared value to a computed field.
+/// Handles all CSS-wide keywords including `revert` / `revert-layer`.
+macro_rules! apply_prop {
+    ($d:expr, $target:expr, $parent:expr, $initial:expr, $ctx:expr, inherit) => {
+        match $d {
+            Declared::Value(v) => $target = crate::ToComputedValue::to_computed_value(v, $ctx),
+            Declared::Initial => $target = crate::ToComputedValue::to_computed_value(&$initial, $ctx),
+            // Inherited property: inherit, unset, revert, revert-layer all inherit.
+            // If no parent exists (root element), reset to initial value.
+            Declared::Inherit | Declared::Unset | Declared::Revert | Declared::RevertLayer => {
+                match $parent {
+                    Some(pv) => $target = pv.clone(),
+                    None => $target = crate::ToComputedValue::to_computed_value(&$initial, $ctx),
+                }
+            },
+            Declared::WithVariables(_) => {} // Handled by resolver before apply
+        }
+    };
+    ($d:expr, $target:expr, $parent:expr, $initial:expr, $ctx:expr, reset) => {
+        match $d {
+            Declared::Value(v) => $target = crate::ToComputedValue::to_computed_value(v, $ctx),
+            Declared::Inherit => if let Some(pv) = $parent { $target = pv.clone(); },
+            // Non-inherited property: initial, unset, revert, revert-layer all reset.
+            Declared::Initial | Declared::Unset | Declared::Revert | Declared::RevertLayer => {
+                $target = crate::ToComputedValue::to_computed_value(&$initial, $ctx);
+            },
+            Declared::WithVariables(_) => {} // Handled by resolver before apply
+        }
+    };
+}
+"#);
+
+    w.impl_block("ComputedStyle", |w| {
+        w.doc("Apply a single property declaration to this computed style.");
+        w.doc("`WithVariables` must be substituted before calling this.");
+        w.doc("Logical properties are resolved using the current direction/writing-mode.");
+        w.line("#[allow(clippy::match_single_binding)]");
+        w.block(
+            "pub fn apply_declaration(\n        &mut self,\n        decl: &PropertyDeclaration,\n        parent: Option<&ComputedStyle>,\n        ctx: &crate::ComputeContext,\n    )",
+            |w| {
+                w.match_block("decl", |w| {
+                    // Physical properties — one arm each.
+                    for group in groups {
+                        for prop in &group.properties {
+                            let pascal = to_pascal(&prop.css);
+                            let g = &group.name;
+                            let f = &prop.field;
+                            let initial = qualify_initial(&prop.initial, &prop.ty);
+                            let mode = if prop.inherited { "inherit" } else { "reset" };
+
+                            w.arm(
+                                &format!("PropertyDeclaration::{pascal}(d)"),
+                                &format!(
+                                    "apply_prop!(d, self.{g}.{f}, parent.map(|p| &p.{g}.{f}), {initial}, ctx, {mode})"
+                                ),
+                            );
+                        }
+
+                        // Logical properties — resolve to physical based on writing-mode + direction.
+                        for logical in &group.logicals {
+                            let pascal = to_pascal(&logical.css);
+
+                            // Look up all 4 physical targets.
+                            let hl = prop_cache.get(logical.physical.horizontal_ltr.as_str()).copied();
+                            let hr = prop_cache.get(logical.physical.horizontal_rtl.as_str()).copied();
+                            let vl = prop_cache.get(logical.physical.vertical_ltr.as_str()).copied();
+                            let vr = prop_cache.get(logical.physical.vertical_rtl.as_str()).copied();
+
+                            let Some((hl_g, hl_p)) = hl else {
+                                panic!("Logical `{}`: physical `{}` not found", logical.css, logical.physical.horizontal_ltr);
+                            };
+                            let Some((hr_g, hr_p)) = hr else {
+                                panic!("Logical `{}`: physical `{}` not found", logical.css, logical.physical.horizontal_rtl);
+                            };
+                            let Some((vl_g, vl_p)) = vl else {
+                                panic!("Logical `{}`: physical `{}` not found", logical.css, logical.physical.vertical_ltr);
+                            };
+                            let Some((vr_g, vr_p)) = vr else {
+                                panic!("Logical `{}`: physical `{}` not found", logical.css, logical.physical.vertical_rtl);
+                            };
+
+                            let mode = if hl_p.inherited { "inherit" } else { "reset" };
+
+                            w.block(&format!("PropertyDeclaration::{pascal}(d) =>"), |w| {
+                                w.line("let horiz = matches!(self.text.writing_mode, WritingMode::HorizontalTb);");
+                                w.line("let ltr = matches!(self.text.direction, Direction::Ltr);");
+                                w.match_block("(horiz, ltr)", |w| {
+                                    for (pat, pg, pp) in [
+                                        ("(true, true)", hl_g, hl_p),
+                                        ("(true, false)", hr_g, hr_p),
+                                        ("(false, true)", vl_g, vl_p),
+                                        ("(false, false)", vr_g, vr_p),
+                                    ] {
+                                        let ini = qualify_initial(&pp.initial, &pp.ty);
+                                        w.arm(
+                                            pat,
+                                            &format!(
+                                                "apply_prop!(d, self.{}.{}, parent.map(|p| &p.{}.{}), {ini}, ctx, {mode})",
+                                                pg, pp.field, pg, pp.field
+                                            ),
+                                        );
+                                    }
+                                });
+                            });
+                        }
+                    }
+
+                    // Custom properties — handled separately by the resolver.
+                    w.arm("PropertyDeclaration::Custom { .. }", "{}");
+                });
+            },
+        );
+    });
+}
+
+use kozan_build_utils::to_pascal;

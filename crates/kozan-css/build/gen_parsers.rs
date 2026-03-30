@@ -457,14 +457,4 @@ fn gen_unparsed_declaration(w: &mut CodeWriter, groups: &[PropertyGroup]) {
     );
 }
 
-fn to_pascal(css: &str) -> String {
-    css.split('-')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                Some(c) => c.to_uppercase().to_string() + chars.as_str(),
-                None => String::new(),
-            }
-        })
-        .collect()
-}
+use kozan_build_utils::to_pascal;

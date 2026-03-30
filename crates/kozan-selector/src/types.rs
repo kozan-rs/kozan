@@ -96,7 +96,7 @@ impl Selector {
     ///
     /// Reverses into match-order (right-to-left) during the ThinArc copy
     /// that already happens — zero extra cost vs an explicit `.reverse()`.
-    pub(crate) fn from_parse_order(
+    pub fn from_parse_order(
         components: smallvec::SmallVec<[Component; 8]>,
         specificity: Specificity,
         hints: SelectorHints,
@@ -156,6 +156,57 @@ impl Selector {
     #[inline]
     pub fn hints(&self) -> &SelectorHints {
         &self.0.header.header.hints
+    }
+}
+
+/// CSS Nesting Level 1: prepend implicit `&` to a selector.
+///
+/// Per spec, nested selectors that don't contain `&` get an implicit
+/// `& ` prepended (descendant combinator). For example:
+///   `.parent { .child { ... } }` → `.parent { & .child { ... } }`
+///
+/// The `&` component matches like `:scope` (the parent rule's element).
+///
+/// Returns a new selector with `[&, descendant, ...original]` and updated
+/// specificity (+1 class-level for `&`).
+pub fn prepend_nesting(sel: &Selector) -> Selector {
+    use smallvec::SmallVec;
+
+    // Components are stored in match-order (right-to-left).
+    // Reverse to parse-order, prepend [Nesting, Descendant], rebuild.
+    let mut parse_order: SmallVec<[Component; 8]> = SmallVec::new();
+    parse_order.push(Component::Nesting);
+    parse_order.push(Component::Combinator(Combinator::Descendant));
+    for c in sel.components().iter().rev() {
+        parse_order.push(c.clone());
+    }
+
+    let mut specificity = sel.specificity();
+    specificity.add_class(); // & has class-level specificity
+
+    // Rebuild hints — key stays the same (rightmost/subject element),
+    // but we now have combinators.
+    let mut hints = sel.hints().clone();
+    hints.deps.set_combinators();
+
+    Selector::from_parse_order(parse_order, specificity, hints)
+}
+
+/// Check if a selector contains an explicit `&` (Nesting component).
+fn has_nesting(sel: &Selector) -> bool {
+    sel.components().iter().any(|c| matches!(c, Component::Nesting))
+}
+
+/// CSS Nesting Level 1: ensure all selectors in a list have `&`.
+///
+/// Call this on selector lists parsed inside a style block (nested rules).
+/// Selectors that already contain `&` are left as-is. Selectors without
+/// `&` get an implicit `& ` prepended (descendant combinator).
+pub fn ensure_nesting(list: &mut SelectorList) {
+    for sel in &mut list.0 {
+        if !has_nesting(sel) {
+            *sel = prepend_nesting(sel);
+        }
     }
 }
 
@@ -262,7 +313,7 @@ impl SelectorDeps {
     pub(crate) fn set_visited(&mut self) { self.flags |= DepFlags::VISITED.bits(); }
     pub(crate) fn set_has(&mut self) { self.flags |= DepFlags::HAS.bits(); }
     pub(crate) fn set_scope(&mut self) { self.flags |= DepFlags::SCOPE.bits(); }
-    pub(crate) fn set_combinators(&mut self) { self.flags |= DepFlags::COMBINATORS.bits(); }
+    pub fn set_combinators(&mut self) { self.flags |= DepFlags::COMBINATORS.bits(); }
 }
 
 /// The "key selector" — the rightmost simple selector used for rule bucketing.

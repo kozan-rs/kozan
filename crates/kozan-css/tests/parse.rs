@@ -1132,7 +1132,7 @@ fn shorthand_transition() {
     assert!(has_duration, "transition shorthand should set transition-duration");
 }
 
-// background (hand-written — single layer)
+// background (hand-written — multi-layer)
 
 #[test]
 fn shorthand_background_color() {
@@ -1140,6 +1140,150 @@ fn shorthand_background_color() {
     assert!(!e.is_empty());
     let has_color = e.iter().any(|(d, _)| matches!(d, PropertyDeclaration::BackgroundColor(Declared::Value(_))));
     assert!(has_color, "background shorthand should set background-color");
+}
+
+#[test]
+fn background_size_cover() {
+    let e = entries("background-size: cover");
+    assert_decl!(e, 0, PropertyDeclaration::BackgroundSize(Declared::Value(_)));
+    if let PropertyDeclaration::BackgroundSize(Declared::Value(list)) = &e[0].0 {
+        assert!(matches!(list.0[0], kozan_style::BackgroundSize::Cover));
+    }
+}
+
+#[test]
+fn background_size_explicit_px() {
+    use kozan_style::BackgroundSize;
+    let e = entries("background-size: 200px");
+    if let PropertyDeclaration::BackgroundSize(Declared::Value(list)) = &e[0].0 {
+        assert!(matches!(&list.0[0], BackgroundSize::Explicit { width: Some(_), height: None }));
+    } else {
+        panic!("expected BackgroundSize");
+    }
+}
+
+#[test]
+fn background_size_explicit_two_values() {
+    use kozan_style::BackgroundSize;
+    let e = entries("background-size: 50% 100px");
+    if let PropertyDeclaration::BackgroundSize(Declared::Value(list)) = &e[0].0 {
+        assert!(matches!(&list.0[0], BackgroundSize::Explicit { width: Some(_), height: Some(_) }));
+    } else {
+        panic!("expected BackgroundSize with two explicit values");
+    }
+}
+
+#[test]
+fn background_size_auto() {
+    use kozan_style::BackgroundSize;
+    let e = entries("background-size: auto");
+    if let PropertyDeclaration::BackgroundSize(Declared::Value(list)) = &e[0].0 {
+        assert!(matches!(&list.0[0], BackgroundSize::Explicit { width: None, height: None }));
+    } else {
+        panic!("expected BackgroundSize::Explicit auto auto");
+    }
+}
+
+#[test]
+fn background_size_multi_layer() {
+    use kozan_style::BackgroundSize;
+    let e = entries("background-size: cover, 100px 50%");
+    if let PropertyDeclaration::BackgroundSize(Declared::Value(list)) = &e[0].0 {
+        assert_eq!(list.0.len(), 2);
+        assert!(matches!(list.0[0], BackgroundSize::Cover));
+        assert!(matches!(list.0[1], BackgroundSize::Explicit { width: Some(_), height: Some(_) }));
+    } else {
+        panic!("expected multi-layer BackgroundSize");
+    }
+}
+
+#[test]
+fn shorthand_background_single_image() {
+    use kozan_style::{ImageList, PositionComponentList, BackgroundRepeatList};
+    let e = entries("background: url(foo.png) no-repeat center");
+    let image = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::BackgroundImage(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    assert!(matches!(image, Some(ImageList::Images(_))), "should set background-image");
+    let repeat = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::BackgroundRepeat(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    let list = repeat.expect("should set background-repeat");
+    assert_eq!(list.0.len(), 1);
+    assert_eq!(list.0[0], kozan_style::BackgroundRepeat::NoRepeat);
+    let pos = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::BackgroundPositionX(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    let list: PositionComponentList = pos.expect("should set background-position-x");
+    assert_eq!(list.0.len(), 1);
+}
+
+#[test]
+fn shorthand_background_two_layers() {
+    use kozan_style::ImageList;
+    // Two layers separated by comma — color only in final layer.
+    let e = entries("background: url(a.png), url(b.png) red");
+    let image = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::BackgroundImage(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    if let Some(ImageList::Images(imgs)) = image {
+        assert_eq!(imgs.len(), 2, "two layers = two images");
+    } else {
+        panic!("expected ImageList::Images with 2 entries");
+    }
+    let has_color = e.iter().any(|(d, _)| matches!(d, PropertyDeclaration::BackgroundColor(Declared::Value(_))));
+    assert!(has_color, "color from final layer should be set");
+    let repeat = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::BackgroundRepeat(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    assert_eq!(repeat.expect("repeat list").0.len(), 2, "repeat list should have 2 entries");
+}
+
+#[test]
+fn shorthand_background_three_layers() {
+    use kozan_style::ImageList;
+    let e = entries("background: url(a.png), url(b.png), url(c.png)");
+    let image = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::BackgroundImage(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    if let Some(ImageList::Images(imgs)) = image {
+        assert_eq!(imgs.len(), 3, "three layers = three images");
+    } else {
+        panic!("expected ImageList::Images with 3 entries");
+    }
+}
+
+#[test]
+fn shorthand_mask_single_layer() {
+    use kozan_style::{ImageList, MaskModeList};
+    let e = entries("mask: url(mask.svg) match-source");
+    let image = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::MaskImage(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    assert!(matches!(image, Some(ImageList::Images(_))), "should set mask-image");
+    let mode = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::MaskMode(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    let mode_list: MaskModeList = mode.expect("should set mask-mode");
+    assert_eq!(mode_list.0.len(), 1);
+}
+
+#[test]
+fn shorthand_mask_two_layers() {
+    use kozan_style::ImageList;
+    let e = entries("mask: url(a.svg), url(b.svg)");
+    let image = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::MaskImage(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    if let Some(ImageList::Images(imgs)) = image {
+        assert_eq!(imgs.len(), 2, "two mask layers = two images");
+    } else {
+        panic!("expected ImageList::Images with 2 entries");
+    }
+    let composite = e.iter().find_map(|(d, _)| {
+        if let PropertyDeclaration::MaskComposite(Declared::Value(v)) = d { Some(v.clone()) } else { None }
+    });
+    assert_eq!(composite.expect("composite list").0.len(), 2);
 }
 
 // column-rule (hand-written — WSC)
@@ -1862,4 +2006,606 @@ fn parse_vertical_align_negative_length() {
         PropertyDeclaration::VerticalAlign(Declared::Value(VerticalAlign::LengthPercentage(_))) => {}
         other => panic!("expected VerticalAlign::LengthPercentage (negative), got {other:?}"),
     }
+}
+
+// --- animation-composition ---
+
+#[test]
+fn animation_composition_replace() {
+    let decl = parse_value(PropertyId::AnimationComposition, "replace");
+    match decl {
+        Some(PropertyDeclaration::AnimationComposition(Declared::Value(v))) => {
+            assert_eq!(v.0.as_ref(), &[AnimationComposition::Replace]);
+        }
+        other => panic!("expected AnimationComposition::Replace, got {other:?}"),
+    }
+}
+
+#[test]
+fn animation_composition_add() {
+    let decl = parse_value(PropertyId::AnimationComposition, "add");
+    match decl {
+        Some(PropertyDeclaration::AnimationComposition(Declared::Value(v))) => {
+            assert_eq!(v.0.as_ref(), &[AnimationComposition::Add]);
+        }
+        other => panic!("expected AnimationComposition::Add, got {other:?}"),
+    }
+}
+
+#[test]
+fn animation_composition_accumulate() {
+    let decl = parse_value(PropertyId::AnimationComposition, "accumulate");
+    match decl {
+        Some(PropertyDeclaration::AnimationComposition(Declared::Value(v))) => {
+            assert_eq!(v.0.as_ref(), &[AnimationComposition::Accumulate]);
+        }
+        other => panic!("expected AnimationComposition::Accumulate, got {other:?}"),
+    }
+}
+
+// --- four-value background-position ---
+
+type LP = kozan_style::specified::LengthPercentage;
+type Pct = kozan_style::computed::Percentage;
+
+fn pct(f: f32) -> LP { LP::Percentage(Pct::new(f)) }
+
+#[test]
+fn bg_position_4value_parses() {
+    // `right 20px bottom 10px` — just verify it parses without error (both produce Calc nodes)
+    let b = parse_inline("object-position: right 20px bottom 10px");
+    match &b.entries()[0].0 {
+        PropertyDeclaration::ObjectPosition(Declared::Value(pos)) => {
+            // x should be calc(100% - 20px) → Calc variant
+            assert!(matches!(pos.x, LP::Calc(_)), "x should be Calc for 'right 20px'");
+            assert!(matches!(pos.y, LP::Calc(_)), "y should be Calc for 'bottom 10px'");
+        }
+        other => panic!("expected ObjectPosition, got {other:?}"),
+    }
+}
+
+#[test]
+fn bg_position_4value_left_top() {
+    // `left 10px top 5px` → x=10px (from left), y=5px (from top)
+    let b = parse_inline("object-position: left 10px top 5px");
+    match &b.entries()[0].0 {
+        PropertyDeclaration::ObjectPosition(Declared::Value(pos)) => {
+            assert!(matches!(pos.x, LP::Length(_)), "x should be Length for 'left 10px'");
+            assert!(matches!(pos.y, LP::Length(_)), "y should be Length for 'top 5px'");
+        }
+        other => panic!("expected ObjectPosition, got {other:?}"),
+    }
+}
+
+#[test]
+fn bg_position_keywords_top_left() {
+    // `top left` → x=0%, y=0%
+    let b = parse_inline("object-position: top left");
+    match &b.entries()[0].0 {
+        PropertyDeclaration::ObjectPosition(Declared::Value(pos)) => {
+            assert_eq!(pos.x, pct(0.0), "x should be 0%");
+            assert_eq!(pos.y, pct(0.0), "y should be 0%");
+        }
+        other => panic!("expected ObjectPosition, got {other:?}"),
+    }
+}
+
+#[test]
+fn bg_position_center() {
+    let b = parse_inline("object-position: center");
+    match &b.entries()[0].0 {
+        PropertyDeclaration::ObjectPosition(Declared::Value(pos)) => {
+            assert_eq!(pos.x, pct(0.5));
+            assert_eq!(pos.y, pct(0.5));
+        }
+        other => panic!("expected ObjectPosition center, got {other:?}"),
+    }
+}
+
+#[test]
+fn bg_position_single_keyword_top() {
+    // `top` alone → x=50%, y=0%
+    let b = parse_inline("object-position: top");
+    match &b.entries()[0].0 {
+        PropertyDeclaration::ObjectPosition(Declared::Value(pos)) => {
+            assert_eq!(pos.x, pct(0.5));
+            assert_eq!(pos.y, pct(0.0));
+        }
+        other => panic!("expected ObjectPosition top, got {other:?}"),
+    }
+}
+
+#[test]
+fn bg_position_lp_lp() {
+    // `10px 20%` → x=10px, y=20%
+    let b = parse_inline("object-position: 10px 20%");
+    match &b.entries()[0].0 {
+        PropertyDeclaration::ObjectPosition(Declared::Value(pos)) => {
+            assert!(matches!(pos.x, LP::Length(_)), "x should be Length");
+            match &pos.y {
+                LP::Percentage(p) => assert!((p.0 - 0.2).abs() < 1e-6, "y should be 20%"),
+                other => panic!("expected y to be 20%, got {other:?}"),
+            }
+        }
+        other => panic!("expected ObjectPosition, got {other:?}"),
+    }
+}
+
+// --- text-wrap shorthand ---
+
+#[test]
+fn text_wrap_balance() {
+    // `balance` → mode=wrap, style=balance
+    let b = parse_inline("text-wrap: balance");
+    let entries = b.entries();
+    let has_mode = entries.iter().any(|(d, _)| matches!(d,
+        PropertyDeclaration::TextWrapMode(Declared::Value(TextWrapMode::Wrap))));
+    let has_style = entries.iter().any(|(d, _)| matches!(d,
+        PropertyDeclaration::TextWrapStyle(Declared::Value(TextWrapStyle::Balance))));
+    assert!(has_mode, "text-wrap: balance should set mode=wrap");
+    assert!(has_style, "text-wrap: balance should set style=balance");
+}
+
+#[test]
+fn text_wrap_nowrap() {
+    let b = parse_inline("text-wrap: nowrap");
+    let has_mode = b.entries().iter().any(|(d, _)| matches!(d,
+        PropertyDeclaration::TextWrapMode(Declared::Value(TextWrapMode::Nowrap))));
+    assert!(has_mode, "text-wrap: nowrap should set mode=nowrap");
+}
+
+#[test]
+fn text_wrap_style_pretty() {
+    let decl = parse_value(PropertyId::TextWrapStyle, "pretty");
+    assert!(matches!(decl, Some(PropertyDeclaration::TextWrapStyle(Declared::Value(TextWrapStyle::Pretty)))));
+}
+
+// --- field-sizing ---
+
+#[test]
+fn field_sizing_content() {
+    let decl = parse_value(PropertyId::FieldSizing, "content");
+    assert!(matches!(decl, Some(PropertyDeclaration::FieldSizing(Declared::Value(FieldSizing::Content)))));
+}
+
+#[test]
+fn field_sizing_fixed() {
+    let decl = parse_value(PropertyId::FieldSizing, "fixed");
+    assert!(matches!(decl, Some(PropertyDeclaration::FieldSizing(Declared::Value(FieldSizing::Fixed)))));
+}
+
+// --- interpolate-size, line-clamp, ruby-*, text-box-trim ---
+
+#[test]
+fn interpolate_size_allow_keywords() {
+    let decl = parse_value(PropertyId::InterpolateSize, "allow-keywords");
+    assert!(matches!(decl, Some(PropertyDeclaration::InterpolateSize(Declared::Value(InterpolateSize::AllowKeywords)))));
+}
+
+#[test]
+fn line_clamp_integer() {
+    let decl = parse_value(PropertyId::LineClamp, "3");
+    assert!(matches!(decl, Some(PropertyDeclaration::LineClamp(Declared::Value(NoneOr::Value(3))))));
+}
+
+#[test]
+fn line_clamp_none() {
+    let decl = parse_value(PropertyId::LineClamp, "none");
+    assert!(matches!(decl, Some(PropertyDeclaration::LineClamp(Declared::Value(NoneOr::None)))));
+}
+
+#[test]
+fn ruby_align_center() {
+    let decl = parse_value(PropertyId::RubyAlign, "center");
+    assert!(matches!(decl, Some(PropertyDeclaration::RubyAlign(Declared::Value(RubyAlign::Center)))));
+}
+
+#[test]
+fn ruby_merge_auto() {
+    let decl = parse_value(PropertyId::RubyMerge, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::RubyMerge(Declared::Value(RubyMerge::Auto)))));
+}
+
+#[test]
+fn text_box_trim_both() {
+    let decl = parse_value(PropertyId::TextBoxTrim, "trim-both");
+    assert!(matches!(decl, Some(PropertyDeclaration::TextBoxTrim(Declared::Value(TextBoxTrim::TrimBoth)))));
+}
+
+// --- math-style, math-shift, reading-flow, scrollbar-gutter ---
+
+#[test]
+fn math_style_compact() {
+    let decl = parse_value(PropertyId::MathStyle, "compact");
+    assert!(matches!(decl, Some(PropertyDeclaration::MathStyle(Declared::Value(MathStyle::Compact)))));
+}
+
+#[test]
+fn math_shift_compact() {
+    let decl = parse_value(PropertyId::MathShift, "compact");
+    assert!(matches!(decl, Some(PropertyDeclaration::MathShift(Declared::Value(MathShift::Compact)))));
+}
+
+#[test]
+fn reading_flow_flex_visual() {
+    let decl = parse_value(PropertyId::ReadingFlow, "flex-visual");
+    assert!(matches!(decl, Some(PropertyDeclaration::ReadingFlow(Declared::Value(ReadingFlow::FlexVisual)))));
+}
+
+#[test]
+fn reading_flow_normal() {
+    let decl = parse_value(PropertyId::ReadingFlow, "normal");
+    assert!(matches!(decl, Some(PropertyDeclaration::ReadingFlow(Declared::Value(ReadingFlow::Normal)))));
+}
+
+#[test]
+fn scrollbar_gutter_stable() {
+    let decl = parse_value(PropertyId::ScrollbarGutter, "stable");
+    assert!(matches!(decl, Some(PropertyDeclaration::ScrollbarGutter(Declared::Value(ScrollbarGutter::Stable)))));
+}
+
+#[test]
+fn scrollbar_gutter_stable_both_edges() {
+    let decl = parse_value(PropertyId::ScrollbarGutter, "stable both-edges");
+    assert!(matches!(decl, Some(PropertyDeclaration::ScrollbarGutter(Declared::Value(ScrollbarGutter::StableBothEdges)))));
+}
+
+#[test]
+fn scrollbar_gutter_auto() {
+    let decl = parse_value(PropertyId::ScrollbarGutter, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::ScrollbarGutter(Declared::Value(ScrollbarGutter::Auto)))));
+}
+
+// --- font-palette, initial-letter, hyphenate-character, hyphenate-limit-chars ---
+
+#[test]
+fn font_palette_dark() {
+    let decl = parse_value(PropertyId::FontPalette, "dark");
+    assert!(matches!(decl, Some(PropertyDeclaration::FontPalette(Declared::Value(FontPalette::Dark)))));
+}
+
+#[test]
+fn font_palette_custom() {
+    let decl = parse_value(PropertyId::FontPalette, "my-palette");
+    match decl {
+        Some(PropertyDeclaration::FontPalette(Declared::Value(FontPalette::Custom(a)))) => {
+            assert_eq!(a.as_ref(), "my-palette");
+        }
+        other => panic!("expected FontPalette::Custom, got {other:?}"),
+    }
+}
+
+#[test]
+fn initial_letter_normal() {
+    let decl = parse_value(PropertyId::InitialLetter, "normal");
+    assert!(matches!(decl, Some(PropertyDeclaration::InitialLetter(Declared::Value(InitialLetter::Normal)))));
+}
+
+#[test]
+fn initial_letter_size_only() {
+    let decl = parse_value(PropertyId::InitialLetter, "3.5");
+    match decl {
+        Some(PropertyDeclaration::InitialLetter(Declared::Value(InitialLetter::Raised { size, sink }))) => {
+            assert!((size - 3.5).abs() < 0.001);
+            assert_eq!(sink, 4); // ceil(3.5)
+        }
+        other => panic!("expected InitialLetter::Raised, got {other:?}"),
+    }
+}
+
+#[test]
+fn initial_letter_size_and_sink() {
+    let decl = parse_value(PropertyId::InitialLetter, "2 3");
+    match decl {
+        Some(PropertyDeclaration::InitialLetter(Declared::Value(InitialLetter::Raised { size, sink }))) => {
+            assert!((size - 2.0).abs() < 0.001);
+            assert_eq!(sink, 3);
+        }
+        other => panic!("expected InitialLetter::Raised, got {other:?}"),
+    }
+}
+
+#[test]
+fn hyphenate_character_auto() {
+    let decl = parse_value(PropertyId::HyphenateCharacter, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::HyphenateCharacter(Declared::Value(HyphenateCharacter::Auto)))));
+}
+
+#[test]
+fn hyphenate_character_string() {
+    let decl = parse_value(PropertyId::HyphenateCharacter, r#""=""#);
+    match decl {
+        Some(PropertyDeclaration::HyphenateCharacter(Declared::Value(HyphenateCharacter::String(s)))) => {
+            assert_eq!(&*s, "=");
+        }
+        other => panic!("expected HyphenateCharacter::String, got {other:?}"),
+    }
+}
+
+#[test]
+fn hyphenate_limit_chars_auto() {
+    let decl = parse_value(PropertyId::HyphenateLimitChars, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::HyphenateLimitChars(Declared::Value(HyphenateLimitChars { .. })))));
+}
+
+#[test]
+fn hyphenate_limit_chars_three_values() {
+    let decl = parse_value(PropertyId::HyphenateLimitChars, "5 2 3");
+    match decl {
+        Some(PropertyDeclaration::HyphenateLimitChars(Declared::Value(v))) => {
+            assert!(matches!(v.total, HyphenateLimitValue::Integer(5)));
+            assert!(matches!(v.before, HyphenateLimitValue::Integer(2)));
+            assert!(matches!(v.after, HyphenateLimitValue::Integer(3)));
+        }
+        other => panic!("expected HyphenateLimitChars, got {other:?}"),
+    }
+}
+
+// --- offset-* (motion path) ---
+
+#[test]
+fn offset_path_none() {
+    let decl = parse_value(PropertyId::OffsetPath, "none");
+    assert!(matches!(decl, Some(PropertyDeclaration::OffsetPath(Declared::Value(OffsetPath::None)))));
+}
+
+#[test]
+fn offset_path_path_fn() {
+    let decl = parse_value(PropertyId::OffsetPath, r#"path("M 0 0 L 100 100")"#);
+    match decl {
+        Some(PropertyDeclaration::OffsetPath(Declared::Value(OffsetPath::Path(s)))) => {
+            assert_eq!(&*s, "M 0 0 L 100 100");
+        }
+        other => panic!("expected OffsetPath::Path, got {other:?}"),
+    }
+}
+
+#[test]
+fn offset_path_ray() {
+    let decl = parse_value(PropertyId::OffsetPath, "ray(45deg closest-side contain)");
+    match decl {
+        Some(PropertyDeclaration::OffsetPath(Declared::Value(OffsetPath::Ray { angle, size, contain }))) => {
+            assert!((angle - 45.0).abs() < 0.001);
+            assert_eq!(size, RaySize::ClosestSide);
+            assert!(contain);
+        }
+        other => panic!("expected OffsetPath::Ray, got {other:?}"),
+    }
+}
+
+#[test]
+fn offset_rotate_auto() {
+    let decl = parse_value(PropertyId::OffsetRotate, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::OffsetRotate(Declared::Value(OffsetRotate::Auto)))));
+}
+
+#[test]
+fn offset_rotate_auto_angle() {
+    let decl = parse_value(PropertyId::OffsetRotate, "auto 45deg");
+    match decl {
+        Some(PropertyDeclaration::OffsetRotate(Declared::Value(OffsetRotate::AutoAngle(a)))) => {
+            assert!((a - 45.0).abs() < 0.001);
+        }
+        other => panic!("expected OffsetRotate::AutoAngle, got {other:?}"),
+    }
+}
+
+#[test]
+fn offset_rotate_reverse() {
+    let decl = parse_value(PropertyId::OffsetRotate, "reverse");
+    assert!(matches!(decl, Some(PropertyDeclaration::OffsetRotate(Declared::Value(OffsetRotate::Reverse)))));
+}
+
+#[test]
+fn offset_position_auto() {
+    let decl = parse_value(PropertyId::OffsetPosition, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::OffsetPosition(Declared::Value(OffsetPosition::Auto)))));
+}
+
+#[test]
+fn offset_position_normal() {
+    let decl = parse_value(PropertyId::OffsetPosition, "normal");
+    assert!(matches!(decl, Some(PropertyDeclaration::OffsetPosition(Declared::Value(OffsetPosition::Normal)))));
+}
+
+// --- scroll-driven animation ---
+
+#[test]
+fn animation_timeline_auto() {
+    let decl = parse_value(PropertyId::AnimationTimeline, "auto");
+    match decl {
+        Some(PropertyDeclaration::AnimationTimeline(Declared::Value(list))) => {
+            match &list {
+                AnimationTimelineList::Values(v) => {
+                    assert_eq!(v.len(), 1);
+                    assert!(matches!(v[0], AnimationTimeline::Auto));
+                }
+            }
+        }
+        other => panic!("expected AnimationTimeline auto, got {other:?}"),
+    }
+}
+
+#[test]
+fn animation_timeline_scroll() {
+    let decl = parse_value(PropertyId::AnimationTimeline, "scroll(root block)");
+    match decl {
+        Some(PropertyDeclaration::AnimationTimeline(Declared::Value(AnimationTimelineList::Values(v)))) => {
+            assert_eq!(v.len(), 1);
+            assert!(matches!(v[0], AnimationTimeline::Scroll(ScrollScroller::Root, ScrollAxis::Block)));
+        }
+        other => panic!("expected AnimationTimeline::Scroll, got {other:?}"),
+    }
+}
+
+#[test]
+fn animation_timeline_view() {
+    let decl = parse_value(PropertyId::AnimationTimeline, "view(inline)");
+    match decl {
+        Some(PropertyDeclaration::AnimationTimeline(Declared::Value(AnimationTimelineList::Values(v)))) => {
+            assert_eq!(v.len(), 1);
+            assert!(matches!(v[0], AnimationTimeline::View(ScrollAxis::Inline)));
+        }
+        other => panic!("expected AnimationTimeline::View, got {other:?}"),
+    }
+}
+
+#[test]
+fn animation_range_start_named() {
+    let decl = parse_value(PropertyId::AnimationRangeStart, "entry 25%");
+    match decl {
+        Some(PropertyDeclaration::AnimationRangeStart(Declared::Value(AnimationRangeValue::Named(name, Some(_))))) => {
+            assert_eq!(name, TimelineRangeName::Entry);
+        }
+        other => panic!("expected AnimationRangeValue::Named, got {other:?}"),
+    }
+}
+
+#[test]
+fn scroll_timeline_axis_inline() {
+    let decl = parse_value(PropertyId::ScrollTimelineAxis, "inline");
+    match decl {
+        Some(PropertyDeclaration::ScrollTimelineAxis(Declared::Value(ScrollTimelineAxisList(v)))) => {
+            assert_eq!(v.len(), 1);
+            assert_eq!(v[0], ScrollAxis::Inline);
+        }
+        other => panic!("expected ScrollTimelineAxisList, got {other:?}"),
+    }
+}
+
+#[test]
+fn image_orientation_from_image() {
+    let decl = parse_value(PropertyId::ImageOrientation, "from-image");
+    assert!(matches!(decl, Some(PropertyDeclaration::ImageOrientation(Declared::Value(ImageOrientation::FromImage)))));
+}
+
+#[test]
+fn image_orientation_angle() {
+    let decl = parse_value(PropertyId::ImageOrientation, "90deg");
+    match decl {
+        Some(PropertyDeclaration::ImageOrientation(Declared::Value(ImageOrientation::Angle(a)))) => {
+            assert!((a - 90.0).abs() < 0.001);
+        }
+        other => panic!("expected ImageOrientation::Angle, got {other:?}"),
+    }
+}
+
+// --- view-transition-name ---
+
+#[test]
+fn view_transition_name_none() {
+    let decl = parse_value(PropertyId::ViewTransitionName, "none");
+    assert!(matches!(decl, Some(PropertyDeclaration::ViewTransitionName(Declared::Value(NoneOr::None)))));
+}
+
+// --- text-decoration-skip-ink, text-spacing-trim, font-variant-emoji ---
+
+#[test]
+fn text_decoration_skip_ink_all() {
+    let decl = parse_value(PropertyId::TextDecorationSkipInk, "all");
+    assert!(matches!(decl, Some(PropertyDeclaration::TextDecorationSkipInk(Declared::Value(TextDecorationSkipInk::All)))));
+}
+
+#[test]
+fn text_spacing_trim_auto() {
+    let decl = parse_value(PropertyId::TextSpacingTrim, "auto");
+    assert!(matches!(decl, Some(PropertyDeclaration::TextSpacingTrim(Declared::Value(TextSpacingTrim::Auto)))));
+}
+
+#[test]
+fn font_variant_emoji_unicode() {
+    let decl = parse_value(PropertyId::FontVariantEmoji, "unicode");
+    assert!(matches!(decl, Some(PropertyDeclaration::FontVariantEmoji(Declared::Value(FontVariantEmoji::Unicode)))));
+}
+
+// --- break/page-break ---
+
+#[test]
+fn page_break_before_always() {
+    let decl = parse_value(PropertyId::PageBreakBefore, "always");
+    assert!(matches!(decl, Some(PropertyDeclaration::PageBreakBefore(Declared::Value(PageBreak::Always)))));
+}
+
+#[test]
+fn page_break_inside_avoid() {
+    let decl = parse_value(PropertyId::PageBreakInside, "avoid");
+    assert!(matches!(decl, Some(PropertyDeclaration::PageBreakInside(Declared::Value(PageBreakInside::Avoid)))));
+}
+
+// --- hanging-punctuation ---
+
+#[test]
+fn hanging_punctuation_none() {
+    let decl = parse_value(PropertyId::HangingPunctuation, "none");
+    assert!(matches!(decl, Some(PropertyDeclaration::HangingPunctuation(Declared::Value(v))) if v.is_empty()));
+}
+
+#[test]
+fn hanging_punctuation_first() {
+    let decl = parse_value(PropertyId::HangingPunctuation, "first");
+    assert!(matches!(decl, Some(PropertyDeclaration::HangingPunctuation(Declared::Value(v))) if v.contains(HangingPunctuation::FIRST)));
+}
+
+#[test]
+fn hanging_punctuation_first_last() {
+    let decl = parse_value(PropertyId::HangingPunctuation, "first last");
+    assert!(matches!(decl, Some(PropertyDeclaration::HangingPunctuation(Declared::Value(v))) if v.contains(HangingPunctuation::FIRST) && v.contains(HangingPunctuation::LAST)));
+}
+
+#[test]
+fn hanging_punctuation_first_force_end_last() {
+    let decl = parse_value(PropertyId::HangingPunctuation, "first force-end last");
+    assert!(matches!(decl, Some(PropertyDeclaration::HangingPunctuation(Declared::Value(v))) if v.contains(HangingPunctuation::FIRST) && v.contains(HangingPunctuation::FORCE_END) && v.contains(HangingPunctuation::LAST)));
+}
+
+#[test]
+fn hanging_punctuation_allow_end() {
+    let decl = parse_value(PropertyId::HangingPunctuation, "allow-end");
+    assert!(matches!(decl, Some(PropertyDeclaration::HangingPunctuation(Declared::Value(v))) if v.contains(HangingPunctuation::ALLOW_END)));
+}
+
+// --- white-space-trim ---
+
+#[test]
+fn white_space_trim_none() {
+    let decl = parse_value(PropertyId::WhiteSpaceTrim, "none");
+    assert!(matches!(decl, Some(PropertyDeclaration::WhiteSpaceTrim(Declared::Value(v))) if v.is_empty()));
+}
+
+#[test]
+fn white_space_trim_discard_before() {
+    let decl = parse_value(PropertyId::WhiteSpaceTrim, "discard-before");
+    assert!(matches!(decl, Some(PropertyDeclaration::WhiteSpaceTrim(Declared::Value(v))) if v.contains(WhiteSpaceTrim::DISCARD_BEFORE)));
+}
+
+#[test]
+fn white_space_trim_all_three() {
+    let decl = parse_value(PropertyId::WhiteSpaceTrim, "discard-before discard-after discard-inner");
+    assert!(matches!(decl, Some(PropertyDeclaration::WhiteSpaceTrim(Declared::Value(v))) if v.contains(WhiteSpaceTrim::DISCARD_BEFORE) && v.contains(WhiteSpaceTrim::DISCARD_AFTER) && v.contains(WhiteSpaceTrim::DISCARD_INNER)));
+}
+
+// --- zoom ---
+
+#[test]
+fn zoom_normal() {
+    let decl = parse_value(PropertyId::Zoom, "normal");
+    assert!(matches!(decl, Some(PropertyDeclaration::Zoom(Declared::Value(Zoom::Normal)))));
+}
+
+#[test]
+fn zoom_reset() {
+    let decl = parse_value(PropertyId::Zoom, "reset");
+    assert!(matches!(decl, Some(PropertyDeclaration::Zoom(Declared::Value(Zoom::Reset)))));
+}
+
+#[test]
+fn zoom_number() {
+    let decl = parse_value(PropertyId::Zoom, "1.5");
+    assert!(matches!(decl, Some(PropertyDeclaration::Zoom(Declared::Value(Zoom::Number(v)))) if (v - 1.5).abs() < 0.001));
+}
+
+#[test]
+fn zoom_percentage() {
+    let decl = parse_value(PropertyId::Zoom, "150%");
+    assert!(matches!(decl, Some(PropertyDeclaration::Zoom(Declared::Value(Zoom::Number(v)))) if (v - 1.5).abs() < 0.001));
 }
